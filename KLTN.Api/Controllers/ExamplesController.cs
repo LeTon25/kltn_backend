@@ -3,9 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KLTN.Api.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ExamplesController : ControllerBase
+    public class ExamplesController : BaseController
     {
         private readonly IUnitOfWork _unitOfWork;
         public ExamplesController(IUnitOfWork unitOfWork) 

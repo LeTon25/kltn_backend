@@ -1,4 +1,5 @@
-﻿using KLTN.Domain.Entities.Examples;
+﻿using KLTN.Domain.Entities;
+using KLTN.Domain.Entities.Examples;
 using KLTN.Infrastructure.Configurations.Examples;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace KLTN.Infrastructure.Data
 {
-    public class ApplicationDbContext  :IdentityDbContext
+    public class ApplicationDbContext  :IdentityDbContext<User>
     {
         public DbSet<Example> Examples { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
