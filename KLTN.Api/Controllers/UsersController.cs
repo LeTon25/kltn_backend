@@ -1,4 +1,5 @@
 ﻿using KLTN.Application.DTOs.Users;
+using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
@@ -27,6 +28,7 @@ namespace KLTN.Api.Controllers
             _uow = uow;
         }
         [HttpPost]
+        [ApiValidationFilter]
         public async Task<IActionResult> PostUser(CreateUserRequestDto request)
         {
             var user = new User
@@ -111,6 +113,8 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [ApiValidationFilter]
+
         public async Task<IActionResult> PutUser(string id, [FromBody] CreateUserRequestDto request)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -145,6 +149,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [ApiValidationFilter]
         public async Task<IActionResult> DeleteUser(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
