@@ -4,11 +4,25 @@ using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog.Events;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+Log.Logger = new LoggerConfiguration()
+#if DEBUG
+    .MinimumLevel.Debug()
+#else
+    .MinimumLevel.Information()
+#endif
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    //.WriteTo.Async(c => c.File("Logs/logs.txt"))
+    .WriteTo.Async(c => c.Console())
+    .CreateLogger();
+Log.Information("pill pill");
 builder.Services.AddControllers();
 //Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
