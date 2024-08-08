@@ -3,7 +3,6 @@ using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
-using KLTN.Domain.Interfaces;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,15 +16,13 @@ namespace KLTN.Api.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IUnitOfWork _uow;
         public UsersController(
            UserManager<IdentityUser> userManager,
-           RoleManager<IdentityRole> roleManager,
-           IUnitOfWork uow)
+           RoleManager<IdentityRole> roleManager
+           )
         {
             _userManager = userManager;
             _roleManager = roleManager;
-            _uow = uow;
         }
         [HttpPost]
         [ApiValidationFilter]
