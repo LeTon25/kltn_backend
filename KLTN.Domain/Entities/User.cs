@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using KLTN.Domain.Entities.Interfaces;
+using KLTN.Domain.Enums;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +9,16 @@ using System.Threading.Tasks;
 
 namespace KLTN.Domain.Entities
 {
-    public class User : IdentityUser
+    public class User : IdentityUser,IDateTracking
     {
+        public string FullName { get; set; }
+        public DateTime? DoB { get; set; }
+        public bool Gender { get; set; }
+        public string? CustomId { get; set; }   
+        public string? Avatar { get; set; }
+        public UserType UserType { get; set; }
+        public DateTime CreatedAt { get ; set ; }
+        public DateTime? UpdatedAt { get; set; }
+        public DateTime? DeletedAt { get; set; }
     }
 }
