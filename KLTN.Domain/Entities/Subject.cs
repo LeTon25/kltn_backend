@@ -9,7 +9,7 @@ namespace KLTN.Domain.Entities
 {
     public class Subject : IDateTracking
     {
-        public  Guid SubjectId { get; set; }
+        public  string SubjectId { get; set; }
         public string Name { get; set; } 
         public string? Description { get; set; }
         public DateTime CreatedAt { get ; set ; }

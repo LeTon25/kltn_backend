@@ -21,4 +21,8 @@
     <ProjectReference Include="..\KLTN.Infrastructure\KLTN.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 </Project>

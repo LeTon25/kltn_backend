@@ -22,6 +22,8 @@ namespace KLTN.Application.DTOs.Users
                     .Matches(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$").WithMessage("Email không đúng định dạng");
 
             RuleFor(x => x.PhoneNumber).NotEmpty().WithMessage("SĐT không được để trống");
+
+            RuleFor(x => x.FullName).NotEmpty().WithMessage("Họ tên không được để trống");
         }  
 
     }

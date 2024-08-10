@@ -9,8 +9,8 @@ namespace KLTN.Domain.Entities
 {
     public class EnrolledCourse : IDateTracking
     {
-        public Guid StudentId { get; set; } 
-        public Guid CourseId { get; set; }
+        public string StudentId { get; set; } 
+        public string CourseId { get; set; }
         public DateTime CreatedAt { get ; set; }
         public DateTime? UpdatedAt { get ; set ; }
         public DateTime? DeletedAt { get; set; }

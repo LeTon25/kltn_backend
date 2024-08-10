@@ -22,7 +22,6 @@ Log.Logger = new LoggerConfiguration()
     //.WriteTo.Async(c => c.File("Logs/logs.txt"))
     .WriteTo.Async(c => c.Console())
     .CreateLogger();
-Log.Information("pill pill");
 builder.Services.AddControllers();
 //Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -54,7 +53,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseStaticFiles();
+app.UseDefaultFiles();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();

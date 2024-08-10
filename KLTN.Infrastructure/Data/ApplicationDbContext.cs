@@ -25,6 +25,7 @@ namespace KLTN.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
             builder.ApplyConfiguration(new AnnouncementConfiguration());
             builder.ApplyConfiguration(new CommentConfiguration());
             builder.ApplyConfiguration(new CourseConfiguration());
@@ -33,7 +34,7 @@ namespace KLTN.Infrastructure.Data
             builder.ApplyConfiguration(new ProjectConfiguration());
             builder.ApplyConfiguration(new SemesterConfiguration());
             builder.ApplyConfiguration(new SubjectConfiguration());
-            builder.ApplyConfiguration(new EnrolledCourseConfiguration());  
+            builder.ApplyConfiguration(new EnrolledCourseConfiguration()); 
         }
     }
 }

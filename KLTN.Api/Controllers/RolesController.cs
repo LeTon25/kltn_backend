@@ -21,7 +21,7 @@ namespace KLTN.Api.Controllers
 
         [HttpPost]
         [ApiValidationFilter]
-        public async Task<IActionResult> PostRole(CreateRoleRequestDto request)
+        public async Task<IActionResult> PostRoleAsync(CreateRoleRequestDto request)
         {
             var role = new IdentityRole()
             {
@@ -31,7 +31,7 @@ namespace KLTN.Api.Controllers
             var result = await _roleManager.CreateAsync(role);
             if (result.Succeeded)
             {
-                return CreatedAtAction(nameof(GetById), new { id = role.Id }, request);
+                return CreatedAtAction(nameof(GetByIdAsync), new { id = role.Id }, request);
             }
             else
             {
@@ -40,7 +40,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetRoles()
+        public async Task<IActionResult> GetRolesAsync()
         {
             var roles = _roleManager.Roles;
 
@@ -54,7 +54,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpGet("filter")]
-        public async Task<IActionResult> GetRolesPaging(string filter, int pageIndex, int pageSize)
+        public async Task<IActionResult> GetRolesPagingAsync(string filter, int pageIndex, int pageSize)
         {
             var query = _roleManager.Roles;
             if (!string.IsNullOrEmpty(filter))
@@ -80,7 +80,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(string id)
+        public async Task<IActionResult> GetByIdAsync(string id)
         {
             var role = await _roleManager.FindByIdAsync(id);
             if (role == null)
@@ -96,7 +96,7 @@ namespace KLTN.Api.Controllers
 
         [HttpPut("{id}")]
         [ApiValidationFilter]
-        public async Task<IActionResult> PutRole(string id, [FromBody] CreateRoleRequestDto roleVm)
+        public async Task<IActionResult> PutRoleAsync(string id, [FromBody] CreateRoleRequestDto roleVm)
         {
             var role = await _roleManager.FindByIdAsync(id);
             if (role == null)
@@ -115,7 +115,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRole(string id)
+        public async Task<IActionResult> DeleteRoleAsync(string id)
         {
             var role = await _roleManager.FindByIdAsync(id);
             if (role == null)

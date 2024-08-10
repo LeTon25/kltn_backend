@@ -1,18 +1,18 @@
-﻿using KLTN.Domain.Entities.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KLTN.Domain.Entities
+namespace KLTN.Application.DTOs.Announcements
 {
-    public class Announcement : IDateTracking
+    public class AnnouncementDto
     {
         public string AnnouncementId { get; set; }
+        public string UserId { get; set; }
         public string CourseId { get; set; }
-        public string UserId { get; set; }    
-        public string Content {  get; set; }
+
+        public string Content { get; set; }
         public string[] AttachedLinks { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

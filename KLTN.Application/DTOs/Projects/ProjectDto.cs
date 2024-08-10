@@ -1,20 +1,20 @@
-﻿using KLTN.Domain.Entities.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KLTN.Domain.Entities
+namespace KLTN.Application.DTOs.Projects
 {
-    public class Project : IDateTracking
+    public class ProjectDto
     {
         public string ProjectId { get; set; }
         public string SubjectId { get; set; }
         public string CreateUserId { get; set; }
+        public string GroupId { get; set; }
         public string Description { get; set; }
         public string CourseId { get; set; }
-        public bool IsApproved {  get; set; }
+        public bool IsApproved { get; set; }
         public string Title { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KLTN.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,5 +16,11 @@ namespace KLTN.Application.DTOs.Users
         public string Email { get; set; }
 
         public string PhoneNumber { get; set; }
+        public string FullName { get; set; }
+        public DateTime? DoB { get; set; }
+        public bool Gender { get; set; }
+        public string? CustomId { get; set; }
+        public string? Avatar { get; set; }
+        public UserType UserType { get; set; }
     }
 }
