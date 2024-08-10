@@ -13,7 +13,6 @@ namespace KLTN.Domain.Entities
         public string SubjectId { get; set; }
         public string CreateUserId { get; set; }
         public string Description { get; set; }
-        public string CourseId { get; set; }
         public bool IsApproved {  get; set; }
         public string Title { get; set; }
         public DateTime CreatedAt { get; set; }

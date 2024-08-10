@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Courses;
+using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Projects;
 using KLTN.Application.DTOs.Semesters;
 using KLTN.Application.DTOs.Users;
@@ -29,6 +30,8 @@ namespace KLTN.Application
             CreateMap<Course, CourseDto>();
 
             CreateMap<Project, ProjectDto>();
+
+            CreateMap<Group,GroupDto>();
 
         }
     }
