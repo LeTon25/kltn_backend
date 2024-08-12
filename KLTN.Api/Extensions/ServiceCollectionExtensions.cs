@@ -2,6 +2,7 @@
 using KLTN.Api.Services.Implements;
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application;
+using KLTN.Infrastructure.Seeders;
 
 namespace KLTN.Api.Extensions
 {
@@ -11,6 +12,7 @@ namespace KLTN.Api.Extensions
         {
             services.AddAutoMapper(typeof(MappingProfile));
             services.AddTransient<IStorageService, FileLocalStorageService>();
+            services.AddTransient<DbInitializer>();
             return services;
         }
     }

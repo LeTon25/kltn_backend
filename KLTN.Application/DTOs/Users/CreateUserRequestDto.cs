@@ -1,4 +1,5 @@
 ﻿using KLTN.Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace KLTN.Application.DTOs.Users
         public DateTime? DoB { get; set; }
         public bool Gender { get; set; }
         public string? CustomId { get; set; }
-        public string? Avatar { get; set; }
         public UserType UserType { get; set; }
+        public IFormFile? File { get; set; }
     }
 }

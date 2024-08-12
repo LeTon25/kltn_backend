@@ -4,7 +4,7 @@
     {
         string GetFileUrl(string fileName);
 
-        Task SaveFileAsync(Stream mediaBinaryStream, string fileName);
+        Task SaveFileAsync(Stream mediaBinaryStream,string? filePath, string fileName);
 
         Task DeleteFileAsync(string fileName);
     }

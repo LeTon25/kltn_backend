@@ -8,6 +8,7 @@ using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 namespace KLTN.Api.Controllers
 {
     public class ProjectsController : BaseController
@@ -43,6 +44,8 @@ namespace KLTN.Api.Controllers
             {
                 Items = data,
                 TotalRecords = totalRecords,
+                PageIndex = pageIndex,
+                PageSize = pageSize
             };
             return Ok(pagination);
         }

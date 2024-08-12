@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KLTN.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240808134854_update-database")]
-    partial class updatedatabase
+    [Migration("20240811074717_migrate-to-remote")]
+    partial class migratetoremote
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,9 +27,8 @@ namespace KLTN.Infrastructure.Migrations
 
             modelBuilder.Entity("KLTN.Domain.Entities.Announcement", b =>
                 {
-                    b.Property<Guid>("AnnouncementId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                    b.Property<string>("AnnouncementId")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("AttachedLinks")
                         .IsRequired()
@@ -39,6 +38,10 @@ namespace KLTN.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -48,8 +51,9 @@ namespace KLTN.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.HasKey("AnnouncementId");
 
@@ -58,12 +62,12 @@ namespace KLTN.Infrastructure.Migrations
 
             modelBuilder.Entity("KLTN.Domain.Entities.Comment", b =>
                 {
-                    b.Property<Guid>("CommentId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                    b.Property<string>("CommentId")
+                        .HasColumnType("varchar(255)");
 
-                    b.Property<Guid>("AnnoucementId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("AnnoucementId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -78,8 +82,9 @@ namespace KLTN.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.HasKey("CommentId");
 
@@ -88,9 +93,8 @@ namespace KLTN.Infrastructure.Migrations
 
             modelBuilder.Entity("KLTN.Domain.Entities.Course", b =>
                 {
-                    b.Property<Guid>("CourseId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                    b.Property<string>("CourseId")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Background")
                         .HasColumnType("longtext");
@@ -112,14 +116,17 @@ namespace KLTN.Infrastructure.Migrations
                     b.Property<string>("InviteCode")
                         .HasColumnType("longtext");
 
-                    b.Property<Guid>("LecturerId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("LecturerId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
-                    b.Property<Guid>("SemesterId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("SemesterId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
-                    b.Property<Guid>("SubjectId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("SubjectId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -131,11 +138,11 @@ namespace KLTN.Infrastructure.Migrations
 
             modelBuilder.Entity("KLTN.Domain.Entities.EnrolledCourse", b =>
                 {
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("StudentId")
+                        .HasColumnType("varchar(255)");
 
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("CourseId")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -153,9 +160,12 @@ namespace KLTN.Infrastructure.Migrations
 
             modelBuilder.Entity("KLTN.Domain.Entities.Group", b =>
                 {
-                    b.Property<Guid>("GroupId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                    b.Property<string>("GroupId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -171,6 +181,9 @@ namespace KLTN.Infrastructure.Migrations
                     b.Property<int?>("NumberOfMembers")
                         .HasColumnType("int");
 
+                    b.Property<string>("ProjectId")
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -181,11 +194,11 @@ namespace KLTN.Infrastructure.Migrations
 
             modelBuilder.Entity("KLTN.Domain.Entities.GroupMember", b =>
                 {
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("StudentId")
+                        .HasColumnType("varchar(255)");
 
-                    b.Property<Guid>("GroupId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("GroupId")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -206,33 +219,37 @@ namespace KLTN.Infrastructure.Migrations
 
             modelBuilder.Entity("KLTN.Domain.Entities.Project", b =>
                 {
-                    b.Property<Guid>("ProjectId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                    b.Property<string>("ProjectId")
+                        .HasColumnType("varchar(255)");
 
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("CreateUserId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
-                    b.Property<Guid>("CreateUserId")
-                        .HasColumnType("char(36)");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<Guid>("GroupId")
-                        .HasColumnType("char(36)");
-
                     b.Property<bool>("IsApproved")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<Guid>("SubjectId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("SubjectId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.HasKey("ProjectId");
 
@@ -241,9 +258,8 @@ namespace KLTN.Infrastructure.Migrations
 
             modelBuilder.Entity("KLTN.Domain.Entities.Semester", b =>
                 {
-                    b.Property<Guid>("SemesterId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                    b.Property<string>("SemesterId")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -272,9 +288,8 @@ namespace KLTN.Infrastructure.Migrations
 
             modelBuilder.Entity("KLTN.Domain.Entities.Subject", b =>
                 {
-                    b.Property<Guid>("SubjectId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                    b.Property<string>("SubjectId")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");

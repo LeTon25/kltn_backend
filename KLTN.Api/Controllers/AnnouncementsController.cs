@@ -47,6 +47,8 @@ namespace KLTN.Api.Controllers
             {
                 Items = data,
                 TotalRecords = totalRecords,
+                PageIndex = pageIndex,
+                PageSize = pageSize
             };
             return Ok(pagination);
         }
@@ -79,9 +81,9 @@ namespace KLTN.Api.Controllers
                 UpdatedAt = null,
                 DeletedAt = null,
             };
-            var result = await _db.AddAsync(newAnnouncement);
+            await _db.AddAsync(newAnnouncement);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<AnnouncementDto>(result));
+            return Ok(_mapper.Map<AnnouncementDto>(newAnnouncement));
         }
         [HttpPut("{announcementId}")]
         [ApiValidationFilter]

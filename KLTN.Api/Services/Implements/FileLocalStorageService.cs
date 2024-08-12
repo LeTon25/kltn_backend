@@ -24,13 +24,18 @@ namespace KLTN.Api.Services.Implements
             return $"/{USER_CONTENT_FOLDER_NAME}/{fileName}";
         }
 
-        public async Task SaveFileAsync(Stream mediaBinaryStream, string fileName)
+        public async Task SaveFileAsync(Stream mediaBinaryStream,string? filePath, string fileName)
         {
-            if (!Directory.Exists(_userContentFolder))
-                Directory.CreateDirectory(_userContentFolder);
+            var pathToSaveFile = this._userContentFolder;
+            if (!string.IsNullOrEmpty(filePath)) { 
+                pathToSaveFile = Path.Combine(pathToSaveFile, filePath);
+            }
+            var check = Directory.Exists(pathToSaveFile);
+            if (!check)
+                Directory.CreateDirectory(pathToSaveFile);
 
-            var filePath = Path.Combine(_userContentFolder, fileName);
-            using var output = new FileStream(filePath, FileMode.Create);
+            var realFilePath = Path.Combine(pathToSaveFile, fileName);
+            using var output = new FileStream(realFilePath, FileMode.Create);
             await mediaBinaryStream.CopyToAsync(output);
         }
     }

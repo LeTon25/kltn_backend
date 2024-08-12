@@ -36,7 +36,8 @@ namespace KLTN.Api.Controllers
         }
         [HttpPost]
         [ApiValidationFilter]
-        public async Task<IActionResult> PostUserAsync(CreateUserRequestDto request,IFormFile file)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> PostUserAsync([FromForm]CreateUserRequestDto request)
         {
             var users = _userManager.Users;
             if (await users.AnyAsync(c=>c.UserName == request.UserName))
@@ -60,16 +61,16 @@ namespace KLTN.Api.Controllers
                 CustomId = request.CustomId,
                 UserType = request.UserType,
             };
-            if(file != null && file.Length >=1 )
+            if(request.File != null && request.File.Length >= 1 )
             {
-                var filePath = $"/avatar/{user.UserName}/";
-                var avatar = await  SaveFileAsync(filePath,file);
+                var filePath = $"avatar/{user.UserName}/";
+                var avatar = await  SaveFileAsync(filePath, request.File);
                 user.Avatar = avatar;
             }    
             var result = await _userManager.CreateAsync(user, request.Password);
             if (result.Succeeded)
             {
-                return CreatedAtAction(nameof(GetByIdAsync), new { id = user.Id }, request);
+                return CreatedAtAction("GetById", new { id = user.Id },request);
             }
             else
             {
@@ -106,6 +107,8 @@ namespace KLTN.Api.Controllers
             {
                 Items = items,
                 TotalRecords = totalRecords,
+                PageSize = pageSize,
+                PageIndex = pageIndex
             };
             return Ok(pagination);
         }
@@ -124,7 +127,7 @@ namespace KLTN.Api.Controllers
         [HttpPut("{id}")]
         [ApiValidationFilter]
 
-        public async Task<IActionResult> PutUserAsync(string id, [FromBody] CreateUserRequestDto request,IFormFile file)
+        public async Task<IActionResult> PutUserAsync(string id, [FromBody] CreateUserRequestDto request)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
@@ -137,14 +140,14 @@ namespace KLTN.Api.Controllers
             user.Gender = request.Gender;
             user.CustomId = request.CustomId;
 
-            if (file != null && file.Length >=1)
+            if (request.File != null && request.File.Length >=1)
             {
                 if(!string.IsNullOrEmpty(user.Avatar))
                 {
                     await _storageService.DeleteFileAsync(user.Avatar);
                 }
-                var filePath = $"/avatar/{user.UserName}/";
-                var avatar = await SaveFileAsync(filePath, file);
+                var filePath = $"avatar/{user.UserName}/";
+                var avatar = await SaveFileAsync(filePath, request.File);
                 user.Avatar = avatar;
             }
             var result = await _userManager.UpdateAsync(user);
@@ -247,7 +250,8 @@ namespace KLTN.Api.Controllers
             var originalFileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
             var fileName = $"{originalFileName.Substring(0, originalFileName.LastIndexOf('.'))}{Path.GetExtension(originalFileName)}";
             var finalFilePath = filePath + fileName;
-            await _storageService.SaveFileAsync(file.OpenReadStream(), finalFilePath);
+
+            await _storageService.SaveFileAsync(file.OpenReadStream(),filePath, originalFileName);
 
             return finalFilePath;
         }

@@ -160,6 +160,10 @@ namespace KLTN.Infrastructure.Migrations
                     b.Property<string>("GroupId")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -214,10 +218,6 @@ namespace KLTN.Infrastructure.Migrations
                 {
                     b.Property<string>("ProjectId")
                         .HasColumnType("varchar(255)");
-
-                    b.Property<string>("CourseId")
-                        .IsRequired()
-                        .HasColumnType("longtext");
 
                     b.Property<string>("CreateUserId")
                         .IsRequired()

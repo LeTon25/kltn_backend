@@ -1,4 +1,4 @@
-using KLTN.Api.Extensions;
+﻿using KLTN.Api.Extensions;
 using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog.Events;
 using Serilog;
+using KLTN.Infrastructure.Seeders;
+using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,8 +32,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         new MySqlServerVersion(new Version(8,0,21)));
 });
 //Add Identity 
-builder.Services.AddIdentity<User,IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.ConfigureIdentity();
 //builder.Services.AddCors();
 builder.Services.AddMyService();
 
@@ -56,9 +57,22 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseDefaultFiles();
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
 
 app.MapControllers();
-
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        Log.Information("Tạo dữ liệu mẫu");
+        var dbInitializer = services.GetService<DbInitializer>();
+        dbInitializer.Seed().Wait();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Có lỗi khi chèn dữ liêu vào database.");
+    }
+}
 app.Run();

@@ -31,7 +31,7 @@ namespace KLTN.Api.Controllers
             var result = await _roleManager.CreateAsync(role);
             if (result.Succeeded)
             {
-                return CreatedAtAction(nameof(GetByIdAsync), new { id = role.Id }, request);
+                return CreatedAtAction("GetById", new { id = role.Id }, request);
             }
             else
             {
@@ -75,6 +75,8 @@ namespace KLTN.Api.Controllers
             {
                 Items = items,
                 TotalRecords = totalRecords,
+                PageSize = pageSize,
+                PageIndex = pageIndex
             };
             return Ok(pagination);
         }

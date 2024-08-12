@@ -48,6 +48,8 @@ namespace KLTN.Api.Controllers
             {
                 Items = items,
                 TotalRecords = totalRecords,
+                PageIndex = pageIndex,
+                PageSize = pageSize
             };
             return Ok(pagination);
         }
