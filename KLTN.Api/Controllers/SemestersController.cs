@@ -86,7 +86,7 @@ namespace KLTN.Api.Controllers
             };
             var result = await _db.AddAsync(newSemester);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<SemesterDto>(result));
+            return Ok(_mapper.Map<SemesterDto>(newSemester));
         }
         [HttpPut("{semesterId}")]
         [ApiValidationFilter]

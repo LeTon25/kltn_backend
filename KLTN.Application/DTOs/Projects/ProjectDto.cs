@@ -11,7 +11,6 @@ namespace KLTN.Application.DTOs.Projects
         public string ProjectId { get; set; }
         public string SubjectId { get; set; }
         public string CreateUserId { get; set; }
-        public string GroupId { get; set; }
         public string Description { get; set; }
         public bool IsApproved { get; set; }
         public string Title { get; set; }

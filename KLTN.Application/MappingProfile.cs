@@ -4,6 +4,7 @@ using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Projects;
 using KLTN.Application.DTOs.Semesters;
+using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Users;
 using KLTN.Domain.Entities;
 using System;
@@ -32,6 +33,8 @@ namespace KLTN.Application
             CreateMap<Project, ProjectDto>();
 
             CreateMap<Group,GroupDto>();
+
+            CreateMap<Subject,SubjectDto>();
 
         }
     }

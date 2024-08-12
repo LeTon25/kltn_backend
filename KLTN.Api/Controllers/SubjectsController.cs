@@ -79,7 +79,7 @@ namespace KLTN.Api.Controllers
             };
             var result = await _db.AddAsync(newSubject);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<SubjectDto>(result));
+            return Ok(_mapper.Map<SubjectDto>(newSubject));
         }
         [HttpPut("{subjectId}")]
         [ApiValidationFilter]

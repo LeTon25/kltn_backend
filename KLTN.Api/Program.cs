@@ -8,7 +8,10 @@ using Serilog.Events;
 using Serilog;
 using KLTN.Infrastructure.Seeders;
 using Microsoft.Extensions.Hosting;
-
+using FluentValidation;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
+using FluentValidation.AspNetCore;
+using KLTN.Application.DTOs.Users;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -25,6 +28,7 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Async(c => c.Console())
     .CreateLogger();
 builder.Services.AddControllers();
+ 
 //Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -40,7 +44,8 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
 });
-
+builder.Services.AddFluentValidationAutoValidation()
+    .AddValidatorsFromAssemblyContaining<CreateUserRequestDtoValidator>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

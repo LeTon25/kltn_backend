@@ -88,7 +88,7 @@ namespace KLTN.Api.Controllers
             };
             var result = await _db.AddAsync(newGroup);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<GroupDto>(result));
+            return Ok(_mapper.Map<GroupDto>(newGroup));
         }
         [HttpPut("{groupId}")]
         [ApiValidationFilter]

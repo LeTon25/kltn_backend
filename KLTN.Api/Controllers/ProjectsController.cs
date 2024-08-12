@@ -74,6 +74,7 @@ namespace KLTN.Api.Controllers
             {
                 ProjectId = newProjectId.ToString(),
                 Title = requestDto.Title,
+                SubjectId = requestDto.SubjectId,
                 Description = requestDto.Description,
                 CreatedAt = DateTime.Now,
                 IsApproved = requestDto.IsApproved,
@@ -83,7 +84,7 @@ namespace KLTN.Api.Controllers
             };
             var result = await _db.AddAsync(newProject);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<ProjectDto>(result));
+            return Ok(_mapper.Map<ProjectDto>(newProject));
         }
         [HttpPut("{projectId}")]
         [ApiValidationFilter]

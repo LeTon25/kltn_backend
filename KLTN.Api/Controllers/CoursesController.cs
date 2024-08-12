@@ -81,13 +81,16 @@ namespace KLTN.Api.Controllers
                 CourseGroup = requestDto.CourseGroup,
                 EnableInvite = requestDto.EnableInvite,
                 InviteCode = requestDto.InviteCode ?? GenerateRandomNumericString(6),
+                LecturerId = requestDto.LecturerId, 
+                SemesterId = requestDto.SemesterId,
+                SubjectId = requestDto.SubjectId,   
                 CreatedAt = DateTime.Now,
                 UpdatedAt = null,
                 DeletedAt = null,
             };
             var result = await _db.AddAsync(newCourse);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<CourseDto>(result));
+            return Ok(_mapper.Map<CourseDto>(newCourse));
         }
         [HttpPut("{courseId}")]
         [ApiValidationFilter]
@@ -102,6 +105,9 @@ namespace KLTN.Api.Controllers
             course.EnableInvite = requestDto.EnableInvite;
             course.InviteCode = requestDto.InviteCode;
             course.UpdatedAt = DateTime.Now;
+            course.LecturerId = requestDto.LecturerId;
+            course.SemesterId = requestDto.SemesterId;
+            course.SubjectId = requestDto.SubjectId; 
 
             _db.Courses.Update(course);
             var result = await _db.SaveChangesAsync();
