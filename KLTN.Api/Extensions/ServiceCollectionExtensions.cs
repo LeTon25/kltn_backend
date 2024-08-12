@@ -13,6 +13,7 @@ namespace KLTN.Api.Extensions
             services.AddAutoMapper(typeof(MappingProfile));
             services.AddTransient<IStorageService, FileLocalStorageService>();
             services.AddTransient<DbInitializer>();
+            services.AddScoped<ITokenService, TokenService>();  
             return services;
         }
     }

@@ -1,0 +1,68 @@
+﻿using KLTN.Api.Services.Interfaces;
+using KLTN.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace KLTN.Api.Services.Implements
+{
+    public class TokenService : ITokenService
+    {
+        private readonly IConfiguration _configuration;
+        private readonly SymmetricSecurityKey _key;
+        public TokenService(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            _key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["Jwt:SigningKey"]));
+        }   
+        public string GenerateTokens(User user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name,user.UserName),
+                new Claim(ClaimTypes.NameIdentifier,user.Id),
+                new Claim(ClaimTypes.Email,user.Email)
+            };
+            var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256Signature);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                 Subject = new ClaimsIdentity(claims),
+                 Expires = DateTime.Now.AddMinutes(30),
+                 SigningCredentials = creds,
+                 Issuer = _configuration["JWT:Issuer"],
+                 Audience = _configuration["JWT:Audience"]
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
+        }
+        public ClaimsPrincipal? GetTokenPrincipal(string token)
+        {
+            var validation = new TokenValidationParameters
+            {
+                IssuerSigningKey = _key,
+                ValidateLifetime = false,
+                ValidateIssuer = false,
+                ValidateAudience = false,
+            };
+            return new JwtSecurityTokenHandler().ValidateToken(token, validation, out _);
+        }
+        public string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[64];
+
+            using (var numberGenerator = RandomNumberGenerator.Create())
+            {
+                numberGenerator.GetBytes(randomNumber);
+            }
+
+            return Convert.ToBase64String(randomNumber);
+        }
+    }
+}

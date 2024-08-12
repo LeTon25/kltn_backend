@@ -6,6 +6,8 @@ using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.EnvironmentVariables;
@@ -27,6 +29,7 @@ namespace KLTN.Api.Controllers
             this._storageService = storageService;
         }
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAnnouncementsAsync()
         {
             var query = _db.Announcements;

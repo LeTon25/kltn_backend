@@ -12,11 +12,10 @@ namespace KLTN.Api.Extensions
     {
         public static IServiceCollection ConfigureIdentity(this IServiceCollection services)
         {
-            services.AddIdentity<User, IdentityRole>(options =>
+            services.AddIdentity<User,IdentityRole>(options =>
             {
                 PasswordOptions passwordOptions = GetPasswordOptions();
                 options.Password = passwordOptions;
-
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddErrorDescriber<CustomIdentityErrorDescriber>();  
