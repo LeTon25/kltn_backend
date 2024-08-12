@@ -1,45 +1,80 @@
-﻿using KLTN.Application.DTOs.Users;
+﻿using AutoMapper;
+using FluentValidation.Validators;
+using KLTN.Api.Services.Interfaces;
+using KLTN.Application.DTOs.Users;
+using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
-using KLTN.Domain.Interfaces;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
+using System.Net.Http.Headers;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace KLTN.Api.Controllers
 {
     public class UsersController : BaseController
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IUnitOfWork _uow;
+        private readonly IMapper _mapper;
+        private readonly IStorageService _storageService;
         public UsersController(
-           UserManager<IdentityUser> userManager,
+           UserManager<User> userManager,
            RoleManager<IdentityRole> roleManager,
-           IUnitOfWork uow)
+           IMapper mapper,
+           IStorageService storageService
+           )
         {
             _userManager = userManager;
             _roleManager = roleManager;
-            _uow = uow;
+            _mapper = mapper;
+            _storageService = storageService;
         }
         [HttpPost]
-        public async Task<IActionResult> PostUser(CreateUserRequestDto request)
+        [ApiValidationFilter]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> PostUserAsync([FromForm]CreateUserRequestDto request)
         {
+            var users = _userManager.Users;
+            if (await users.AnyAsync(c=>c.UserName == request.UserName))
+            {
+                return BadRequest(new ApiBadRequestResponse("Tên người dùng không được trùng"));
+            }
+            if (await users.AnyAsync(c => c.PhoneNumber == request.PhoneNumber))
+            {
+                return BadRequest(new ApiBadRequestResponse("SĐT người dùng không được trùng"));
+            }
+            if (await users.AnyAsync(c => c.Email == request.Email))
+            {
+                return BadRequest(new ApiBadRequestResponse("Email người dùng không được trùng"));
+            }
             var user = new User
             {
                 Id = Guid.NewGuid().ToString(),
                 Email = request.Email,
                 UserName = request.UserName,
                 PhoneNumber = request.PhoneNumber,
+                FullName = request.FullName,
+                Avatar = "",
+                DoB = request.DoB,
+                Gender = request.Gender,
+                CustomId = request.CustomId,
+                UserType = request.UserType,
             };
+            if(request.File != null && request.File.Length >= 1 )
+            {
+                var filePath = $"avatar/{user.UserName}/";
+                var avatar = await  SaveFileAsync(filePath, request.File);
+                user.Avatar = avatar;
+            }    
             var result = await _userManager.CreateAsync(user, request.Password);
             if (result.Succeeded)
             {
-                return CreatedAtAction(nameof(GetById), new { id = user.Id }, request);
+                return CreatedAtAction("GetById", new { id = user.Id },request);
             }
             else
             {
@@ -48,23 +83,17 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetUsers()
+        public async Task<IActionResult> GetUsersAsync()
         {
             var users = _userManager.Users;
 
-            var uservms = await users.Select(u => new UserDto()
-            {
-                Id = u.Id,
-                UserName = u.UserName,
-                Email = u.Email,
-                PhoneNumber = u.PhoneNumber,
-            }).ToListAsync();
+            var uservms = await users.Select(u=> _mapper.Map<UserDto>(u)).ToListAsync();
 
             return Ok(uservms);
         }
 
         [HttpGet("filter")]
-        public async Task<IActionResult> GetUsersPaging(string filter, int pageIndex, int pageSize)
+        public async Task<IActionResult> GetUsersPagingAsync(string filter, int pageIndex, int pageSize)
         {
             var query = _userManager.Users;
             if (!string.IsNullOrEmpty(filter))
@@ -76,49 +105,55 @@ namespace KLTN.Api.Controllers
             var totalRecords = await query.CountAsync();
             var items = await query.Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
-                .Select(u => new UserDto()
-                {
-                    Id = u.Id,
-                    UserName = u.UserName,
-                    Email = u.Email,
-                    PhoneNumber = u.PhoneNumber,
-                })
+                .Select(u =>_mapper.Map<UserDto>(u))
                 .ToListAsync();
             var pagination = new Pagination<UserDto>
             {
                 Items = items,
                 TotalRecords = totalRecords,
+                PageSize = pageSize,
+                PageIndex = pageIndex
             };
             return Ok(pagination);
         }
 
         //URL: GET: http://localhost:5001/api/users/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(string id)
+        public async Task<IActionResult> GetByIdAsync(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
                 return NotFound(new ApiNotFoundResponse($"Không tìm thấy User với id: {id}"));
 
-            var userVm = new UserDto()
-            {
-                Id = user.Id,
-                UserName = user.UserName,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
-            };
-            return Ok(userVm);
+            return Ok(_mapper.Map<UserDto>(user));
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(string id, [FromBody] CreateUserRequestDto request)
+        [ApiValidationFilter]
+
+        public async Task<IActionResult> PutUserAsync(string id, [FromBody] CreateUserRequestDto request)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
-                return NotFound(new ApiNotFoundResponse($"Cannot found user with id: {id}"));
+                return NotFound(new ApiNotFoundResponse($"Không thể tìm thấy người dùng với id : {id}"));
 
             // Tùy chỉnh các trường thông tin User sau để sau mới làm
+            user.PhoneNumber = request.PhoneNumber;
+            user.FullName = request.FullName;
+            user.DoB = request.DoB;
+            user.Gender = request.Gender;
+            user.CustomId = request.CustomId;
 
+            if (request.File != null && request.File.Length >=1)
+            {
+                if(!string.IsNullOrEmpty(user.Avatar))
+                {
+                    await _storageService.DeleteFileAsync(user.Avatar);
+                }
+                var filePath = $"avatar/{user.UserName}/";
+                var avatar = await SaveFileAsync(filePath, request.File);
+                user.Avatar = avatar;
+            }
             var result = await _userManager.UpdateAsync(user);
 
             if (result.Succeeded)
@@ -129,7 +164,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpPut("{id}/change-password")]
-        public async Task<IActionResult> PutUserPassword(string id, [FromBody] ChangeUserPasswordRequestDto request)
+        public async Task<IActionResult> PutUserPasswordAsync(string id, [FromBody] ChangeUserPasswordRequestDto request)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
@@ -145,7 +180,8 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(string id)
+        [ApiValidationFilter]
+        public async Task<IActionResult> DeleteUserAsync(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
@@ -161,19 +197,12 @@ namespace KLTN.Api.Controllers
 
             if (result.Succeeded)
             {
-                var uservm = new UserDto()
-                {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    PhoneNumber = user.PhoneNumber,
-                };
-                return Ok(uservm);
+               return Ok(_mapper.Map<UserDto>(result));
             }
             return BadRequest(new ApiBadRequestResponse(result));
         }
         [HttpGet("{userId}/roles")]
-        public async Task<IActionResult> GetUserRoles(string userId)
+        public async Task<IActionResult> GetUserRolesAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
@@ -183,15 +212,15 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpPost("{userId}/roles")]
-        public async Task<IActionResult> PostRolesToUserUser(string userId, [FromBody] RolesAssignRequestDto request)
+        public async Task<IActionResult> PostRolesToUserUserAsync(string userId, [FromBody] RolesAssignRequestDto request)
         {
             if (request.RoleNames?.Length == 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Role names cannot empty"));
+                return BadRequest(new ApiBadRequestResponse("Vai trò không được để trống"));
             }
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-                return NotFound(new ApiNotFoundResponse($"Cannot found user with id: {userId}"));
+                return NotFound(new ApiNotFoundResponse($"Không thể tìm thấy người dùng với id : {userId}"));
             var result = await _userManager.AddToRolesAsync(user, request.RoleNames);
             if (result.Succeeded)
                 return Ok();
@@ -200,7 +229,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpDelete("{userId}/roles")]
-        public async Task<IActionResult> RemoveRolesFromUser(string userId, [FromQuery] RolesAssignRequestDto request)
+        public async Task<IActionResult> RemoveRolesFromUserAsync(string userId, [FromBody] RolesAssignRequestDto request)
         {
             if (request.RoleNames?.Length == 0)
             {
@@ -218,6 +247,17 @@ namespace KLTN.Api.Controllers
                 return Ok();
 
             return BadRequest(new ApiBadRequestResponse(result));
+        }
+
+        private async Task<string> SaveFileAsync(string filePath,IFormFile file)
+        {
+            var originalFileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
+            var fileName = $"{originalFileName.Substring(0, originalFileName.LastIndexOf('.'))}{Path.GetExtension(originalFileName)}";
+            var finalFilePath = filePath + fileName;
+
+            await _storageService.SaveFileAsync(file.OpenReadStream(),filePath, originalFileName);
+
+            return finalFilePath;
         }
     }
 }

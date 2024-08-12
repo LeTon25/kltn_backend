@@ -1,0 +1,133 @@
+﻿using AutoMapper;
+using KLTN.Application.DTOs.Projects;
+using KLTN.Application.DTOs.Subjects;
+using KLTN.Application.Helpers.Filter;
+using KLTN.Application.Helpers.Pagination;
+using KLTN.Application.Helpers.Response;
+using KLTN.Domain.Entities;
+using KLTN.Infrastructure.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace KLTN.Api.Controllers
+{
+    public class ProjectsController : BaseController
+    {
+        private readonly ApplicationDbContext _db;
+        private readonly IMapper _mapper;
+        public ProjectsController(ApplicationDbContext db, IMapper mapper)
+        {
+            this._db = db;
+            this._mapper = mapper;
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetProjectsAsync()
+        {
+            var query = _db.Projects;
+
+            var projectDtos = await query.ToListAsync();
+            return Ok(_mapper.Map<List<ProjectDto>>(projectDtos));
+        }
+        [HttpGet("filter")]
+        public async Task<IActionResult> GetProjectsPagingAsync(string filter, int pageIndex, int pageSize)
+        {
+            var query = _db.Projects.AsQueryable();
+            if (!string.IsNullOrEmpty(filter))
+            {
+                query = query.Where(e => e.Title.Contains(filter));
+            }
+            var totalRecords = await query.CountAsync();
+            var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+            var data = items.Select(e => _mapper.Map<ProjectDto>(e)).ToList();
+
+            var pagination = new Pagination<ProjectDto>
+            {
+                Items = data,
+                TotalRecords = totalRecords,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            return Ok(pagination);
+        }
+        [HttpGet("{projectId}")]
+        public async Task<IActionResult> GetByIdAsync(string projectId)
+        {
+            var project = await _db.Projects.FindAsync(projectId);
+            if (project == null)
+            {
+                return NotFound(new ApiNotFoundResponse("Không tìm thấy đề tài cần tìm"));
+            }
+            return Ok(_mapper.Map<ProjectDto>(project));
+
+        }
+        [HttpPost]
+        [ApiValidationFilter]
+        public async Task<IActionResult> PostProjectAsync(CreateProjectRequestDto requestDto)
+        {
+            var projects = _db.Projects;
+            if (await projects.AnyAsync(c => c.Title.Equals(requestDto.Title)))
+            {
+                return BadRequest(new ApiBadRequestResponse("Tên đề tài không được trùng"));
+            }
+            var newProjectId = Guid.NewGuid();
+            var newProject = new Project()
+            {
+                ProjectId = newProjectId.ToString(),
+                Title = requestDto.Title,
+                SubjectId = requestDto.SubjectId,
+                Description = requestDto.Description,
+                CreatedAt = DateTime.Now,
+                IsApproved = requestDto.IsApproved,
+                CreateUserId = requestDto.CreateUserId,
+                UpdatedAt = null,
+                DeletedAt = null,
+            };
+            var result = await _db.AddAsync(newProject);
+            await _db.SaveChangesAsync();
+            return Ok(_mapper.Map<ProjectDto>(newProject));
+        }
+        [HttpPut("{projectId}")]
+        [ApiValidationFilter]
+        public async Task<IActionResult> PutProjectId(string projectId, [FromBody] CreateProjectRequestDto requestDto)
+        {
+            var project = await _db.Projects.FirstOrDefaultAsync(c => c.ProjectId == projectId);
+            if (project == null)
+            {
+                return NotFound(new ApiNotFoundResponse($"Không tìm thấy đề tài với id : {projectId}"));
+            }
+            if (await _db.Projects.AnyAsync(e => e.Title == requestDto.Title && e.ProjectId != projectId))
+            {
+                return BadRequest(new ApiBadRequestResponse("Tên đề tài không được trùng"));
+            }
+
+            project.Title = requestDto.Title;
+            project.Description = requestDto.Description;
+            project.UpdatedAt=DateTime.Now;
+            project.IsApproved = requestDto.IsApproved;
+            _db.Projects.Update(project);
+            var result = await _db.SaveChangesAsync();
+            if (result > 0)
+            {
+                return NoContent();
+            }
+            return BadRequest(new ApiBadRequestResponse("Cập nhật đề tài thất bại"));
+        }
+
+        [HttpDelete("{projectId}")]
+        public async Task<IActionResult> DeleteProjectAsync(string projectId)
+        {
+            var project = await _db.Projects.FirstOrDefaultAsync(c => c.ProjectId == projectId);
+            if (project == null)
+            {
+                return NotFound(new ApiNotFoundResponse("Không thể tìm thấy đề tài với id"));
+            }
+            _db.Projects.Remove(project);
+            var result = await _db.SaveChangesAsync();
+            if (result > 0)
+            {
+                return Ok(_mapper.Map<ProjectDto>(project));
+            }
+            return BadRequest(new ApiBadRequestResponse("Xóa thông tin đề tài thất bại"));
+        }
+    }
+}
