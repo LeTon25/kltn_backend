@@ -52,6 +52,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("JWT:SigningKey").Value))
     };
 });
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddAuthorization();
 //Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -61,7 +62,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 
-//builder.Services.AddCors();
+builder.Services.AddCors(
+    options =>
+    {
+        options.AddPolicy("AllowAll", builder =>
+        {
+            builder.AllowAnyOrigin();
+        });
+    }
+);
 builder.Services.AddMyService();
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
@@ -111,6 +120,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowAll");
 
 app.UseStaticFiles();
 app.UseDefaultFiles();

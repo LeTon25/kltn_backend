@@ -29,19 +29,44 @@ namespace KLTN.Api.Controllers
             this._storageService = storageService;
         }
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetAnnouncementsAsync()
         {
-            var query = _db.Announcements;
-
+            var query = from announcement in _db.Announcements
+                        join user in _db.Users on announcement.UserId equals user.Id into announcementUsers
+                        from user in announcementUsers.DefaultIfEmpty()
+                        select new AnnouncementDto
+                        {
+                            AnnouncementId= announcement.AnnouncementId,
+                            UserId=announcement.UserId,
+                            CourseId=announcement.CourseId,
+                            Content=announcement.Content,
+                            AttachedLinks=announcement.AttachedLinks,
+                            CreatedAt=announcement.CreatedAt,
+                            UpdatedAt=announcement.UpdatedAt,
+                            DeletedAt=announcement.DeletedAt,
+                            CreateUserName=user.FullName
+                        };
             var announcementDtos = await query.ToListAsync();
             return Ok(_mapper.Map<List<AnnouncementDto>>(announcementDtos));
         }
         [HttpGet("filter")]
         public async Task<IActionResult> GetAnnouncementsPagingAsync(string filter,int pageIndex,int pageSize)
         {
-            var query = _db.Announcements.AsQueryable();
-            
+            var query = from announcement in _db.Announcements
+                        join user in _db.Users on announcement.UserId equals user.Id into announcementUsers
+                        from user in announcementUsers.DefaultIfEmpty()
+                        select new AnnouncementDto
+                        {
+                            AnnouncementId = announcement.AnnouncementId,
+                            UserId = announcement.UserId,
+                            CourseId = announcement.CourseId,
+                            Content = announcement.Content,
+                            AttachedLinks = announcement.AttachedLinks,
+                            CreatedAt = announcement.CreatedAt,
+                            UpdatedAt = announcement.UpdatedAt,
+                            DeletedAt = announcement.DeletedAt,
+                            CreateUserName = user.FullName
+                        };
             var totalRecords = await query.CountAsync();
             var items= await query.Skip((pageIndex-1)*pageSize).Take(pageSize).ToListAsync();
             var data = items.Select(e => _mapper.Map<AnnouncementDto>(e)).ToList();
@@ -58,12 +83,26 @@ namespace KLTN.Api.Controllers
         [HttpGet("{announcementId}")]
         public async Task<IActionResult> GetByIdAsync(string announcementId)
         {
-            var announcement = await _db.Announcements.FindAsync(announcementId);
-            if(announcement == null)
+            var query = from announcement in _db.Announcements where announcement.AnnouncementId == announcementId
+                        join user in _db.Users on announcement.UserId equals user.Id into announcementUsers
+                        from user in announcementUsers.DefaultIfEmpty()
+                        select new AnnouncementDto
+                        {
+                            AnnouncementId = announcement.AnnouncementId,
+                            UserId = announcement.UserId,
+                            CourseId = announcement.CourseId,
+                            Content = announcement.Content,
+                            AttachedLinks = announcement.AttachedLinks,
+                            CreatedAt = announcement.CreatedAt,
+                            UpdatedAt = announcement.UpdatedAt,
+                            DeletedAt = announcement.DeletedAt,
+                            CreateUserName = user.FullName
+                        };
+            if (await query.CountAsync() == 0)
             {
-                return NotFound(new ApiNotFoundResponse("Không tìm thấy học kỳ cần tìm"));
+                return NotFound(new ApiNotFoundResponse("Không tìm thấy thông báo cần tìm"));
             }
-            return Ok(_mapper.Map<AnnouncementDto>(announcement));  
+            return Ok(_mapper.Map<AnnouncementDto>(await query.FirstOrDefaultAsync()));  
 
         }
         [HttpPost]
@@ -107,7 +146,7 @@ namespace KLTN.Api.Controllers
             {
                 return NoContent(); 
             }
-            return BadRequest(new ApiBadRequestResponse("Cập nhật học kì thất bại"));
+            return BadRequest(new ApiBadRequestResponse("Cập nhật thông báo thất bại"));
         }
 
         [HttpDelete("{announcementId}")]
@@ -115,14 +154,14 @@ namespace KLTN.Api.Controllers
         {
             var announcement = await _db.Announcements.FirstOrDefaultAsync(c => c.AnnouncementId == announcementId);
             if (announcement == null) {
-                return NotFound(new ApiNotFoundResponse("Không thể tìm thấy học kì với id"));
+                return NotFound(new ApiNotFoundResponse("Không thể tìm thấy thông báo với id"));
             }
             _db.Announcements.Remove(announcement);
             var result = await _db.SaveChangesAsync();
             if (result > 0) {
                 return Ok(_mapper.Map<AnnouncementDto>(announcement));
             }
-            return BadRequest(new ApiBadRequestResponse("Xóa thông tin học kì thất bại"));
+            return BadRequest(new ApiBadRequestResponse("Xóa thông tin thông báo thất bại"));
         }
 
     }

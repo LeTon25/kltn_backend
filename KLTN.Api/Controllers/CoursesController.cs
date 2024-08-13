@@ -24,10 +24,29 @@ namespace KLTN.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCoursesAsync()
         {
-            var query = _db.Courses;
-
+            var query = from course in _db.Courses
+                        join subject in _db.Subjects on course.SubjectId equals subject.SubjectId
+                        join semester in _db.Semesters on course.SemesterId equals semester.SemesterId
+                        join instructor in _db.Users on course.LecturerId equals instructor.Id
+                        select new CourseDto
+                        {
+                            CourseId = course.CourseId,
+                            SubjectId =subject.SubjectId,
+                            SemesterId =semester.SemesterId,
+                            CourseGroup =course.CourseGroup,
+                            Background =course.Background,
+                            InviteCode =course.InviteCode,
+                            EnableInvite = course.EnableInvite,
+                            LecturerId = instructor.Id,
+                            CreatedAt =course.CreatedAt,
+                            UpdatedAt =course.UpdatedAt,
+                            DeletedAt =course.DeletedAt,
+                            SubjectName =subject.Name,
+                            SemesterName =semester.Name,
+                            LecturerName =instructor.FullName
+                        };
             var courseDtos = await query.ToListAsync();
-            return Ok(_mapper.Map<List<CourseDto>>(courseDtos));
+            return Ok(courseDtos);
         }
         [HttpGet("filter")]
         public async Task<IActionResult> GetCoursesPagingAsync(string filter, int pageIndex, int pageSize)
@@ -37,34 +56,115 @@ namespace KLTN.Api.Controllers
             {
                 query = query.Where(e => e.CourseGroup.Contains(filter));
             }
-            var totalRecords = await query.CountAsync();
-            var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
-            var data = items.Select(e => _mapper.Map<CourseDto>(e)).ToList();
+            var finalQuery = from course in query
+                        join instructor in _db.Users on course.LecturerId equals instructor.Id into courseInstructors
+                        from instructor in courseInstructors.DefaultIfEmpty()
+
+                        join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemesters
+                        from semester in courseSemesters.DefaultIfEmpty()
+
+                        join subject in _db.Subjects on course.SubjectId equals subject.SubjectId into courseSubjects
+                        from subject in courseSubjects.DefaultIfEmpty()
+                        select new CourseDto
+                        {
+                            CourseId = course.CourseId,
+                            SubjectId = course.SubjectId,
+                            SemesterId = course.SemesterId,
+                            CourseGroup = course.CourseGroup,
+                            Background = course.Background,
+                            InviteCode = course.InviteCode,
+                            EnableInvite = course.EnableInvite,
+                            LecturerId = course.LecturerId,
+                            CreatedAt = course.CreatedAt,
+                            UpdatedAt = course.UpdatedAt,
+                            DeletedAt = course.DeletedAt,
+                            SubjectName = subject != null ? subject.Name : "Không tìm thấy",
+                            SemesterName = semester != null ? semester.Name : "Không tìm thấy",
+                            LecturerName = instructor != null ? instructor.FullName : "Không tìm thấy"
+                        }; ;
+            var totalRecords = await finalQuery.CountAsync();
+            var items = await finalQuery.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
 
             var pagination = new Pagination<CourseDto>
             {
-                Items = data,
+                Items = items,
                 TotalRecords = totalRecords,
                 PageIndex = pageIndex,
                 PageSize = pageSize
             };
             return Ok(pagination);
         }
-
-        [HttpGet("{lecturerId}/filter")]
-        public async Task<IActionResult> GetByIdAsync(string lecturerId, int pageIndex, int pageSize)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetByIdAsync(string id)
         {
-            var query = _db.Courses.AsQueryable();
+            var query = from course in _db.Courses where course.CourseId == id
+                        join instructor in _db.Users on course.LecturerId equals instructor.Id into courseInstructors
+                        from instructor in courseInstructors.DefaultIfEmpty()
+                        
+                        join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemesters
+                        from semester in courseSemesters.DefaultIfEmpty()
+                        
+                        join subject in _db.Subjects on course.SubjectId equals subject.SubjectId into courseSubjects
+                        from subject in courseSubjects.DefaultIfEmpty()
+                        select new CourseDto
+                        {
+                            CourseId = course.CourseId,
+                            SubjectId = course.SubjectId,
+                            SemesterId = course.SemesterId,
+                            CourseGroup = course.CourseGroup,
+                            Background = course.Background,
+                            InviteCode = course.InviteCode,
+                            EnableInvite = course.EnableInvite,
+                            LecturerId = course.LecturerId,
+                            CreatedAt = course.CreatedAt,
+                            UpdatedAt = course.UpdatedAt,
+                            DeletedAt = course.DeletedAt,
+                            SubjectName = subject != null ? subject.Name : "Không tìm thấy",
+                            SemesterName = semester != null ? semester.Name : "Không tìm thấy",
+                            LecturerName = instructor != null ? instructor.FullName : "Không tìm thấy"
+                        }; 
+            if( await query.CountAsync() == 0)
+            {
+                return NotFound(new ApiNotFoundResponse($"Không tìm thấy khóa học với id : {id}"));
+            }
+            return Ok(await query.FirstOrDefaultAsync());
+        }
+        [HttpGet("{lecturerId}/filter")]
+        public async Task<IActionResult> GetByLecturerIdAsync(string lecturerId, int pageIndex, int pageSize)
+        {
+            var query = from course in _db.Courses
+                        where course.LecturerId == lecturerId
+                        join instructor in _db.Users on course.LecturerId equals instructor.Id into courseInstructors
+                        from instructor in courseInstructors.DefaultIfEmpty()
 
-            query = query.Where(x => x.LecturerId == lecturerId); 
+                        join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemesters
+                        from semester in courseSemesters.DefaultIfEmpty()
 
+                        join subject in _db.Subjects on course.SubjectId equals subject.SubjectId into courseSubjects
+                        from subject in courseSubjects.DefaultIfEmpty()
+                        select new CourseDto
+                        {
+                            CourseId = course.CourseId,
+                            SubjectId = course.SubjectId,
+                            SemesterId = course.SemesterId,
+                            CourseGroup = course.CourseGroup,
+                            Background = course.Background,
+                            InviteCode = course.InviteCode,
+                            EnableInvite = course.EnableInvite,
+                            LecturerId = course.LecturerId,
+                            CreatedAt = course.CreatedAt,
+                            UpdatedAt = course.UpdatedAt,
+                            DeletedAt = course.DeletedAt,
+                            SubjectName = subject != null ? subject.Name : "Không tìm thấy",
+                            SemesterName = semester != null ? semester.Name : "Không tìm thấy",
+                            LecturerName = instructor != null ? instructor.FullName : "Không tìm thấy"
+                        };
             var totalRecords = await query.CountAsync();
             var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
-            var data = items.Select(e => _mapper.Map<CourseDto>(e)).ToList();
 
             var pagination = new Pagination<CourseDto>
             {
-                Items = data,
+                Items = items,
                 TotalRecords = totalRecords,
             };
             return Ok(pagination);
@@ -113,7 +213,7 @@ namespace KLTN.Api.Controllers
             var result = await _db.SaveChangesAsync();
             if (result > 0)
             {
-                return NoContent();
+                return Ok(_mapper.Map<CourseDto>(course));
             }
             return BadRequest(new ApiBadRequestResponse("Cập nhật lớp học thất bại"));
         }
