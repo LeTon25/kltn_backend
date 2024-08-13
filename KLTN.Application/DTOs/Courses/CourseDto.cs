@@ -19,5 +19,9 @@ namespace KLTN.Application.DTOs.Courses
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
+        public string SubjectName { get; set; } 
+        public string SemesterName { get; set; }    
+        public string LecturerName { get; set; }    
+
     }
 }

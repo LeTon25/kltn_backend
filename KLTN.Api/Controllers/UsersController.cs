@@ -191,13 +191,13 @@ namespace KLTN.Api.Controllers
             var otherUsers = adminUsers.Where(x => x.Id != id).ToList();
             if (otherUsers.Count == 0)
             {
-                return BadRequest(new ApiBadRequestResponse("You cannot remove the only admin user remaining."));
+                return BadRequest(new ApiBadRequestResponse("Bạn không thể xóa Admin duy nhất của hệ thống."));
             }
             var result = await _userManager.DeleteAsync(user);
 
             if (result.Succeeded)
             {
-               return Ok(_mapper.Map<UserDto>(result));
+               return Ok(_mapper.Map<UserDto>(user));
             }
             return BadRequest(new ApiBadRequestResponse(result));
         }

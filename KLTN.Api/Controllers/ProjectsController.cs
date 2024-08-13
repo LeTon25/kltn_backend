@@ -23,10 +23,28 @@ namespace KLTN.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProjectsAsync()
         {
-            var query = _db.Projects;
+            var query = from project in _db.Projects
+                        join subject in _db.Subjects on project.SubjectId equals subject.SubjectId into projectSubjects
+                        from subject in projectSubjects.DefaultIfEmpty()
 
+                        join user in _db.Users on project.CreateUserId equals user.Id into projectUser
+                        from user in projectUser.DefaultIfEmpty()
+                        select new ProjectDto
+                        {
+                            ProjectId = project.ProjectId,
+                            SubjectId = project.SubjectId,
+                            CreateUserId =project.CreateUserId,
+                            Description =project.Description,
+                            IsApproved = project.IsApproved,
+                            Title = project.Title,
+                            CreatedAt = project.CreatedAt,
+                            UpdatedAt =project.UpdatedAt,
+                            DeletedAt =project.DeletedAt,
+                            SubjectName = subject != null ? subject.Name : "Không xác định",
+                            CreateUserName =user != null ? user.FullName : "Không xác định" ,
+                        };
             var projectDtos = await query.ToListAsync();
-            return Ok(_mapper.Map<List<ProjectDto>>(projectDtos));
+            return Ok(projectDtos);
         }
         [HttpGet("filter")]
         public async Task<IActionResult> GetProjectsPagingAsync(string filter, int pageIndex, int pageSize)
@@ -36,13 +54,31 @@ namespace KLTN.Api.Controllers
             {
                 query = query.Where(e => e.Title.Contains(filter));
             }
-            var totalRecords = await query.CountAsync();
-            var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
-            var data = items.Select(e => _mapper.Map<ProjectDto>(e)).ToList();
+            var finalQuery = from project in _db.Projects
+                        join subject in _db.Subjects on project.SubjectId equals subject.SubjectId into projectSubjects
+                        from subject in projectSubjects.DefaultIfEmpty()
 
+                        join user in _db.Users on project.CreateUserId equals user.Id into projectUser
+                        from user in projectUser.DefaultIfEmpty()
+                        select new ProjectDto
+                        {
+                            ProjectId = project.ProjectId,
+                            SubjectId = project.SubjectId,
+                            CreateUserId = project.CreateUserId,
+                            Description = project.Description,
+                            IsApproved = project.IsApproved,
+                            Title = project.Title,
+                            CreatedAt = project.CreatedAt,
+                            UpdatedAt = project.UpdatedAt,
+                            DeletedAt = project.DeletedAt,
+                            SubjectName = subject != null ? subject.Name : "Không xác định",
+                            CreateUserName = user != null ? user.FullName : "Không xác định",
+                        };
+            var totalRecords = await finalQuery.CountAsync();
+            var items = await finalQuery.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
             var pagination = new Pagination<ProjectDto>
             {
-                Items = data,
+                Items = items,
                 TotalRecords = totalRecords,
                 PageIndex = pageIndex,
                 PageSize = pageSize
@@ -52,12 +88,31 @@ namespace KLTN.Api.Controllers
         [HttpGet("{projectId}")]
         public async Task<IActionResult> GetByIdAsync(string projectId)
         {
-            var project = await _db.Projects.FindAsync(projectId);
-            if (project == null)
+            var finalQuery = from project in _db.Projects where project.ProjectId == projectId
+                             join subject in _db.Subjects on project.SubjectId equals subject.SubjectId into projectSubjects
+                             from subject in projectSubjects.DefaultIfEmpty()
+
+                             join user in _db.Users on project.CreateUserId equals user.Id into projectUser
+                             from user in projectUser.DefaultIfEmpty()
+                             select new ProjectDto
+                             {
+                                 ProjectId = project.ProjectId,
+                                 SubjectId = project.SubjectId,
+                                 CreateUserId = project.CreateUserId,
+                                 Description = project.Description,
+                                 IsApproved = project.IsApproved,
+                                 Title = project.Title,
+                                 CreatedAt = project.CreatedAt,
+                                 UpdatedAt = project.UpdatedAt,
+                                 DeletedAt = project.DeletedAt,
+                                 SubjectName = subject != null ? subject.Name : "Không xác định",
+                                 CreateUserName = user != null ? user.FullName : "Không xác định",
+                             };
+            if(await finalQuery.CountAsync() == 0)
             {
                 return NotFound(new ApiNotFoundResponse("Không tìm thấy đề tài cần tìm"));
-            }
-            return Ok(_mapper.Map<ProjectDto>(project));
+            }    
+            return Ok(await finalQuery.FirstOrDefaultAsync());
 
         }
         [HttpPost]

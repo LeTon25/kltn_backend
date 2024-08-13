@@ -28,10 +28,27 @@ namespace KLTN.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetGroupsAsync()
         {
-            var query = _db.Groups;
+            var query = from g in _db.Groups
+                        join project in _db.Projects on g.ProjectId equals project.ProjectId into gProject
+                        from project in gProject.DefaultIfEmpty()
+                        
+                        join course in _db.Courses on g.CourseId equals course.CourseId into gCourse
+                        from course in gCourse.DefaultIfEmpty()
+                        select new GroupDto
+                        {
+                            GroupId= g.GroupId,
+                            GroupName=g.GroupName,
+                            ProjectId=project != null ? project.Title : "Chưa đăng ký",
+                            CourseId=g.CourseId,
+                            NumberOfMembers=g.NumberOfMembers,
+                            CreatedAt=g.CreatedAt,
+                            UpdatedAt=g.UpdatedAt,
+                            DeletedAt=g.DeletedAt,
+                            CourseGroup= course != null ? course.CourseGroup :"Không tìm thấy"
+                        };
 
             var groupDtos = await query.ToListAsync();
-            return Ok(_mapper.Map<List<GroupDto>>(groupDtos));
+            return Ok(groupDtos);
         }
         [HttpGet("filter")]
         public async Task<IActionResult> GetGroupsPagingAsync(string filter, int pageIndex, int pageSize)
@@ -41,13 +58,30 @@ namespace KLTN.Api.Controllers
             {
                 query = query.Where(e => e.GroupName.Contains(filter));
             }
-            var totalRecords = await query.CountAsync();
-            var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
-            var data = items.Select(e => _mapper.Map<GroupDto>(e)).ToList();
+            var finalQuery =from g in query
+                            join project in _db.Projects on g.ProjectId equals project.ProjectId into gProject
+                            from project in gProject.DefaultIfEmpty()
+
+                            join course in _db.Courses on g.CourseId equals course.CourseId into gCourse
+                            from course in gCourse.DefaultIfEmpty()
+                            select new GroupDto
+                                {
+                                GroupId = g.GroupId,
+                                GroupName = g.GroupName,
+                                ProjectId = project != null ? project.Title : "Chưa đăng ký",
+                                CourseId = g.CourseId,
+                                NumberOfMembers = g.NumberOfMembers,
+                                CreatedAt = g.CreatedAt,
+                                UpdatedAt = g.UpdatedAt,
+                                DeletedAt = g.DeletedAt,
+                                CourseGroup = course != null ? course.CourseGroup : "Không tìm thấy"
+                            };
+            var totalRecords = await finalQuery.CountAsync();
+            var items = await finalQuery.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
 
             var pagination = new Pagination<GroupDto>
             {
-                Items = data,
+                Items = items,
                 TotalRecords = totalRecords,
                 PageSize = pageSize,
                 PageIndex= pageIndex,
@@ -57,12 +91,31 @@ namespace KLTN.Api.Controllers
         [HttpGet("{groupId}")]
         public async Task<IActionResult> GetByIdAsync(string groupId)
         {
-            var group = await _db.Groups.FindAsync(groupId);
-            if (group == null)
+            var query = from g in _db.Groups where g.GroupId == groupId
+                        join project in _db.Projects on g.ProjectId equals project.ProjectId into gProject
+                        from project in gProject.DefaultIfEmpty()
+
+                        join course in _db.Courses on g.CourseId equals course.CourseId into gCourse
+                        from course in gCourse.DefaultIfEmpty()
+                        select new GroupDto
+                        {
+                            GroupId = g.GroupId,
+                            GroupName = g.GroupName,
+                            ProjectId = project != null ? project.Title : "Chưa đăng ký",
+                            CourseId = g.CourseId,
+                            NumberOfMembers = g.NumberOfMembers,
+                            CreatedAt = g.CreatedAt,
+                            UpdatedAt = g.UpdatedAt,
+                            DeletedAt = g.DeletedAt,
+                            CourseGroup = course != null ? course.CourseGroup : "Không tìm thấy"
+                        };
+
+            if (await query.CountAsync() == 0)
             {
                 return NotFound(new ApiNotFoundResponse("Không tìm thấy nhóm cần tìm"));
             }
-            return Ok(_mapper.Map<GroupDto>(group));
+
+            return Ok(_mapper.Map<GroupDto>(await query.FirstOrDefaultAsync()));
 
         }
         [HttpPost]
@@ -160,7 +213,7 @@ namespace KLTN.Api.Controllers
                 group.NumberOfMembers += requestDto.studentIds.Length;
             }
             await _db.SaveChangesAsync();
-            return NoContent();
+            return Ok("Thêm thành công");
         }
 
     }
