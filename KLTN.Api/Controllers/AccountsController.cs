@@ -39,10 +39,6 @@ namespace KLTN.Api.Controllers
             {
                 return BadRequest(new ApiBadRequestResponse("Tên người dùng không được trùng"));
             }
-            if (await users.AnyAsync(c => c.PhoneNumber == requestDto.PhoneNumber))
-            {
-                return BadRequest(new ApiBadRequestResponse("SĐT người dùng không được trùng"));
-            }
             if (await users.AnyAsync(c => c.Email == requestDto.Email))
             {
                 return BadRequest(new ApiBadRequestResponse("Email người dùng không được trùng"));
@@ -53,10 +49,10 @@ namespace KLTN.Api.Controllers
                 UserName = requestDto.UserName,
                 Email = requestDto.Email,
                 LockoutEnabled = false,
-                Gender = requestDto.Gender,
-                DoB = requestDto.DoB,
+                Gender = true,
+                DoB = null,
                 UserType = Domain.Enums.UserType.Student,
-                FullName = requestDto.FullName,
+                FullName = "",
                 CreatedAt = DateTime.Now,
             },requestDto.Password);
             if (result.Succeeded)
