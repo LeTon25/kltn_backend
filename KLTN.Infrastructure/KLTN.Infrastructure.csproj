@@ -24,4 +24,8 @@
     <ProjectReference Include="..\KLTN.Domain\KLTN.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>

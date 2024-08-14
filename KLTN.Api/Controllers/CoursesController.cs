@@ -1,0 +1,283 @@
+﻿using AutoMapper;
+using KLTN.Application.DTOs.Courses;
+using KLTN.Application.Helpers.Filter;
+using KLTN.Application.Helpers.Pagination;
+using KLTN.Application.Helpers.Response;
+using KLTN.Domain.Entities;
+using KLTN.Infrastructure.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace KLTN.Api.Controllers
+{
+    public class CoursesController : BaseController
+    {
+        private readonly ApplicationDbContext _db;
+        private readonly IMapper _mapper;
+        public CoursesController(ApplicationDbContext _db,
+            IMapper _mapper) 
+        { 
+            this._db = _db;
+            this._mapper = _mapper;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCoursesAsync()
+        {
+            var query = from course in _db.Courses
+                        join subject in _db.Subjects on course.SubjectId equals subject.SubjectId
+                        join semester in _db.Semesters on course.SemesterId equals semester.SemesterId
+                        join instructor in _db.Users on course.LecturerId equals instructor.Id
+                        select new CourseDto
+                        {
+                            CourseId = course.CourseId,
+                            SubjectId =subject.SubjectId,
+                            SemesterId =semester.SemesterId,
+                            CourseGroup =course.CourseGroup,
+                            Background =course.Background,
+                            InviteCode =course.InviteCode,
+                            EnableInvite = course.EnableInvite,
+                            LecturerId = instructor.Id,
+                            CreatedAt =course.CreatedAt,
+                            UpdatedAt =course.UpdatedAt,
+                            DeletedAt =course.DeletedAt,
+                            SubjectName =subject.Name,
+                            SemesterName =semester.Name,
+                            LecturerName =instructor.FullName
+                        };
+            var courseDtos = await query.ToListAsync();
+            return Ok(courseDtos);
+        }
+        [HttpGet("filter")]
+        public async Task<IActionResult> GetCoursesPagingAsync(string filter, int pageIndex, int pageSize)
+        {
+            var query = _db.Courses.AsQueryable();
+            if (!string.IsNullOrEmpty(filter))
+            {
+                query = query.Where(e => e.CourseGroup.Contains(filter));
+            }
+            var finalQuery = from course in query
+                        join instructor in _db.Users on course.LecturerId equals instructor.Id into courseInstructors
+                        from instructor in courseInstructors.DefaultIfEmpty()
+
+                        join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemesters
+                        from semester in courseSemesters.DefaultIfEmpty()
+
+                        join subject in _db.Subjects on course.SubjectId equals subject.SubjectId into courseSubjects
+                        from subject in courseSubjects.DefaultIfEmpty()
+                        select new CourseDto
+                        {
+                            CourseId = course.CourseId,
+                            SubjectId = course.SubjectId,
+                            SemesterId = course.SemesterId,
+                            CourseGroup = course.CourseGroup,
+                            Background = course.Background,
+                            InviteCode = course.InviteCode,
+                            EnableInvite = course.EnableInvite,
+                            LecturerId = course.LecturerId,
+                            CreatedAt = course.CreatedAt,
+                            UpdatedAt = course.UpdatedAt,
+                            DeletedAt = course.DeletedAt,
+                            SubjectName = subject != null ? subject.Name : "Không tìm thấy",
+                            SemesterName = semester != null ? semester.Name : "Không tìm thấy",
+                            LecturerName = instructor != null ? instructor.FullName : "Không tìm thấy"
+                        }; ;
+            var totalRecords = await finalQuery.CountAsync();
+            var items = await finalQuery.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            var pagination = new Pagination<CourseDto>
+            {
+                Items = items,
+                TotalRecords = totalRecords,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            return Ok(pagination);
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetByIdAsync(string id)
+        {
+            var query = from course in _db.Courses where course.CourseId == id
+                        join instructor in _db.Users on course.LecturerId equals instructor.Id into courseInstructors
+                        from instructor in courseInstructors.DefaultIfEmpty()
+                        
+                        join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemesters
+                        from semester in courseSemesters.DefaultIfEmpty()
+                        
+                        join subject in _db.Subjects on course.SubjectId equals subject.SubjectId into courseSubjects
+                        from subject in courseSubjects.DefaultIfEmpty()
+                        select new CourseDto
+                        {
+                            CourseId = course.CourseId,
+                            SubjectId = course.SubjectId,
+                            SemesterId = course.SemesterId,
+                            CourseGroup = course.CourseGroup,
+                            Background = course.Background,
+                            InviteCode = course.InviteCode,
+                            EnableInvite = course.EnableInvite,
+                            LecturerId = course.LecturerId,
+                            CreatedAt = course.CreatedAt,
+                            UpdatedAt = course.UpdatedAt,
+                            DeletedAt = course.DeletedAt,
+                            SubjectName = subject != null ? subject.Name : "Không tìm thấy",
+                            SemesterName = semester != null ? semester.Name : "Không tìm thấy",
+                            LecturerName = instructor != null ? instructor.FullName : "Không tìm thấy"
+                        }; 
+            if( await query.CountAsync() == 0)
+            {
+                return NotFound(new ApiNotFoundResponse($"Không tìm thấy khóa học với id : {id}"));
+            }
+            return Ok(await query.FirstOrDefaultAsync());
+        }
+        [HttpGet("{lecturerId}/filter")]
+        public async Task<IActionResult> GetByLecturerIdAsync(string lecturerId, int pageIndex, int pageSize)
+        {
+            var query = from course in _db.Courses
+                        where course.LecturerId == lecturerId
+                        join instructor in _db.Users on course.LecturerId equals instructor.Id into courseInstructors
+                        from instructor in courseInstructors.DefaultIfEmpty()
+
+                        join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemesters
+                        from semester in courseSemesters.DefaultIfEmpty()
+
+                        join subject in _db.Subjects on course.SubjectId equals subject.SubjectId into courseSubjects
+                        from subject in courseSubjects.DefaultIfEmpty()
+                        select new CourseDto
+                        {
+                            CourseId = course.CourseId,
+                            SubjectId = course.SubjectId,
+                            SemesterId = course.SemesterId,
+                            CourseGroup = course.CourseGroup,
+                            Background = course.Background,
+                            InviteCode = course.InviteCode,
+                            EnableInvite = course.EnableInvite,
+                            LecturerId = course.LecturerId,
+                            CreatedAt = course.CreatedAt,
+                            UpdatedAt = course.UpdatedAt,
+                            DeletedAt = course.DeletedAt,
+                            SubjectName = subject != null ? subject.Name : "Không tìm thấy",
+                            SemesterName = semester != null ? semester.Name : "Không tìm thấy",
+                            LecturerName = instructor != null ? instructor.FullName : "Không tìm thấy"
+                        };
+            var totalRecords = await query.CountAsync();
+            var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            var pagination = new Pagination<CourseDto>
+            {
+                Items = items,
+                TotalRecords = totalRecords,
+            };
+            return Ok(pagination);
+        }
+        [HttpPost]
+        [ApiValidationFilter]
+        public async Task<IActionResult> PostCourseAsync(CreateCourseRequestDto requestDto)
+        {
+            var courses = _db.Courses;
+            var newCourseId = Guid.NewGuid();
+            var newCourse = new Course()
+            {
+                CourseId = newCourseId.ToString(),
+                CourseGroup = requestDto.CourseGroup,
+                EnableInvite = requestDto.EnableInvite,
+                InviteCode = requestDto.InviteCode ?? GenerateRandomNumericString(6),
+                LecturerId = requestDto.LecturerId, 
+                SemesterId = requestDto.SemesterId,
+                SubjectId = requestDto.SubjectId,   
+                CreatedAt = DateTime.Now,
+                UpdatedAt = null,
+                DeletedAt = null,
+            };
+            var result = await _db.AddAsync(newCourse);
+            await _db.SaveChangesAsync();
+            return Ok(_mapper.Map<CourseDto>(newCourse));
+        }
+        [HttpPut("{courseId}")]
+        [ApiValidationFilter]
+        public async Task<IActionResult> PutCourseId(string courseId, [FromBody] CreateCourseRequestDto requestDto)
+        {
+            var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
+            if(course == null)
+            {
+                return NotFound(new ApiNotFoundResponse("Không tìm thấy lớp"));
+            }    
+            course.CourseGroup = requestDto.CourseGroup;
+            course.EnableInvite = requestDto.EnableInvite;
+            course.InviteCode = requestDto.InviteCode;
+            course.UpdatedAt = DateTime.Now;
+            course.LecturerId = requestDto.LecturerId;
+            course.SemesterId = requestDto.SemesterId;
+            course.SubjectId = requestDto.SubjectId; 
+
+            _db.Courses.Update(course);
+            var result = await _db.SaveChangesAsync();
+            if (result > 0)
+            {
+                return Ok(_mapper.Map<CourseDto>(course));
+            }
+            return BadRequest(new ApiBadRequestResponse("Cập nhật lớp học thất bại"));
+        }
+
+        [HttpDelete("{courseId}")]
+        public async Task<IActionResult> DeleteCourseAsync(string courseId)
+        {
+            var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
+            if (course == null)
+            {
+                return NotFound(new ApiNotFoundResponse("Không thể tìm thấy lớp học với id"));
+            }
+            _db.Courses.Remove(course);
+            var result = await _db.SaveChangesAsync();
+            if (result > 0)
+            {
+                return Ok(_mapper.Map<CourseDto>(course));
+            }
+            return BadRequest(new ApiBadRequestResponse("Xóa thông tin lớp học thất bại"));
+        }
+        [HttpPost("{courseId}/apply-code")]
+        public async Task<IActionResult> PostApplyCode(string courseId,JoinCourseViaCodeDto requestDto )
+        {
+            var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
+            if (course == null) { 
+                return NotFound(new ApiNotFoundResponse("Không tìm thấy lớp học"));
+            }
+            
+            if(course.EnableInvite == false)
+            {
+                return BadRequest(new ApiBadRequestResponse("Không thể tham gia lớp học qua mã mời.Vui lòng liên hệ giáo viên"));
+            }    
+
+            if(course.InviteCode != requestDto.InviteCode)
+            {
+                return BadRequest(new ApiBadRequestResponse("Mã lớp học không chính xác"));
+            }
+
+            await _db.EnrolledCourse.AddAsync(new EnrolledCourse()
+            {
+                CourseId = courseId,
+                StudentId = "tmp"
+            });
+            var result = await _db.SaveChangesAsync();
+            if (result > 0) {
+                return Ok();
+            }
+            else
+            {
+                return BadRequest(new ApiBadRequestResponse("Không thể tham gia lớp học"));
+            }
+        }
+        private string GenerateRandomNumericString(int length)
+        {
+            Random random = new Random();
+            char[] result = new char[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                result[i] = (char)('0' + random.Next(0, 10));
+            }
+
+            return new string(result);
+        }
+
+    }
+}

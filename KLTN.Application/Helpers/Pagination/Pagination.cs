@@ -8,6 +8,6 @@ namespace KLTN.Application.Helpers.Pagination
 {
     public class Pagination<T> : PaginationBase  where T: class    
     {
-       public IEnumerable<T> Items;
+       public List<T> Items { get; set; }
     }
 }
