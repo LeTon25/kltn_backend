@@ -12,6 +12,6 @@ namespace KLTN.Application.DTOs.Courses
         public CreateCourseRequestDtoValidator() 
         { 
             RuleFor(c=>c.CourseGroup).NotEmpty().WithMessage("Không được bỏ trống nhóm lớp");
-        }    
+        }
     }
 }

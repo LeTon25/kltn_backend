@@ -67,11 +67,16 @@ namespace KLTN.Api.Controllers
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Tên môn học không được trùng"));
             }
+            if (await subjects.AnyAsync(c => c.SubjectCode.Equals(requestDto.SubjectCode)))
+            {
+                return BadRequest(new ApiBadRequestResponse<string>("Mã môn học không được trùng"));
+            }
             var newSubjectId = Guid.NewGuid();
             var newSubject = new Subject()
             {
                 SubjectId = newSubjectId.ToString(),
                 Name = requestDto.Name,
+                SubjectCode = requestDto.SubjectCode,
                 Description = requestDto.Description,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = null,
@@ -93,9 +98,14 @@ namespace KLTN.Api.Controllers
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Tên môn học không được trùng"));
             }
- 
+
+            if (await _db.Subjects.AnyAsync(e => e.SubjectCode == requestDto.SubjectCode && e.SubjectId != subjectId))
+            {
+                return BadRequest(new ApiBadRequestResponse<string>("Mã môn học không được trùng"));
+            }
             subject.Name = requestDto.Name;
             subject.Description  = requestDto.Description;
+            subject.SubjectCode = requestDto.SubjectCode;
 
             _db.Subjects.Update(subject);
             var result = await _db.SaveChangesAsync();

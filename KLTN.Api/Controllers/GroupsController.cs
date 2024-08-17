@@ -188,7 +188,7 @@ namespace KLTN.Api.Controllers
             return BadRequest(new ApiBadRequestResponse<string>("Xóa thông tin nhóm thất bại"));
         }
 
-        [HttpPost("{groupId}/add-members")]
+        [HttpPost("{groupId}/members")]
         public async Task<IActionResult> PostAddMembersToGroupAsync(string groupId, AddMemberToGroupDto requestDto)
         {
             var group = await _db.Groups.FindAsync(groupId);
@@ -215,7 +215,7 @@ namespace KLTN.Api.Controllers
             await _db.SaveChangesAsync();
             return Ok(new ApiResponse<string>(200,"Thêm thành công"));
         }
-        [HttpDelete("{groupId}/remove-members")]
+        [HttpDelete("{groupId}/members")]
         public async Task<IActionResult> DeleteRemoveMemberAsync(string groupId,RemoveMemberFromGroupDto requestDto)
         {
             var group = await _db.Groups.FindAsync(groupId);

@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Accounts;
+using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
+using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain;
 using KLTN.Domain.Entities;
@@ -143,9 +145,9 @@ namespace KLTN.Api.Controllers
             return Ok(new ApiSuccessResponse<RefreshTokenResponseDto>(200,"Refresh token thành công",response));
         }
 
-        [HttpGet]
+        [HttpGet("courses")]
         [Authorize]
-        public async Task<IActionResult> GetAllCourses()
+        public async Task<IActionResult> GetAllCoursesByCurrentUser()
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             #region lay cac khoa nguoi dung giang day
@@ -205,6 +207,40 @@ namespace KLTN.Api.Controllers
                 CreatedCourses = await teachingCourse.ToListAsync(),
                 EnrolledCourses = await enrolledCourses.ToListAsync(),
             }));
+        }
+
+        [HttpGet("announcements/filter")]
+        [Authorize]
+        public async Task<IActionResult> GetAllAnnouncementsByCurrentUser(string filter,int pageIndex, int pageSize)
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var query = from announcement in _db.Announcements where announcement.UserId == userId
+                        join user in _db.Users on announcement.UserId equals user.Id into announcementUsers
+                        from user in announcementUsers.DefaultIfEmpty()
+                        select new AnnouncementDto
+                        {
+                            AnnouncementId = announcement.AnnouncementId,
+                            UserId = announcement.UserId,
+                            CourseId = announcement.CourseId,
+                            Content = announcement.Content,
+                            AttachedLinks = announcement.AttachedLinks,
+                            CreatedAt = announcement.CreatedAt,
+                            UpdatedAt = announcement.UpdatedAt,
+                            DeletedAt = announcement.DeletedAt,
+                            CreateUserName = user.FullName
+                        };
+            var totalRecords = await query.CountAsync();
+            var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+            var data = items.Select(e => _mapper.Map<AnnouncementDto>(e)).ToList();
+
+            var pagination = new Pagination<AnnouncementDto>
+            {
+                Items = data,
+                TotalRecords = totalRecords,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            return Ok(new ApiResponse<Pagination<AnnouncementDto>>(200, "Thành công", pagination));
         }
 
     }
