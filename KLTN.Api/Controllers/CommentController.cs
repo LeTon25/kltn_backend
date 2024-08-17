@@ -51,7 +51,7 @@ namespace KLTN.Api.Controllers
                 PageIndex = pageIndex,
                 PageSize = pageSize
             };
-            return Ok(pagination);
+            return Ok(new ApiResponse<Pagination<CommentDto>>(200,"Thành công",pagination));
         }
         
         [HttpPost("{announcementId}/comments")]
@@ -70,11 +70,11 @@ namespace KLTN.Api.Controllers
             var result = await _db.SaveChangesAsync();
             if (result > 0)
             {
-               return Ok();
+               return Ok(new ApiResponse<string>(200,"Thành công"));
             }
             else
             {
-                return BadRequest(new ApiBadRequestResponse("Bình luận thất bại"));
+                return BadRequest(new ApiBadRequestResponse<string>("Bình luận thất bại"));
             }
         }
 
@@ -84,7 +84,7 @@ namespace KLTN.Api.Controllers
         {
             var comment = await _db.Comments.FindAsync(commentId);
             if (comment == null)
-                return BadRequest(new ApiBadRequestResponse($"Không thể tìm thấy bình luận với id : {commentId}"));
+                return BadRequest(new ApiBadRequestResponse<string>($"Không thể tìm thấy bình luận với id : {commentId}"));
             if (comment.UserId != request.UserId)
                 return Forbid("Không thể chỉnh sửa bình luận");
 
@@ -96,9 +96,9 @@ namespace KLTN.Api.Controllers
 
             if (result > 0)
             {
-                return NoContent();
+                return Ok(new ApiResponse<string>(200, "Cập nhật thành công"));
             }
-            return BadRequest(new ApiBadRequestResponse($"Update comment failed"));
+            return BadRequest(new ApiBadRequestResponse<string>($"Update comment failed"));
         }
 
         [HttpDelete("{announcementId}/comments/{commentId}")]
@@ -106,7 +106,7 @@ namespace KLTN.Api.Controllers
         {
             var comment = await _db.Comments.FindAsync(commentId);
             if (comment == null)
-                return NotFound(new ApiNotFoundResponse($"Cannot found the comment with id: {commentId}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Cannot found the comment with id: {commentId}"));
 
             _db.Comments.Remove(comment);
 
@@ -122,9 +122,9 @@ namespace KLTN.Api.Controllers
                     UpdatedAt = comment.UpdatedAt,
                     OwnerUserId = comment.UserId,
                 };
-                return Ok(commentVm);
+                return Ok(new ApiResponse<CommentDto>(200,"Xóa thành công",commentVm));
             }
-            return BadRequest(new ApiBadRequestResponse($"Xóa comment thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>($"Xóa comment thất bại"));
         }
 
         [HttpGet("comments/recent/{take}")]
@@ -148,7 +148,7 @@ namespace KLTN.Api.Controllers
                     OwnerName = x.u.FullName,
                     Content = x.c.Content,
                 }).ToListAsync();
-            return Ok(comments);
+            return Ok(new ApiResponse<List<CommentDto>>(200,"Thành công",comments));
         }
     }
 }

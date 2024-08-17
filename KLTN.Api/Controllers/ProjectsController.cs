@@ -44,7 +44,7 @@ namespace KLTN.Api.Controllers
                             CreateUserName =user != null ? user.FullName : "Không xác định" ,
                         };
             var projectDtos = await query.ToListAsync();
-            return Ok(projectDtos);
+            return Ok(new ApiResponse<List<ProjectDto>>(200,"Thành công",projectDtos));
         }
         [HttpGet("filter")]
         public async Task<IActionResult> GetProjectsPagingAsync(string filter, int pageIndex, int pageSize)
@@ -83,7 +83,7 @@ namespace KLTN.Api.Controllers
                 PageIndex = pageIndex,
                 PageSize = pageSize
             };
-            return Ok(pagination);
+            return Ok(new ApiResponse<Pagination<ProjectDto>>(200,"Thành công", pagination));
         }
         [HttpGet("{projectId}")]
         public async Task<IActionResult> GetByIdAsync(string projectId)
@@ -110,7 +110,7 @@ namespace KLTN.Api.Controllers
                              };
             if(await finalQuery.CountAsync() == 0)
             {
-                return NotFound(new ApiNotFoundResponse("Không tìm thấy đề tài cần tìm"));
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy đề tài cần tìm"));
             }    
             return Ok(await finalQuery.FirstOrDefaultAsync());
 
@@ -122,7 +122,7 @@ namespace KLTN.Api.Controllers
             var projects = _db.Projects;
             if (await projects.AnyAsync(c => c.Title.Equals(requestDto.Title)))
             {
-                return BadRequest(new ApiBadRequestResponse("Tên đề tài không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Tên đề tài không được trùng"));
             }
             var newProjectId = Guid.NewGuid();
             var newProject = new Project()
@@ -148,11 +148,11 @@ namespace KLTN.Api.Controllers
             var project = await _db.Projects.FirstOrDefaultAsync(c => c.ProjectId == projectId);
             if (project == null)
             {
-                return NotFound(new ApiNotFoundResponse($"Không tìm thấy đề tài với id : {projectId}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy đề tài với id : {projectId}"));
             }
             if (await _db.Projects.AnyAsync(e => e.Title == requestDto.Title && e.ProjectId != projectId))
             {
-                return BadRequest(new ApiBadRequestResponse("Tên đề tài không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Tên đề tài không được trùng"));
             }
 
             project.Title = requestDto.Title;
@@ -165,7 +165,7 @@ namespace KLTN.Api.Controllers
             {
                 return NoContent();
             }
-            return BadRequest(new ApiBadRequestResponse("Cập nhật đề tài thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Cập nhật đề tài thất bại"));
         }
 
         [HttpDelete("{projectId}")]
@@ -174,7 +174,7 @@ namespace KLTN.Api.Controllers
             var project = await _db.Projects.FirstOrDefaultAsync(c => c.ProjectId == projectId);
             if (project == null)
             {
-                return NotFound(new ApiNotFoundResponse("Không thể tìm thấy đề tài với id"));
+                return NotFound(new ApiNotFoundResponse<string>("Không thể tìm thấy đề tài với id"));
             }
             _db.Projects.Remove(project);
             var result = await _db.SaveChangesAsync();
@@ -182,7 +182,7 @@ namespace KLTN.Api.Controllers
             {
                 return Ok(_mapper.Map<ProjectDto>(project));
             }
-            return BadRequest(new ApiBadRequestResponse("Xóa thông tin đề tài thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Xóa thông tin đề tài thất bại"));
         }
     }
 }

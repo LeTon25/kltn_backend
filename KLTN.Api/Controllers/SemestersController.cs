@@ -26,7 +26,7 @@ namespace KLTN.Api.Controllers
             var query = _db.Semesters;
 
             var semesterDtos = await query.ToListAsync();
-            return Ok(_mapper.Map<List<SemesterDto>>(semesterDtos));
+            return Ok(new ApiResponse<List<SemesterDto>>(200,"Thành công",_mapper.Map<List<SemesterDto>>(semesterDtos)));
         }
         [HttpGet("filter")]
         public async Task<IActionResult> GetSemestersPagingAsync(string filter,int pageIndex,int pageSize)
@@ -47,7 +47,7 @@ namespace KLTN.Api.Controllers
                 PageIndex = pageIndex,
                 PageSize = pageSize
             };
-            return Ok(pagination);
+            return Ok(new ApiResponse<Pagination<SemesterDto>>(200, "Thành công", pagination));
         }
         [HttpGet("{semesterId}")]
         public async Task<IActionResult> GetByIdAsync(string semesterId)  
@@ -55,9 +55,9 @@ namespace KLTN.Api.Controllers
             var semester = await _db.Semesters.FindAsync(semesterId);
             if(semester == null)
             {
-                return NotFound(new ApiNotFoundResponse("Không tìm thấy học kỳ cần tìm"));
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy học kỳ cần tìm"));
             }
-            return Ok(_mapper.Map<SemesterDto>(semester));  
+            return Ok(new ApiResponse<SemesterDto>(200, "Thành công", _mapper.Map<SemesterDto>(semester)));  
 
         }
         [HttpPost]
@@ -67,11 +67,11 @@ namespace KLTN.Api.Controllers
             var semesters = _db.Semesters;
             if (await semesters.AnyAsync(c => c.Name.Equals(requestDto.Name))) 
             {
-                return BadRequest(new ApiBadRequestResponse("Tên học kì không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Tên học kì không được trùng"));
             }
             if (requestDto.StartDate > requestDto.EndDate) 
             {
-                return BadRequest(new ApiBadRequestResponse("Ngày bắt đầu không được lớn hơn ngày kết thúc"));
+                return BadRequest(new ApiBadRequestResponse<string>("Ngày bắt đầu không được lớn hơn ngày kết thúc"));
             }
             var newSemesterId = Guid.NewGuid();
             var newSemester = new Semester()
@@ -86,7 +86,7 @@ namespace KLTN.Api.Controllers
             };
             var result = await _db.AddAsync(newSemester);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<SemesterDto>(newSemester));
+            return Ok(new ApiResponse<SemesterDto>(200, "Thành công", _mapper.Map<SemesterDto>(newSemester)));
         }
         [HttpPut("{semesterId}")]
         [ApiValidationFilter]
@@ -94,15 +94,15 @@ namespace KLTN.Api.Controllers
         {
             var semester = await _db.Semesters.FirstOrDefaultAsync(c=>c.SemesterId == semesterId);
             if (semester == null) {
-                return NotFound(new ApiNotFoundResponse($"Không tìm thấy học kì với id : {semesterId}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy học kì với id : {semesterId}"));
             }
             if(await _db.Semesters.AnyAsync(e=>e.Name == requestDto.Name && e.SemesterId != semesterId))
             {
-                return BadRequest(new ApiBadRequestResponse("Tên học kì không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Tên học kì không được trùng"));
             }
             if (requestDto.StartDate > requestDto.EndDate)
             {
-                return BadRequest(new ApiBadRequestResponse("Ngày bắt đầu không được lớn hơn ngày kết thúc"));
+                return BadRequest(new ApiBadRequestResponse<string>("Ngày bắt đầu không được lớn hơn ngày kết thúc"));
             }
             semester.Name = requestDto.Name;
             semester.StartDate = requestDto.StartDate;
@@ -115,7 +115,7 @@ namespace KLTN.Api.Controllers
             {
                 return NoContent(); 
             }
-            return BadRequest(new ApiBadRequestResponse("Cập nhật học kì thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Cập nhật học kì thất bại"));
         }
 
         [HttpDelete("{semesterId}")]
@@ -123,14 +123,14 @@ namespace KLTN.Api.Controllers
         {
             var semester = await _db.Semesters.FirstOrDefaultAsync(c => c.SemesterId == semesterId);
             if (semester == null) {
-                return NotFound(new ApiNotFoundResponse("Không thể tìm thấy học kì với id"));
+                return NotFound(new ApiNotFoundResponse<string>("Không thể tìm thấy học kì với id"));
             }
             _db.Semesters.Remove(semester);
             var result = await _db.SaveChangesAsync();
             if (result > 0) {
-                return Ok(_mapper.Map<SemesterDto>(semester));
+                return Ok(new ApiResponse<SemesterDto>(200, "Thành công", _mapper.Map<SemesterDto>(semester)));
             }
-            return BadRequest(new ApiBadRequestResponse("Xóa thông tin học kì thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Xóa thông tin học kì thất bại"));
         }
 
     }

@@ -13,19 +13,29 @@ namespace KLTN.Api.Services.Implements
     {
         private readonly IConfiguration _configuration;
         private readonly SymmetricSecurityKey _key;
-        public TokenService(IConfiguration configuration)
+        private readonly UserManager<User> _userManager; 
+        public TokenService(IConfiguration configuration,
+                UserManager<User> userManager
+            )
         {
             _configuration = configuration;
             _key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["Jwt:SigningKey"]));
+            _userManager = userManager;
         }   
-        public string GenerateTokens(User user,DateTime expiresAt)
+        public async Task<string> GenerateTokens(User user,DateTime expiresAt)
         {
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name,user.UserName),
                 new Claim(ClaimTypes.NameIdentifier,user.Id),
                 new Claim(ClaimTypes.Email,user.Email)
             };
+            var roles = await _userManager.GetRolesAsync(user);
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
             var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256Signature);
             var tokenDescriptor = new SecurityTokenDescriptor
             {

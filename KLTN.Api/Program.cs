@@ -133,6 +133,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseMiddleware<LogTokenMiddleware>();
 app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {

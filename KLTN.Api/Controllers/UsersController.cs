@@ -42,15 +42,15 @@ namespace KLTN.Api.Controllers
             var users = _userManager.Users;
             if (await users.AnyAsync(c=>c.UserName == request.UserName))
             {
-                return BadRequest(new ApiBadRequestResponse("Tên người dùng không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Tên người dùng không được trùng"));
             }
             if (await users.AnyAsync(c => c.PhoneNumber == request.PhoneNumber))
             {
-                return BadRequest(new ApiBadRequestResponse("SĐT người dùng không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("SĐT người dùng không được trùng"));
             }
             if (await users.AnyAsync(c => c.Email == request.Email))
             {
-                return BadRequest(new ApiBadRequestResponse("Email người dùng không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Email người dùng không được trùng"));
             }
             var user = new User
             {
@@ -78,7 +78,7 @@ namespace KLTN.Api.Controllers
             }
             else
             {
-                return BadRequest(new ApiBadRequestResponse(result));
+                return BadRequest(new ApiBadRequestResponse<string>(result));
             }
         }
 
@@ -123,7 +123,7 @@ namespace KLTN.Api.Controllers
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
-                return NotFound(new ApiNotFoundResponse($"Không tìm thấy User với id: {id}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy User với id: {id}"));
 
             return Ok(_mapper.Map<UserDto>(user));
         }
@@ -135,7 +135,7 @@ namespace KLTN.Api.Controllers
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
-                return NotFound(new ApiNotFoundResponse($"Không thể tìm thấy người dùng với id : {id}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không thể tìm thấy người dùng với id : {id}"));
 
             // Tùy chỉnh các trường thông tin User sau để sau mới làm
             user.PhoneNumber = request.PhoneNumber;
@@ -160,7 +160,7 @@ namespace KLTN.Api.Controllers
             {
                 return NoContent();
             }
-            return BadRequest(new ApiBadRequestResponse(result));
+            return BadRequest(new ApiBadRequestResponse<string>(result));
         }
 
         [HttpPut("{id}/change-password")]
@@ -168,7 +168,7 @@ namespace KLTN.Api.Controllers
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
-                return NotFound(new ApiNotFoundResponse($"Không tìm thấy người dùng với id : {id}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy người dùng với id : {id}"));
 
             var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
 
@@ -176,7 +176,7 @@ namespace KLTN.Api.Controllers
             {
                 return NoContent();
             }
-            return BadRequest(new ApiBadRequestResponse(result));
+            return BadRequest(new ApiBadRequestResponse<string>(result));
         }
 
         [HttpDelete("{id}")]
@@ -191,7 +191,7 @@ namespace KLTN.Api.Controllers
             var otherUsers = adminUsers.Where(x => x.Id != id).ToList();
             if (otherUsers.Count == 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Bạn không thể xóa Admin duy nhất của hệ thống."));
+                return BadRequest(new ApiBadRequestResponse<string>("Bạn không thể xóa Admin duy nhất của hệ thống."));
             }
             var result = await _userManager.DeleteAsync(user);
 
@@ -199,14 +199,14 @@ namespace KLTN.Api.Controllers
             {
                return Ok(_mapper.Map<UserDto>(user));
             }
-            return BadRequest(new ApiBadRequestResponse(result));
+            return BadRequest(new ApiBadRequestResponse<string>(result));
         }
         [HttpGet("{userId}/roles")]
         public async Task<IActionResult> GetUserRolesAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-                return NotFound(new ApiNotFoundResponse($"Không tìm thấy người dùng với id : {userId}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy người dùng với id : {userId}"));
             var roles = await _userManager.GetRolesAsync(user);
             return Ok(roles);
         }
@@ -216,16 +216,16 @@ namespace KLTN.Api.Controllers
         {
             if (request.RoleNames?.Length == 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Vai trò không được để trống"));
+                return BadRequest(new ApiBadRequestResponse<string>("Vai trò không được để trống"));
             }
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-                return NotFound(new ApiNotFoundResponse($"Không thể tìm thấy người dùng với id : {userId}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không thể tìm thấy người dùng với id : {userId}"));
             var result = await _userManager.AddToRolesAsync(user, request.RoleNames);
             if (result.Succeeded)
                 return Ok();
 
-            return BadRequest(new ApiBadRequestResponse(result));
+            return BadRequest(new ApiBadRequestResponse<string>(result));
         }
 
         [HttpDelete("{userId}/roles")]
@@ -233,22 +233,22 @@ namespace KLTN.Api.Controllers
         {
             if (request.RoleNames?.Length == 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Các quyền không được bỏ trống"));
+                return BadRequest(new ApiBadRequestResponse<string>("Các quyền không được bỏ trống"));
             }
             if (request.RoleNames.Length == 1 && request.RoleNames[0] == "Admin")
             {
-                return base.BadRequest(new ApiBadRequestResponse($"Không thể gỡ bỏ quyền Admin"));
+                return base.BadRequest(new ApiBadRequestResponse<string>($"Không thể gỡ bỏ quyền Admin"));
             }
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-                return NotFound(new ApiNotFoundResponse($"Không thể tìm thấy người dùng với id : {userId}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không thể tìm thấy người dùng với id : {userId}"));
             var result = await _userManager.RemoveFromRolesAsync(user, request.RoleNames);
             if (result.Succeeded)
                 return Ok();
 
-            return BadRequest(new ApiBadRequestResponse(result));
+            return BadRequest(new ApiBadRequestResponse<string>(result));
         }
-
+        
         private async Task<string> SaveFileAsync(string filePath,IFormFile file)
         {
             var originalFileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
