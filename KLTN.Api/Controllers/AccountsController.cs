@@ -87,7 +87,7 @@ namespace KLTN.Api.Controllers
             }
             else
             {
-                return BadRequest(new ApiBadRequestResponse<string>(result));
+                return Ok(new ApiBadRequestResponse<string>(result));
             }
         }
 
@@ -99,7 +99,7 @@ namespace KLTN.Api.Controllers
 
             if (user == null) 
             { 
-                return Unauthorized(new ApiResponse<string>(401,"Tên người dùng không đúng"));
+                return Ok(new ApiResponse<string>(401,"Tên người dùng không đúng"));
             }
 
             var result = await _signInManager.CheckPasswordSignInAsync(user,requestDto.Password,false);
