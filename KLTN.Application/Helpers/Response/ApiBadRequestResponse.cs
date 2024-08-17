@@ -8,9 +8,8 @@ using System.Threading.Tasks;
 
 namespace KLTN.Application.Helpers.Response
 {
-    public class ApiBadRequestResponse : ApiResponse
+    public class ApiBadRequestResponse<T> : ApiResponse<T> where T : class
     {
-        public IEnumerable<string>? Errors { get; }
         public ApiBadRequestResponse(ModelStateDictionary modelState) : base(400) 
         {
             if (modelState.IsValid)
@@ -18,14 +17,20 @@ namespace KLTN.Application.Helpers.Response
                 throw new ArgumentException("ModelState must be invalid", nameof(modelState));
             }
 
-            Errors = modelState.SelectMany(x => x.Value.Errors)
-                .Select(x => x.ErrorMessage).ToArray();
+            var Errors = string.Join(",",modelState.SelectMany(x => x.Value.Errors)
+                .Select(x => x.ErrorMessage).ToArray());
+            if (!string.IsNullOrEmpty(this.Message)) 
+                 this.Message += ", " + Errors;
+            else this.Message = Errors;
         }
         public ApiBadRequestResponse(IdentityResult identityResult)
            : base(400)
         {
-            Errors = identityResult.Errors
-                .Select(x => x.Code + " - " + x.Description).ToArray();
+            var Errors =string.Join(",",identityResult.Errors
+                .Select(x => x.Code + " - " + x.Description).ToArray());
+            if (!string.IsNullOrEmpty(this.Message))
+                this.Message += ", " + Errors;
+            else this.Message = Errors;
         }
         public ApiBadRequestResponse(string message)
            : base(400, message)

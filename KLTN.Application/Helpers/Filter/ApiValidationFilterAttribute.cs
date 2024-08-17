@@ -14,7 +14,7 @@ namespace KLTN.Application.Helpers.Filter
         {
             if (!context.ModelState.IsValid)
             {
-                context.Result = new BadRequestObjectResult(new ApiBadRequestResponse(context.ModelState));
+                context.Result = new BadRequestObjectResult(new ApiBadRequestResponse<string>(context.ModelState));
             }
 
             base.OnActionExecuting(context);

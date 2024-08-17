@@ -20,16 +20,16 @@ namespace KLTN.Application.Helpers.Middleware
         {
             var authHeader = context.Request.Headers["Authorization"].ToString();
             
-            Console.WriteLine("KKKKK");
-            Console.WriteLine(authHeader);  
             if (authHeader.StartsWith("Bearer "))
             {
-                var token = authHeader.Substring("Bearer ".Length).Trim();
-                // In token ra console hoặc log
-                Console.WriteLine($"Token: {token}");
+                var claims = context.User.Claims;
+                foreach (var claim in claims)
+                {
+                    // In ra thông tin claim
+                    Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+                }
             }
 
-            // Call the next delegate/middleware in the pipeline
             await _next(context);
         }
 

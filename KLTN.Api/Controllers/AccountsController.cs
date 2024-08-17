@@ -42,11 +42,11 @@ namespace KLTN.Api.Controllers
             var users = _userManager.Users;
             if (await users.AnyAsync(c => c.UserName == requestDto.UserName))
             {
-                return BadRequest(new ApiBadRequestResponse("Tên người dùng không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Tên người dùng không được trùng"));
             }
             if (await users.AnyAsync(c => c.Email == requestDto.Email))
             {
-                return BadRequest(new ApiBadRequestResponse("Email người dùng không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Email người dùng không được trùng"));
             }
             var result = await _userManager.CreateAsync(new User
             {
@@ -68,7 +68,7 @@ namespace KLTN.Api.Controllers
                 DateTime expiresAt = DateTime.Now.AddMinutes(30);
                 var authResponse = new AuthResponseDto
                 {
-                    Token = _tokenService.GenerateTokens(user,expiresAt),
+                    Token = await _tokenService.GenerateTokens(user,expiresAt),
                     RefreshToken = _tokenService.GenerateRefreshToken(),
                     ExpiresAt = expiresAt,
                     User = _mapper.Map<UserDto>(user),
@@ -77,11 +77,11 @@ namespace KLTN.Api.Controllers
                 user.RefreshTokenExpiry = authResponse.ExpiresAt;
 
                 await _userManager.UpdateAsync(user);
-                return Ok(authResponse);
+                return Ok(new ApiResponse<AuthResponseDto>(200,"Đăng kí thành công",authResponse));
             }
             else
             {
-                return BadRequest(new ApiBadRequestResponse(result));
+                return BadRequest(new ApiBadRequestResponse<string>(result));
             }
         }
 
@@ -93,19 +93,19 @@ namespace KLTN.Api.Controllers
 
             if (user == null) 
             { 
-                return Unauthorized("Không tìm thấy tên người dùng");
+                return Unauthorized(new ApiResponse<string>(401,"Tên người dùng không đúng"));
             }
 
             var result = await _signInManager.CheckPasswordSignInAsync(user,requestDto.Password,false);
 
             if (!result.Succeeded)
             {
-                return Unauthorized("Username hoặc mật khẩu bị sai");
+                return Unauthorized(new ApiResponse<string>(401, "Thông tin đăng nhập không chính xác"));
             }
             DateTime expiresAt = DateTime.Now.AddMinutes(30);
             var authResponse  = new AuthResponseDto
             {
-                Token = _tokenService.GenerateTokens(user,expiresAt),
+                Token = await _tokenService.GenerateTokens(user,expiresAt),
                 RefreshToken = _tokenService.GenerateRefreshToken(),
                 ExpiresAt = expiresAt, //access_token
                 User = _mapper.Map<UserDto>(user), 
@@ -114,7 +114,7 @@ namespace KLTN.Api.Controllers
             user.RefreshTokenExpiry = DateTime.Now.AddHours(12);
 
             await _userManager.UpdateAsync(user);
-            return Ok(authResponse);
+            return Ok(new ApiSuccessResponse<AuthResponseDto>(200,"Đăng nhập thành công",authResponse));
         }
 
         [HttpPost("refresh-token")]
@@ -123,18 +123,18 @@ namespace KLTN.Api.Controllers
             var principal = _tokenService.GetTokenPrincipal(model.Token);
             if(principal?.Identity?.Name is null)
             {
-                return BadRequest(new ApiBadRequestResponse("Không thể cấp mới token"));
+                return BadRequest(new ApiBadRequestResponse<string>("Không thể cấp mới token"));
             }
             var user = await _userManager.FindByNameAsync(principal.Identity.Name);
             if (user is null || user.RefreshToken != model.RefreshToken || user.RefreshTokenExpiry < DateTime.Now)
-                return BadRequest(new ApiBadRequestResponse("Không thể cấp mới token"));
+                return BadRequest(new ApiBadRequestResponse<string>("Không thể cấp mới token"));
             DateTime expiresAt = DateTime.Now.AddMinutes(30);
             var response = new RefreshTokenResponseDto
             {
-                Token = _tokenService.GenerateTokens(user, expiresAt),
+                Token = await _tokenService.GenerateTokens(user, expiresAt),
                 ExpiresAt = expiresAt, //access_token
             };
-            return Ok(response);
+            return Ok(new ApiSuccessResponse<RefreshTokenResponseDto>(200,"Refresh token thành công",response));
         }
 
     }

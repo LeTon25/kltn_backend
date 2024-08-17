@@ -7,17 +7,19 @@ using System.Threading.Tasks;
 
 namespace KLTN.Application.Helpers.Response
 {
-    public class ApiResponse
+    public class ApiResponse<T>
     {
-        public int StatusCode { get; }
+        public int StatusCode { get; set; }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string Message { get; }
+        public string Message { get; set; }
 
-        public ApiResponse(int statusCode, string message = null)
+        public T Data { get; set; }
+        public ApiResponse(int statusCode, string message = null, T data = default)
         {
             StatusCode = statusCode;
             Message = message ?? GetDefaultMessageForStatusCode(statusCode);
+            Data = data;
         }
         private static string GetDefaultMessageForStatusCode(int statusCode)
         {

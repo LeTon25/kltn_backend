@@ -48,7 +48,7 @@ namespace KLTN.Api.Controllers
                         };
 
             var groupDtos = await query.ToListAsync();
-            return Ok(groupDtos);
+            return Ok(new ApiResponse<List<GroupDto>>(200,"Thành công", groupDtos));
         }
         [HttpGet("filter")]
         public async Task<IActionResult> GetGroupsPagingAsync(string filter, int pageIndex, int pageSize)
@@ -86,7 +86,7 @@ namespace KLTN.Api.Controllers
                 PageSize = pageSize,
                 PageIndex= pageIndex,
             };
-            return Ok(pagination);
+            return Ok(new ApiResponse<Pagination<GroupDto>>(200,"Thành công", pagination));
         }
         [HttpGet("{groupId}")]
         public async Task<IActionResult> GetByIdAsync(string groupId)
@@ -112,10 +112,10 @@ namespace KLTN.Api.Controllers
 
             if (await query.CountAsync() == 0)
             {
-                return NotFound(new ApiNotFoundResponse("Không tìm thấy nhóm cần tìm"));
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy nhóm cần tìm"));
             }
 
-            return Ok(_mapper.Map<GroupDto>(await query.FirstOrDefaultAsync()));
+            return Ok(new ApiResponse<GroupDto>(200,"Thành công", _mapper.Map<GroupDto>(await query.FirstOrDefaultAsync())));
 
         }
         [HttpPost]
@@ -125,7 +125,7 @@ namespace KLTN.Api.Controllers
             var groups = _db.Groups;
             if (await groups.AnyAsync(c => c.GroupName.Equals(requestDto.GroupName)))
             {
-                return BadRequest(new ApiBadRequestResponse("Tên nhóm không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Tên nhóm không được trùng"));
             }
             var newGroupId = Guid.NewGuid();
             var newGroup = new Group()
@@ -141,7 +141,7 @@ namespace KLTN.Api.Controllers
             };
             var result = await _db.AddAsync(newGroup);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<GroupDto>(newGroup));
+            return Ok(new ApiResponse<GroupDto>(200,"Thành công", _mapper.Map<GroupDto>(newGroup)));
         }
         [HttpPut("{groupId}")]
         [ApiValidationFilter]
@@ -150,11 +150,11 @@ namespace KLTN.Api.Controllers
             var group = await _db.Groups.FirstOrDefaultAsync(c => c.GroupId == groupId);
             if (group == null)
             {
-                return NotFound(new ApiNotFoundResponse($"Không tìm thấy nhóm với id : {groupId}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy nhóm với id : {groupId}"));
             }
             if (await _db.Groups.AnyAsync(e => e.GroupName == requestDto.GroupName && e.GroupId != groupId && e.CourseId == requestDto.CourseId))
             {
-                return BadRequest(new ApiBadRequestResponse("Tên nhóm không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Tên nhóm không được trùng"));
             }
 
             group.GroupName = requestDto.GroupName; 
@@ -166,9 +166,9 @@ namespace KLTN.Api.Controllers
             var result = await _db.SaveChangesAsync();
             if (result > 0)
             {
-                return NoContent();
+                return Ok(new ApiResponse<string>(200,"Thành công"));
             }
-            return BadRequest(new ApiBadRequestResponse("Cập nhật nhóm thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Cập nhật nhóm thất bại"));
         }
 
         [HttpDelete("{groupId}")]
@@ -177,15 +177,15 @@ namespace KLTN.Api.Controllers
             var group = await _db.Groups.FirstOrDefaultAsync(c => c.GroupId == groupId);
             if (group == null)
             {
-                return NotFound(new ApiNotFoundResponse("Không thể tìm thấy nhóm với id"));
+                return NotFound(new ApiNotFoundResponse<string>("Không thể tìm thấy nhóm với id"));
             }
             _db.Groups.Remove(group);
             var result = await _db.SaveChangesAsync();
             if (result > 0)
             {
-                return Ok(_mapper.Map<GroupDto>(group));
+                return Ok(new ApiResponse<GroupDto>(200,"Thành công",_mapper.Map<GroupDto>(group)));
             }
-            return BadRequest(new ApiBadRequestResponse("Xóa thông tin nhóm thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Xóa thông tin nhóm thất bại"));
         }
 
         [HttpPost("{groupId}/add-members")]
@@ -194,7 +194,7 @@ namespace KLTN.Api.Controllers
             var group = await _db.Groups.FindAsync(groupId);
             if (group == null) 
             { 
-                return NotFound(new ApiNotFoundResponse("Không tìm thấy nhóm"));
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy nhóm"));
             } 
             if (requestDto.studentIds.Length > 0 && !string.IsNullOrEmpty(requestDto.leaderId)) { 
                 foreach(var id in requestDto.studentIds)
@@ -213,7 +213,7 @@ namespace KLTN.Api.Controllers
                 group.NumberOfMembers += requestDto.studentIds.Length;
             }
             await _db.SaveChangesAsync();
-            return Ok("Thêm thành công");
+            return Ok(new ApiResponse<string>(200,"Thêm thành công"));
         }
         [HttpDelete("{groupId}/remove-members")]
         public async Task<IActionResult> DeleteRemoveMemberAsync(string groupId,RemoveMemberFromGroupDto requestDto)
@@ -221,7 +221,7 @@ namespace KLTN.Api.Controllers
             var group = await _db.Groups.FindAsync(groupId);
             if (group == null) 
             { 
-                return NotFound(new ApiNotFoundResponse("Không tìm thấy nhóm"));
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy nhóm"));
             } 
             if (requestDto.studentIds.Length > 0 ) { 
                 foreach(var id in requestDto.studentIds)
@@ -239,7 +239,7 @@ namespace KLTN.Api.Controllers
                 group.NumberOfMembers += requestDto.studentIds.Length;
             }
             await _db.SaveChangesAsync();
-            return Ok("Xóa thành công");
+            return Ok(new ApiResponse<string>(200,"Thêm thành công"));
         }
         [HttpGet("{groupId}/members")]
         public async Task<IActionResult> GetGroupMembersAsync()
@@ -258,9 +258,7 @@ namespace KLTN.Api.Controllers
                            UpdatedAt = member.UpdatedAt,
                            StudentName = user.FullName
                        };
-            if (data == null)
-                return Ok(new List<GroupMemberDto>());
-            return Ok(await data.ToListAsync());
+            return Ok(new ApiResponse<List<GroupMemberDto>>(200,"Thành công", await data.ToListAsync()));
         }
 
     }

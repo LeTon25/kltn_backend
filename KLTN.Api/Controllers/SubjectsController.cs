@@ -45,7 +45,7 @@ namespace KLTN.Api.Controllers
                 PageIndex = pageIndex,
                 PageSize = pageSize 
             };
-            return Ok(pagination);
+            return Ok(new ApiResponse<Pagination<SubjectDto>>(200,"Thành công", pagination));
         }
         [HttpGet("{subjectId}")]
         public async Task<IActionResult> GetByIdAsync(string subjectId)
@@ -53,9 +53,9 @@ namespace KLTN.Api.Controllers
             var subject = await _db.Subjects.FindAsync(subjectId);
             if(subject == null)
             {
-                return NotFound(new ApiNotFoundResponse("Không tìm thấy học kỳ cần tìm"));
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy học kỳ cần tìm"));
             }
-            return Ok(_mapper.Map<SubjectDto>(subject));  
+            return Ok(new ApiResponse<SubjectDto>(200, "Thành công", _mapper.Map<SubjectDto>(subject)));  
 
         }
         [HttpPost]
@@ -65,7 +65,7 @@ namespace KLTN.Api.Controllers
             var subjects = _db.Subjects;
             if (await subjects.AnyAsync(c => c.Name.Equals(requestDto.Name))) 
             {
-                return BadRequest(new ApiBadRequestResponse("Tên môn học không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Tên môn học không được trùng"));
             }
             var newSubjectId = Guid.NewGuid();
             var newSubject = new Subject()
@@ -79,7 +79,7 @@ namespace KLTN.Api.Controllers
             };
             var result = await _db.AddAsync(newSubject);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<SubjectDto>(newSubject));
+            return Ok(new ApiResponse<SubjectDto>(200, "Thành công", _mapper.Map<SubjectDto>(newSubject)));
         }
         [HttpPut("{subjectId}")]
         [ApiValidationFilter]
@@ -87,11 +87,11 @@ namespace KLTN.Api.Controllers
         {
             var subject = await _db.Subjects.FirstOrDefaultAsync(c=>c.SubjectId == subjectId);
             if (subject == null) {
-                return NotFound(new ApiNotFoundResponse($"Không tìm thấy môn học với id : {subjectId}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy môn học với id : {subjectId}"));
             }
             if(await _db.Subjects.AnyAsync(e=>e.Name == requestDto.Name && e.SubjectId != subjectId))
             {
-                return BadRequest(new ApiBadRequestResponse("Tên môn học không được trùng"));
+                return BadRequest(new ApiBadRequestResponse<string>("Tên môn học không được trùng"));
             }
  
             subject.Name = requestDto.Name;
@@ -101,9 +101,10 @@ namespace KLTN.Api.Controllers
             var result = await _db.SaveChangesAsync();
             if(result > 0)
             {
-                return NoContent(); 
+                return Ok(new ApiResponse<string>(200, "Thành công"));
+
             }
-            return BadRequest(new ApiBadRequestResponse("Cập nhật môn học thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Cập nhật môn học thất bại"));
         }
 
         [HttpDelete("{subjectId}")]
@@ -111,14 +112,14 @@ namespace KLTN.Api.Controllers
         {
             var subject = await _db.Subjects.FirstOrDefaultAsync(c => c.SubjectId == subjectId);
             if (subject == null) {
-                return NotFound(new ApiNotFoundResponse("Không thể tìm thấy môn học với id"));
+                return NotFound(new ApiNotFoundResponse<string>("Không thể tìm thấy môn học với id"));
             }
             _db.Subjects.Remove(subject);
             var result = await _db.SaveChangesAsync();
             if (result > 0) {
-                return Ok(_mapper.Map<SubjectDto>(subject));
+                return Ok(new ApiResponse<SubjectDto>(200, "Thành công", _mapper.Map<SubjectDto>(subject)));
             }
-            return BadRequest(new ApiBadRequestResponse("Xóa thông tin môn học thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Xóa thông tin môn học thất bại"));
         }
 
     }

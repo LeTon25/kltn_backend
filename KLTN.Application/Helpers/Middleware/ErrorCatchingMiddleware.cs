@@ -38,7 +38,7 @@ namespace KLTN.Application.Helpers.Middleware
             {
                 context.Response.ContentType = "application/json";
 
-                var response = new ApiResponse(context.Response.StatusCode);
+                var response = new ApiResponse<string>(context.Response.StatusCode);
 
                 var json = JsonConvert.SerializeObject(response);
 

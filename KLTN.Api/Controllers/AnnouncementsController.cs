@@ -48,7 +48,7 @@ namespace KLTN.Api.Controllers
                             CreateUserName=user.FullName
                         };
             var announcementDtos = await query.ToListAsync();
-            return Ok(_mapper.Map<List<AnnouncementDto>>(announcementDtos));
+            return Ok(new ApiResponse<List<AnnouncementDto>>(200,"Thành công", _mapper.Map<List<AnnouncementDto>>(announcementDtos)));
         }
         [HttpGet("filter")]
         public async Task<IActionResult> GetAnnouncementsPagingAsync(string filter,int pageIndex,int pageSize)
@@ -79,7 +79,7 @@ namespace KLTN.Api.Controllers
                 PageIndex = pageIndex,
                 PageSize = pageSize
             };
-            return Ok(pagination);
+            return Ok(new ApiResponse<Pagination<AnnouncementDto>>(200,"Thành công",pagination));
         }
         [HttpGet("{announcementId}")]
         public async Task<IActionResult> GetByIdAsync(string announcementId)
@@ -101,7 +101,7 @@ namespace KLTN.Api.Controllers
                         };
             if (await query.CountAsync() == 0)
             {
-                return NotFound(new ApiNotFoundResponse("Không tìm thấy thông báo cần tìm"));
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy thông báo cần tìm"));
             }
             return Ok(_mapper.Map<AnnouncementDto>(await query.FirstOrDefaultAsync()));  
 
@@ -135,7 +135,7 @@ namespace KLTN.Api.Controllers
             var announcement = await _db.Announcements.FirstOrDefaultAsync(c=>c.AnnouncementId == announcementId);
             if(announcement == null)
             {
-                return NotFound(new ApiNotFoundResponse("Không tìm thấy thông báo"));
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy thông báo"));
             }
             announcement.Content = requestDto.Content;
             announcement.AttachedLinks = requestDto.AttachedLinks;
@@ -145,9 +145,9 @@ namespace KLTN.Api.Controllers
             var result = await _db.SaveChangesAsync();
             if(result > 0)
             {
-                return NoContent(); 
+                return Ok(new ApiResponse<string>(200,"Cập nhập thành công")); 
             }
-            return BadRequest(new ApiBadRequestResponse("Cập nhật thông báo thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Cập nhật thông báo thất bại"));
         }
 
         [HttpDelete("{announcementId}")]
@@ -155,14 +155,14 @@ namespace KLTN.Api.Controllers
         {
             var announcement = await _db.Announcements.FirstOrDefaultAsync(c => c.AnnouncementId == announcementId);
             if (announcement == null) {
-                return NotFound(new ApiNotFoundResponse("Không thể tìm thấy thông báo với id"));
+                return NotFound(new ApiNotFoundResponse<string>("Không thể tìm thấy thông báo với id"));
             }
             _db.Announcements.Remove(announcement);
             var result = await _db.SaveChangesAsync();
             if (result > 0) {
                 return Ok(_mapper.Map<AnnouncementDto>(announcement));
             }
-            return BadRequest(new ApiBadRequestResponse("Xóa thông tin thông báo thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Xóa thông tin thông báo thất bại"));
         }
 
     }

@@ -35,7 +35,7 @@ namespace KLTN.Api.Controllers
             }
             else
             {
-                return BadRequest(new ApiBadRequestResponse(result));
+                return BadRequest(new ApiBadRequestResponse<string>(result));
             }
         }
 
@@ -50,7 +50,7 @@ namespace KLTN.Api.Controllers
                 Name = r.Name
             }).ToListAsync();
 
-            return Ok(rolevms);
+            return Ok(new ApiResponse<List<RoleDto>>(200,"Thành công",rolevms));
         }
 
         [HttpGet("filter")]
@@ -78,7 +78,7 @@ namespace KLTN.Api.Controllers
                 PageSize = pageSize,
                 PageIndex = pageIndex
             };
-            return Ok(pagination);
+            return Ok(new ApiResponse<Pagination<RoleDto>>(200,"Thành công",pagination));
         }
 
         [HttpGet("{id}")]
@@ -86,14 +86,14 @@ namespace KLTN.Api.Controllers
         {
             var role = await _roleManager.FindByIdAsync(id);
             if (role == null)
-                return NotFound(new ApiNotFoundResponse($"Không thể tìm thấy Role với id : {id}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không thể tìm thấy Role với id : {id}"));
 
             var roleVm = new RoleDto()
             {
                 Id = role.Id,
                 Name = role.Name,
             };
-            return Ok(roleVm);
+            return Ok(new ApiResponse<RoleDto>(200, "Thành công",roleVm));
         }
 
         [HttpPut("{id}")]
@@ -102,7 +102,7 @@ namespace KLTN.Api.Controllers
         {
             var role = await _roleManager.FindByIdAsync(id);
             if (role == null)
-                return NotFound(new ApiNotFoundResponse($"Không tìm thấy role với id : {id}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy role với id : {id}"));
 
             role.Name = roleVm.Name;
             role.NormalizedName = roleVm.Name.ToUpper();
@@ -111,9 +111,9 @@ namespace KLTN.Api.Controllers
 
             if (result.Succeeded)
             {
-                return NoContent();
+                return Ok(new ApiResponse<string>(200,"Thành công"));
             }
-            return BadRequest(new ApiBadRequestResponse(result));
+            return BadRequest(new ApiBadRequestResponse<string>(result));
         }
 
         [HttpDelete("{id}")]
@@ -121,7 +121,7 @@ namespace KLTN.Api.Controllers
         {
             var role = await _roleManager.FindByIdAsync(id);
             if (role == null)
-                return NotFound(new ApiNotFoundResponse($"Không tìm thấy role với id : {id}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy role với id : {id}"));
 
             var result = await _roleManager.DeleteAsync(role);
 
@@ -132,9 +132,9 @@ namespace KLTN.Api.Controllers
                     Id = role.Id,
                     Name = role.Name
                 };
-                return Ok(rolevm);
+                return Ok(new ApiResponse<RoleDto>(200,"Xóa thành công",rolevm));
             }
-            return BadRequest(new ApiBadRequestResponse(result));
+            return BadRequest(new ApiBadRequestResponse<string>(result));
         }
     }
 }

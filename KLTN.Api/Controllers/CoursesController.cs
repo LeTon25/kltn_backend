@@ -8,6 +8,7 @@ using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace KLTN.Api.Controllers
@@ -48,7 +49,7 @@ namespace KLTN.Api.Controllers
                             LecturerName =instructor.FullName
                         };
             var courseDtos = await query.ToListAsync();
-            return Ok(courseDtos);
+            return Ok(new ApiResponse<List<CourseDto>>(200,"Thành công",courseDtos));
         }
         [HttpGet("filter")]
         public async Task<IActionResult> GetCoursesPagingAsync(string filter, int pageIndex, int pageSize)
@@ -127,9 +128,9 @@ namespace KLTN.Api.Controllers
                         }; 
             if( await query.CountAsync() == 0)
             {
-                return NotFound(new ApiNotFoundResponse($"Không tìm thấy khóa học với id : {id}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy khóa học với id : {id}"));
             }
-            return Ok(await query.FirstOrDefaultAsync());
+            return Ok(new ApiResponse<CourseDto>(200,"Thành công", await query.FirstOrDefaultAsync()));
         }
         [HttpGet("{lecturerId}/filter")]
         public async Task<IActionResult> GetByLecturerIdAsync(string lecturerId, int pageIndex, int pageSize)
@@ -169,7 +170,7 @@ namespace KLTN.Api.Controllers
                 Items = items,
                 TotalRecords = totalRecords,
             };
-            return Ok(pagination);
+            return Ok(new ApiResponse<Pagination<CourseDto>>(200,"Thành công",pagination));
         }
         [HttpPost]
         [ApiValidationFilter]
@@ -192,7 +193,7 @@ namespace KLTN.Api.Controllers
             };
             var result = await _db.AddAsync(newCourse);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<CourseDto>(newCourse));
+            return Ok(new ApiResponse<CourseDto>(200,"Thành công",_mapper.Map<CourseDto>(newCourse)));
         }
         [HttpPut("{courseId}")]
         [ApiValidationFilter]
@@ -201,7 +202,7 @@ namespace KLTN.Api.Controllers
             var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
             if(course == null)
             {
-                return NotFound(new ApiNotFoundResponse("Không tìm thấy lớp"));
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy lớp"));
             }    
             course.CourseGroup = requestDto.CourseGroup;
             course.EnableInvite = requestDto.EnableInvite;
@@ -215,9 +216,9 @@ namespace KLTN.Api.Controllers
             var result = await _db.SaveChangesAsync();
             if (result > 0)
             {
-                return Ok(_mapper.Map<CourseDto>(course));
+                return Ok(new ApiResponse<CourseDto>(200,"Cập nhật thành công", _mapper.Map<CourseDto>(course)));
             }
-            return BadRequest(new ApiBadRequestResponse("Cập nhật lớp học thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Cập nhật lớp học thất bại"));
         }
 
         [HttpDelete("{courseId}")]
@@ -226,32 +227,27 @@ namespace KLTN.Api.Controllers
             var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
             {
-                return NotFound(new ApiNotFoundResponse($"Không thể tìm thấy lớp học với id {courseId}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không thể tìm thấy lớp học với id {courseId}"));
             }
             _db.Courses.Remove(course);
             var result = await _db.SaveChangesAsync();
             if (result > 0)
             {
-                return Ok(_mapper.Map<CourseDto>(course));
+                return Ok(new ApiResponse<CourseDto>(200,"Xóa thành công",_mapper.Map<CourseDto>(course)));
             }
-            return BadRequest(new ApiBadRequestResponse("Xóa thông tin lớp học thất bại"));
+            return BadRequest(new ApiBadRequestResponse<string>("Xóa thông tin lớp học thất bại"));
         }
         [HttpPost("{courseId}/apply-code")]
         public async Task<IActionResult> PostApplyCode(string courseId,JoinCourseViaCodeDto requestDto )
         {
             var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null) { 
-                return NotFound(new ApiNotFoundResponse("Không tìm thấy lớp học"));
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy lớp học"));
             }
             
-            if(course.EnableInvite == false)
-            {
-                return BadRequest(new ApiBadRequestResponse("Không thể tham gia lớp học qua mã mời.Vui lòng liên hệ giáo viên"));
-            }    
-
             if(course.InviteCode != requestDto.InviteCode)
             {
-                return BadRequest(new ApiBadRequestResponse("Mã lớp học không chính xác"));
+                return BadRequest(new ApiBadRequestResponse<string>("Mã lớp học không chính xác"));
             }
 
             await _db.EnrolledCourse.AddAsync(new EnrolledCourse()
@@ -265,7 +261,7 @@ namespace KLTN.Api.Controllers
             }
             else
             {
-                return BadRequest(new ApiBadRequestResponse("Không thể tham gia lớp học"));
+                return BadRequest(new ApiBadRequestResponse<string>("Không thể tham gia lớp học"));
             }
         }
         [HttpGet("{courseId}/groups")]
@@ -288,7 +284,7 @@ namespace KLTN.Api.Controllers
                          };
             if (groups == null)
             {
-                return NotFound(new ApiNotFoundResponse($"Không thể tìm thấy lớp học với id : {courseId}"));
+                return NotFound(new ApiNotFoundResponse<string>($"Không thể tìm thấy lớp học với id : {courseId}"));
             }
             return Ok(await groups.ToListAsync());
 
