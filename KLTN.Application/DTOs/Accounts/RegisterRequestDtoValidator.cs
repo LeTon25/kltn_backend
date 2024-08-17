@@ -21,7 +21,7 @@ namespace KLTN.Application.DTOs.Accounts
             RuleFor(x => x.Email)
                     .NotEmpty().WithMessage("Email không được để trống")
                     .Matches(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$").WithMessage("Email không đúng định dạng");
-            RuleFor(x=>x.ConfirmPassword).Equal(x=>x.Password).WithMessage("Mật khẩu nhập lại không chính xác")
+            RuleFor(x => x.ConfirmPassword).Equal(x => x.Password).WithMessage("Mật khẩu nhập lại không chính xác");
         }
     }
 }

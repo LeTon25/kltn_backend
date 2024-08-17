@@ -29,6 +29,7 @@ namespace KLTN.Api.Controllers
             this._storageService = storageService;
         }
         [HttpGet]
+        [CustomAuthorizationAttribute]
         public async Task<IActionResult> GetAnnouncementsAsync()
         {
             var query = from announcement in _db.Announcements
