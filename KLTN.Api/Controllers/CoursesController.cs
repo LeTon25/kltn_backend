@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
+using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
@@ -177,6 +179,10 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PostCourseAsync(CreateCourseRequestDto requestDto)
         {
             var courses = _db.Courses;
+            if(await _db.Courses.AnyAsync(c=>c.CourseGroup == requestDto.CourseGroup && c.SemesterId==requestDto.SemesterId && c.SubjectId == requestDto.SemesterId))
+            {
+                return BadRequest(new ApiBadRequestResponse<string>("Nhóm môn học được mở không được trùng"));
+            }    
             var newCourseId = Guid.NewGuid();
             var newCourse = new Course()
             {
@@ -203,7 +209,11 @@ namespace KLTN.Api.Controllers
             if(course == null)
             {
                 return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy lớp"));
-            }    
+            }
+            if (await _db.Courses.AnyAsync(c => c.CourseGroup == requestDto.CourseGroup && c.SemesterId == requestDto.SemesterId && c.SubjectId == requestDto.SemesterId && c.CourseId != course.CourseId))
+            {
+                return BadRequest(new ApiBadRequestResponse<string>("Nhóm môn học được mở không được trùng"));
+            }
             course.CourseGroup = requestDto.CourseGroup;
             course.EnableInvite = requestDto.EnableInvite;
             course.InviteCode = requestDto.InviteCode;
@@ -289,6 +299,59 @@ namespace KLTN.Api.Controllers
             return Ok(await groups.ToListAsync());
 
         }
+
+        [HttpGet("{courseId}/announcements/filter")]
+        public async Task<IActionResult> GetAnnouncementsInCourseAsync(string courseId,string filter, int pageIndex, int pageSize)
+        {
+            var query = from announcement in _db.Announcements where announcement.CourseId == courseId
+                        join user in _db.Users on announcement.UserId equals user.Id into announcementUsers
+                        from user in announcementUsers.DefaultIfEmpty()
+                        select new AnnouncementDto
+                        {
+                            AnnouncementId = announcement.AnnouncementId,
+                            UserId = announcement.UserId,
+                            CourseId = announcement.CourseId,
+                            Content = announcement.Content,
+                            AttachedLinks = announcement.AttachedLinks,
+                            CreatedAt = announcement.CreatedAt,
+                            UpdatedAt = announcement.UpdatedAt,
+                            DeletedAt = announcement.DeletedAt,
+                            CreateUserName = user.FullName
+                        };
+            var totalRecords = await query.CountAsync();
+            var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+            var data = items.Select(e => _mapper.Map<AnnouncementDto>(e)).ToList();
+
+            var pagination = new Pagination<AnnouncementDto>
+            {
+                Items = data,
+                TotalRecords = totalRecords,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            return Ok(new ApiResponse<Pagination<AnnouncementDto>>(200, "Thành công", pagination));
+        }
+        [HttpGet("{courseId}/students")]
+        public async Task<IActionResult> GetStudentsInCourseAsync(string courseId,string filter, int pageIndex, int pageSize)
+        {
+            var query = from student in _db.Users
+                        join enrollData in _db.EnrolledCourse on student.Id equals enrollData.StudentId
+                        where enrollData.CourseId == courseId
+                        select student;
+            var totalRecords = await query.CountAsync();
+            var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            var pagination = new Pagination<UserDto>
+            {
+                Items = _mapper.Map<List<UserDto>>(items),
+                TotalRecords = totalRecords,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            return Ok(new ApiResponse<Pagination<UserDto>>(200, "Thành công", pagination));
+        }
+
+
         private string GenerateRandomNumericString(int length)
         {
             Random random = new Random();

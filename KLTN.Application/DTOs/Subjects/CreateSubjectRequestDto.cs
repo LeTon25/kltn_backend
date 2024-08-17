@@ -9,6 +9,7 @@ namespace KLTN.Application.DTOs.Subjects
     public class CreateSubjectRequestDto
     {
         public string Name { get; set; }
+        public string SubjectCode { get; set; }
         public string? Description { get; set; }
     }
 }

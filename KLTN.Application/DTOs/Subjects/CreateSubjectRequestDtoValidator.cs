@@ -14,6 +14,8 @@ namespace KLTN.Application.DTOs.Subjects
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Tên môn học không được để trống")
                 .MaximumLength(100).WithMessage("Tên môn học có tối đa 100 kí tự");
+            RuleFor(x => x.SubjectCode)
+                .NotEmpty().WithMessage("Mã môn học không được để trống");
         }
     }
 }
