@@ -18,7 +18,7 @@ namespace KLTN.Api.Services.Implements
             _configuration = configuration;
             _key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["Jwt:SigningKey"]));
         }   
-        public string GenerateTokens(User user)
+        public string GenerateTokens(User user,DateTime expiresAt)
         {
             var claims = new List<Claim>
             {

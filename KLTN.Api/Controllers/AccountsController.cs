@@ -64,15 +64,17 @@ namespace KLTN.Api.Controllers
             {
                 var user = await _userManager.FindByNameAsync(requestDto.UserName);
                 await _userManager.AddToRoleAsync(user, Constants.Role.Student);
+
+                DateTime expiresAt = DateTime.Now.AddMinutes(30);
                 var authResponse = new AuthResponseDto
                 {
-                    Token = _tokenService.GenerateTokens(user),
+                    Token = _tokenService.GenerateTokens(user,expiresAt),
                     RefreshToken = _tokenService.GenerateRefreshToken(),
-                    ExpireIn = DateTime.Now.AddHours(12),
+                    ExpiresAt = expiresAt,
                     User = _mapper.Map<UserDto>(user),
                 };
                 user.RefreshToken = authResponse.RefreshToken;
-                user.RefreshTokenExpiry = authResponse.ExpireIn;
+                user.RefreshTokenExpiry = authResponse.ExpiresAt;
 
                 await _userManager.UpdateAsync(user);
                 return Ok(authResponse);
@@ -100,15 +102,16 @@ namespace KLTN.Api.Controllers
             {
                 return Unauthorized("Username hoặc mật khẩu bị sai");
             }
+            DateTime expiresAt = DateTime.Now.AddMinutes(30);
             var authResponse  = new AuthResponseDto
             {
-                Token = _tokenService.GenerateTokens(user),
+                Token = _tokenService.GenerateTokens(user,expiresAt),
                 RefreshToken = _tokenService.GenerateRefreshToken(),
-                ExpireIn = DateTime.Now.AddHours(12),
+                ExpiresAt = expiresAt, //access_token
                 User = _mapper.Map<UserDto>(user), 
             };
             user.RefreshToken = authResponse.RefreshToken;
-            user.RefreshTokenExpiry = authResponse.ExpireIn;
+            user.RefreshTokenExpiry = DateTime.Now.AddHours(12);
 
             await _userManager.UpdateAsync(user);
             return Ok(authResponse);
@@ -120,26 +123,18 @@ namespace KLTN.Api.Controllers
             var principal = _tokenService.GetTokenPrincipal(model.Token);
             if(principal?.Identity?.Name is null)
             {
-                return BadRequest("Không thể cấp mới được token");
+                return BadRequest(new ApiBadRequestResponse("Không thể cấp mới token"));
             }
             var user = await _userManager.FindByNameAsync(principal.Identity.Name);
             if (user is null || user.RefreshToken != model.RefreshToken || user.RefreshTokenExpiry < DateTime.Now)
-                return BadRequest("Không thể cấp mới được token");
-
-            var refreshToken = _tokenService.GenerateRefreshToken();
-            var expireRefreshToken = DateTime.Now.AddHours(12);
-            var authResponse =new AuthResponseDto
+                return BadRequest(new ApiBadRequestResponse("Không thể cấp mới token"));
+            DateTime expiresAt = DateTime.Now.AddMinutes(30);
+            var response = new RefreshTokenResponseDto
             {
-                Token = _tokenService.GenerateTokens(user),
-                RefreshToken = refreshToken,
-                ExpireIn = expireRefreshToken,
+                Token = _tokenService.GenerateTokens(user, expiresAt),
+                ExpiresAt = expiresAt, //access_token
             };
-
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiry = expireRefreshToken;   
-
-            await _userManager.UpdateAsync(user);
-            return Ok(authResponse);
+            return Ok(response);
         }
 
     }
