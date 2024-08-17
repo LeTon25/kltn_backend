@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\KLTN.Domain\KLTN.Domain.csproj" />
-    <ProjectReference Include="..\KLTN.Infrastructure\KLTN.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

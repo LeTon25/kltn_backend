@@ -1,4 +1,6 @@
-﻿using System;
+﻿using KLTN.Application.DTOs.Users;
+using KLTN.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +13,6 @@ namespace KLTN.Application.DTOs.Accounts
         public string Token { get; set; }
         public string RefreshToken { get; set; }    
         public DateTime ExpireIn { get; set; }  
-        public string UserName {  get; set; }
+        public UserDto User { get; set; }
     }
 }
