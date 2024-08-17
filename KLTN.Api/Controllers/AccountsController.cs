@@ -1,5 +1,7 @@
-﻿using KLTN.Api.Services.Interfaces;
+﻿using AutoMapper;
+using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Accounts;
+using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain;
@@ -20,15 +22,18 @@ namespace KLTN.Api.Controllers
         private readonly SignInManager<User> _signInManager;    
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ITokenService _tokenService;
+        private readonly IMapper _mapper;
         public AccountsController(UserManager<User> userManager,
             SignInManager<User> signInManager,
             RoleManager<IdentityRole> roleManager,
-            ITokenService tokenService) 
+            ITokenService tokenService,
+            IMapper mapper) 
         {
             this._userManager = userManager;
             this._signInManager = signInManager;
             this._roleManager = roleManager;
             this._tokenService = tokenService;  
+            this._mapper = mapper;
         }
         [HttpPost("register")]
         [ApiValidationFilter]
@@ -59,7 +64,18 @@ namespace KLTN.Api.Controllers
             {
                 var user = await _userManager.FindByNameAsync(requestDto.UserName);
                 await _userManager.AddToRoleAsync(user, Constants.Role.Student);
-                return Ok("Đăng ký thành công");
+                var authResponse = new AuthResponseDto
+                {
+                    Token = _tokenService.GenerateTokens(user),
+                    RefreshToken = _tokenService.GenerateRefreshToken(),
+                    ExpireIn = DateTime.Now.AddHours(12),
+                    User = _mapper.Map<UserDto>(user),
+                };
+                user.RefreshToken = authResponse.RefreshToken;
+                user.RefreshTokenExpiry = authResponse.ExpireIn;
+
+                await _userManager.UpdateAsync(user);
+                return Ok(authResponse);
             }
             else
             {
@@ -89,7 +105,7 @@ namespace KLTN.Api.Controllers
                 Token = _tokenService.GenerateTokens(user),
                 RefreshToken = _tokenService.GenerateRefreshToken(),
                 ExpireIn = DateTime.Now.AddHours(12),
-                UserName = requestDto.UserName,
+                User = _mapper.Map<UserDto>(user), 
             };
             user.RefreshToken = authResponse.RefreshToken;
             user.RefreshTokenExpiry = authResponse.ExpireIn;
@@ -117,7 +133,6 @@ namespace KLTN.Api.Controllers
                 Token = _tokenService.GenerateTokens(user),
                 RefreshToken = refreshToken,
                 ExpireIn = expireRefreshToken,
-                UserName = user.UserName
             };
 
             user.RefreshToken = refreshToken;
