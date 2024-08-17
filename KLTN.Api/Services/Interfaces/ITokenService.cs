@@ -5,7 +5,7 @@ namespace KLTN.Api.Services.Interfaces
 {
     public interface ITokenService
     {
-        string GenerateTokens(User user);
+        string GenerateTokens(User user,DateTime expiresAt);
         string GenerateRefreshToken();
         ClaimsPrincipal? GetTokenPrincipal(string token);
     }
