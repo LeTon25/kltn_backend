@@ -84,7 +84,7 @@ namespace KLTN.Api.Controllers
                             SubjectName = subject != null ? subject.Name : "Không tìm thấy",
                             SemesterName = semester != null ? semester.Name : "Không tìm thấy",
                             LecturerName = instructor != null ? instructor.FullName : "Không tìm thấy"
-                        }; ;
+                        }; 
             var totalRecords = await finalQuery.CountAsync();
             var items = await finalQuery.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
 

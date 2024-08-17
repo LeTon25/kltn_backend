@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Accounts;
+using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain;
 using KLTN.Domain.Entities;
+using KLTN.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -23,17 +26,20 @@ namespace KLTN.Api.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
+        private readonly ApplicationDbContext _db;
         public AccountsController(UserManager<User> userManager,
             SignInManager<User> signInManager,
             RoleManager<IdentityRole> roleManager,
             ITokenService tokenService,
-            IMapper mapper) 
+            IMapper mapper,
+            ApplicationDbContext _db) 
         {
             this._userManager = userManager;
             this._signInManager = signInManager;
             this._roleManager = roleManager;
             this._tokenService = tokenService;  
             this._mapper = mapper;
+            this._db = _db;
         }
         [HttpPost("register")]
         [ApiValidationFilter]
@@ -135,6 +141,70 @@ namespace KLTN.Api.Controllers
                 ExpiresAt = expiresAt, //access_token
             };
             return Ok(new ApiSuccessResponse<RefreshTokenResponseDto>(200,"Refresh token thành công",response));
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetAllCourses()
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            #region lay cac khoa nguoi dung giang day
+            var teachingCourse = from user in _db.Users where user.Id == userId
+                                 join course in _db.Courses on user.Id equals course.LecturerId
+                                 join subject in _db.Subjects on course.SemesterId equals subject.SubjectId into courseSubject
+                                 from subject in courseSubject.DefaultIfEmpty()
+                                 join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemester
+                                 from semester in courseSemester.DefaultIfEmpty()
+                                 select new CourseDto
+                                 {
+                                     CourseId = course.CourseId,
+                                     SubjectId = course.SubjectId,
+                                     SemesterId = course.SemesterId,
+                                     CourseGroup = course.CourseGroup,
+                                     Background = course.Background,
+                                     InviteCode = course.InviteCode,
+                                     EnableInvite = course.EnableInvite,
+                                     LecturerId = course.LecturerId,
+                                     CreatedAt = course.CreatedAt,
+                                     UpdatedAt = course.UpdatedAt,
+                                     DeletedAt = course.DeletedAt,
+                                     SubjectName = subject != null ? subject.Name : "Không tìm thấy",
+                                     SemesterName = semester != null ? semester.Name : "Không tìm thấy",
+                                     LecturerName = user != null ? user.FullName : "Không tìm thấy"
+                                 };
+            #endregion
+            #region lay cac khoa nguoi dung tham gia hoc
+            var enrolledCourses = from user in _db.Users where user.Id == userId
+                                 join enrolledStudent in _db.EnrolledCourse on user.Id equals enrolledStudent.StudentId
+                                 join course in _db.Courses on enrolledStudent.CourseId equals course.CourseId
+                                 join subject in _db.Subjects on course.SemesterId equals subject.SubjectId into courseSubject
+                                 from subject in courseSubject.DefaultIfEmpty()
+                                 join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemester
+                                 from semester in courseSemester.DefaultIfEmpty()
+                                 select new CourseDto
+                                 {
+                                     CourseId = course.CourseId,
+                                     SubjectId = course.SubjectId,
+                                     SemesterId = course.SemesterId,
+                                     CourseGroup = course.CourseGroup,
+                                     Background = course.Background,
+                                     InviteCode = course.InviteCode,
+                                     EnableInvite = course.EnableInvite,
+                                     LecturerId = course.LecturerId,
+                                     CreatedAt = course.CreatedAt,
+                                     UpdatedAt = course.UpdatedAt,
+                                     DeletedAt = course.DeletedAt,
+                                     SubjectName = subject != null ? subject.Name : "Không tìm thấy",
+                                     SemesterName = semester != null ? semester.Name : "Không tìm thấy",
+                                     LecturerName = user != null ? user.FullName : "Không tìm thấy"
+                                 };
+            #endregion
+
+            return Ok(new ApiResponse<CourseByUserDto>(200,"Thành công",new CourseByUserDto()
+            {
+                CreatedCourses = await teachingCourse.ToListAsync(),
+                EnrolledCourses = await enrolledCourses.ToListAsync(),
+            }));
         }
 
     }

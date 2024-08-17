@@ -248,7 +248,7 @@ namespace KLTN.Api.Controllers
 
             return BadRequest(new ApiBadRequestResponse<string>(result));
         }
-
+        
         private async Task<string> SaveFileAsync(string filePath,IFormFile file)
         {
             var originalFileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
