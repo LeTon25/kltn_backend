@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Courses;
+using KLTN.Application.DTOs.Groups;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
@@ -7,6 +8,7 @@ using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace KLTN.Api.Controllers
 {
@@ -224,7 +226,7 @@ namespace KLTN.Api.Controllers
             var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
             {
-                return NotFound(new ApiNotFoundResponse("Không thể tìm thấy lớp học với id"));
+                return NotFound(new ApiNotFoundResponse($"Không thể tìm thấy lớp học với id {courseId}"));
             }
             _db.Courses.Remove(course);
             var result = await _db.SaveChangesAsync();
@@ -265,6 +267,31 @@ namespace KLTN.Api.Controllers
             {
                 return BadRequest(new ApiBadRequestResponse("Không thể tham gia lớp học"));
             }
+        }
+        [HttpGet("{courseId}/groups")]
+        public async Task<IActionResult> GetCourseGroupsAsync(string courseId)
+        {
+            var groups = from course in _db.Courses where course.CourseId == courseId
+                         join g in _db.Groups on course.CourseId equals g.CourseId into gCourse
+                         from g in gCourse.DefaultIfEmpty()
+                         select new GroupDto
+                         {
+                             GroupId = g.GroupId,
+                             GroupName = g.GroupName,
+                             ProjectId = g.ProjectId,
+                             CourseId= courseId,
+                             NumberOfMembers = g.NumberOfMembers,
+                             CreatedAt = g.CreatedAt,
+                             UpdatedAt = g.UpdatedAt,
+                             DeletedAt = g.DeletedAt,
+                             CourseGroup = course.CourseGroup,
+                         };
+            if (groups == null)
+            {
+                return NotFound(new ApiNotFoundResponse($"Không thể tìm thấy lớp học với id : {courseId}"));
+            }
+            return Ok(await groups.ToListAsync());
+
         }
         private string GenerateRandomNumericString(int length)
         {

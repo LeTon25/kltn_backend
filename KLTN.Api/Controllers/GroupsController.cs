@@ -145,7 +145,7 @@ namespace KLTN.Api.Controllers
         }
         [HttpPut("{groupId}")]
         [ApiValidationFilter]
-        public async Task<IActionResult> PutGroupId(string groupId, [FromBody] CreateGroupRequestDto requestDto)
+        public async Task<IActionResult> PutGroupIdAsync(string groupId, [FromBody] CreateGroupRequestDto requestDto)
         {
             var group = await _db.Groups.FirstOrDefaultAsync(c => c.GroupId == groupId);
             if (group == null)
@@ -189,7 +189,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpPost("{groupId}/add-members")]
-        public async Task<IActionResult> PostAddMembersToGroup(string groupId, AddMemberToGroupDto requestDto)
+        public async Task<IActionResult> PostAddMembersToGroupAsync(string groupId, AddMemberToGroupDto requestDto)
         {
             var group = await _db.Groups.FindAsync(groupId);
             if (group == null) 
@@ -214,6 +214,53 @@ namespace KLTN.Api.Controllers
             }
             await _db.SaveChangesAsync();
             return Ok("Thêm thành công");
+        }
+        [HttpDelete("{groupId}/remove-members")]
+        public async Task<IActionResult> DeleteRemoveMemberAsync(string groupId,RemoveMemberFromGroupDto requestDto)
+        {
+            var group = await _db.Groups.FindAsync(groupId);
+            if (group == null) 
+            { 
+                return NotFound(new ApiNotFoundResponse("Không tìm thấy nhóm"));
+            } 
+            if (requestDto.studentIds.Length > 0 ) { 
+                foreach(var id in requestDto.studentIds)
+                {
+                    var student = await _userManager.FindByIdAsync(id);
+                    if (student != null) 
+                    {
+                        var groupMember = await _db.GroupMembers.Where(c => c.GroupId == groupId && c.StudentId == id).FirstOrDefaultAsync();
+                        if (groupMember != null) 
+                        {
+                            _db.GroupMembers.Remove(groupMember);
+                        }
+                    }
+                }
+                group.NumberOfMembers += requestDto.studentIds.Length;
+            }
+            await _db.SaveChangesAsync();
+            return Ok("Xóa thành công");
+        }
+        [HttpGet("{groupId}/members")]
+        public async Task<IActionResult> GetGroupMembersAsync()
+        {
+            var data = from gr in _db.Groups
+                       where gr.GroupId == gr.GroupId
+                       join member in _db.GroupMembers on gr.GroupId equals member.GroupId
+                       join user in _db.Users on member.StudentId equals user.Id
+                       select new GroupMemberDto
+                       {
+                           GroupId = gr.GroupId,
+                           IsLeader = member.IsLeader,  
+                           StudentId = member.StudentId,
+                           CreatedAt = member.CreatedAt,
+                           DeletedAt = member.DeletedAt,
+                           UpdatedAt = member.UpdatedAt,
+                           StudentName = user.FullName
+                       };
+            if (data == null)
+                return Ok(new List<GroupMemberDto>());
+            return Ok(await data.ToListAsync());
         }
 
     }
