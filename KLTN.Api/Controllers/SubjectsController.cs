@@ -24,7 +24,7 @@ namespace KLTN.Api.Controllers
             var query = _db.Subjects;
 
             var subjectDtos = await query.ToListAsync();
-            return Ok(_mapper.Map<List<SubjectDto>>(subjectDtos));
+            return Ok(new ApiResponse<List<SubjectDto>>(200,"Thành công",_mapper.Map<List<SubjectDto>>(subjectDtos)));
         }
         [HttpGet("filter")]
         public async Task<IActionResult> GetSubjectsPagingAsync(string filter,int pageIndex,int pageSize)

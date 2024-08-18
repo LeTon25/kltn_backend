@@ -130,6 +130,7 @@ app.UseStaticFiles();
 app.UseDefaultFiles();
 
 app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
