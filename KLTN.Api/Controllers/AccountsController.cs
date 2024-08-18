@@ -73,7 +73,7 @@ namespace KLTN.Api.Controllers
                 var user = await _userManager.FindByNameAsync(requestDto.UserName);
                 await _userManager.AddToRoleAsync(user, Constants.Role.Student);
 
-                DateTime expiresAt = DateTime.Now.AddMinutes(30);
+                DateTime expiresAt = DateTime.Now.AddDays(2);
                 var authResponse = new AuthResponseDto
                 {
                     Token = await _tokenService.GenerateTokens(user,expiresAt),
@@ -110,7 +110,7 @@ namespace KLTN.Api.Controllers
             {
                 return Unauthorized(new ApiResponse<string>(401, "Thông tin đăng nhập không chính xác"));
             }
-            DateTime expiresAt = DateTime.Now.AddMinutes(30);
+            DateTime expiresAt = DateTime.Now.AddDays(2);
             var authResponse  = new AuthResponseDto
             {
                 Token = await _tokenService.GenerateTokens(user,expiresAt),
@@ -136,7 +136,7 @@ namespace KLTN.Api.Controllers
             var user = await _userManager.FindByNameAsync(principal.Identity.Name);
             if (user is null || user.RefreshToken != model.RefreshToken || user.RefreshTokenExpiry < DateTime.Now)
                 return BadRequest(new ApiBadRequestResponse<string>("Không thể cấp mới token"));
-            DateTime expiresAt = DateTime.Now.AddMinutes(30);
+            DateTime expiresAt = DateTime.Now.AddDays(2);
             var response = new RefreshTokenResponseDto
             {
                 Token = await _tokenService.GenerateTokens(user, expiresAt),
@@ -153,7 +153,7 @@ namespace KLTN.Api.Controllers
             #region lay cac khoa nguoi dung giang day
             var teachingCourse = from user in _db.Users where user.Id == userId
                                  join course in _db.Courses on user.Id equals course.LecturerId
-                                 join subject in _db.Subjects on course.SemesterId equals subject.SubjectId into courseSubject
+                                 join subject in _db.Subjects on course.SubjectId equals subject.SubjectId into courseSubject
                                  from subject in courseSubject.DefaultIfEmpty()
                                  join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemester
                                  from semester in courseSemester.DefaultIfEmpty()
@@ -179,7 +179,7 @@ namespace KLTN.Api.Controllers
             var enrolledCourses = from user in _db.Users where user.Id == userId
                                  join enrolledStudent in _db.EnrolledCourse on user.Id equals enrolledStudent.StudentId
                                  join course in _db.Courses on enrolledStudent.CourseId equals course.CourseId
-                                 join subject in _db.Subjects on course.SemesterId equals subject.SubjectId into courseSubject
+                                 join subject in _db.Subjects on course.SubjectId equals subject.SubjectId into courseSubject
                                  from subject in courseSubject.DefaultIfEmpty()
                                  join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemester
                                  from semester in courseSemester.DefaultIfEmpty()

@@ -8,6 +8,7 @@ using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Runtime.CompilerServices;
@@ -15,6 +16,7 @@ using System.Text.RegularExpressions;
 
 namespace KLTN.Api.Controllers
 {
+    [Authorize]
     public class CoursesController : BaseController
     {
         private readonly ApplicationDbContext _db;
