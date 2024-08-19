@@ -235,6 +235,29 @@ namespace KLTN.Api.Controllers
             return BadRequest(new ApiBadRequestResponse<string>("Cập nhật lớp học thất bại"));
         }
 
+        [HttpPut("{courseId}/inviteCode")]
+        [ApiValidationFilter]
+        public async Task<IActionResult> PutCourseInviteCodeAsync(string courseId,[FromBody]string inviteCode)
+        {
+            var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
+            if (course == null)
+            {
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy lớp"));
+            }
+            if (string.IsNullOrEmpty(inviteCode))
+            {
+                return BadRequest(new ApiBadRequestResponse<string>("Mã mời không được trùng"));
+            }
+            course.InviteCode = inviteCode; 
+            _db.Courses.Update(course);
+            var result = await _db.SaveChangesAsync();
+            if (result > 0)
+            {
+                return Ok(new ApiResponse<CourseDto>(200, "Cập nhật mã mời thành công", _mapper.Map<CourseDto>(course)));
+            }
+            return BadRequest(new ApiBadRequestResponse<string>("Cập nhật mã mời thất bại"));
+        }
+
         [HttpDelete("{courseId}")]
         public async Task<IActionResult> DeleteCourseAsync(string courseId)
         {
