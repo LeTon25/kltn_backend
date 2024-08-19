@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Projects;
 using KLTN.Application.DTOs.Subjects;
+using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
@@ -40,8 +41,9 @@ namespace KLTN.Api.Controllers
                             CreatedAt = project.CreatedAt,
                             UpdatedAt =project.UpdatedAt,
                             DeletedAt =project.DeletedAt,
-                            SubjectName = subject != null ? subject.Name : "Không xác định",
-                            CreateUserName =user != null ? user.FullName : "Không xác định" ,
+                            Subject = _mapper.Map<SubjectDto>(subject),
+                            CreateUser = _mapper.Map<UserDto>(user),
+
                         };
             var projectDtos = await query.ToListAsync();
             return Ok(new ApiResponse<List<ProjectDto>>(200,"Thành công",projectDtos));
@@ -105,8 +107,8 @@ namespace KLTN.Api.Controllers
                                  CreatedAt = project.CreatedAt,
                                  UpdatedAt = project.UpdatedAt,
                                  DeletedAt = project.DeletedAt,
-                                 SubjectName = subject != null ? subject.Name : "Không xác định",
-                                 CreateUserName = user != null ? user.FullName : "Không xác định",
+                                 Subject = _mapper.Map<SubjectDto>(subject),
+                                 CreateUser = _mapper.Map<UserDto>(user),
                              };
             if(await finalQuery.CountAsync() == 0)
             {
