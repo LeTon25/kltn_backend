@@ -1,4 +1,8 @@
-﻿using System;
+﻿using KLTN.Application.DTOs.Semesters;
+using KLTN.Application.DTOs.Subjects;
+using KLTN.Application.DTOs.Users;
+using KLTN.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,9 +23,10 @@ namespace KLTN.Application.DTOs.Courses
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
-        public string SubjectName { get; set; } 
-        public string SemesterName { get; set; }    
-        public string LecturerName { get; set; }    
+        
+        public SubjectDto? Subject { get; set; }   
+        public UserDto? Lecturer { get ; set; }    
+        public SemesterDto? Semester { get; set; } 
 
     }
 }
