@@ -233,15 +233,14 @@ namespace KLTN.Api.Controllers
                             CreatedAt = announcement.CreatedAt,
                             UpdatedAt = announcement.UpdatedAt,
                             DeletedAt = announcement.DeletedAt,
-                            CreateUserName = user.FullName
+                            CreateUser = _mapper.Map<UserDto>(user)
                         };
             var totalRecords = await query.CountAsync();
             var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
-            var data = items.Select(e => _mapper.Map<AnnouncementDto>(e)).ToList();
 
             var pagination = new Pagination<AnnouncementDto>
             {
-                Items = data,
+                Items = await query.ToListAsync(),
                 TotalRecords = totalRecords,
                 PageIndex = pageIndex,
                 PageSize = pageSize

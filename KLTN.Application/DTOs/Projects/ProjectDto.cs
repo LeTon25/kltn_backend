@@ -1,4 +1,6 @@
-﻿using System;
+﻿using KLTN.Application.DTOs.Subjects;
+using KLTN.Application.DTOs.Users;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,7 +19,7 @@ namespace KLTN.Application.DTOs.Projects
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
-        public string SubjectName { get; set; }
-        public string CreateUserName { get; set; }
+        public SubjectDto? Subject { get; set; }
+        public UserDto? CreateUser { get; set; }    
     }
 }
