@@ -35,7 +35,6 @@ namespace KLTN.Application
             CreateMap<Group,GroupDto>();
 
             CreateMap<Subject,SubjectDto>();
-
         }
     }
 }

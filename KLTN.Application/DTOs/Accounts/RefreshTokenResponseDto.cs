@@ -9,6 +9,6 @@ namespace KLTN.Application.DTOs.Accounts
     public class RefreshTokenResponseDto
     {
         public string Token { get; set; }
-        public DateTime ExpiresAt { get; set; }
+        public DateTime TokenExpiresAt { get; set; }
     }
 }

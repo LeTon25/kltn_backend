@@ -2,6 +2,8 @@
 using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
+using KLTN.Application.DTOs.Semesters;
+using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
@@ -48,9 +50,9 @@ namespace KLTN.Api.Controllers
                             CreatedAt =course.CreatedAt,
                             UpdatedAt =course.UpdatedAt,
                             DeletedAt =course.DeletedAt,
-                            SubjectName =subject.Name,
-                            SemesterName =semester.Name,
-                            LecturerName =instructor.FullName
+                            Semester = _mapper.Map<SemesterDto>(semester),
+                            Lecturer = _mapper.Map<UserDto>(instructor),
+                            Subject = _mapper.Map<SubjectDto>(subject),
                         };
             var courseDtos = await query.ToListAsync();
             return Ok(new ApiResponse<List<CourseDto>>(200,"Thành công",courseDtos));
@@ -85,9 +87,9 @@ namespace KLTN.Api.Controllers
                             CreatedAt = course.CreatedAt,
                             UpdatedAt = course.UpdatedAt,
                             DeletedAt = course.DeletedAt,
-                            SubjectName = subject != null ? subject.Name : "Không tìm thấy",
-                            SemesterName = semester != null ? semester.Name : "Không tìm thấy",
-                            LecturerName = instructor != null ? instructor.FullName : "Không tìm thấy"
+                            Semester = _mapper.Map<SemesterDto>(semester),
+                            Lecturer = _mapper.Map<UserDto>(instructor),
+                            Subject = _mapper.Map<SubjectDto>(subject),
                         }; 
             var totalRecords = await finalQuery.CountAsync();
             var items = await finalQuery.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
@@ -126,9 +128,9 @@ namespace KLTN.Api.Controllers
                             CreatedAt = course.CreatedAt,
                             UpdatedAt = course.UpdatedAt,
                             DeletedAt = course.DeletedAt,
-                            SubjectName = subject != null ? subject.Name : "Không tìm thấy",
-                            SemesterName = semester != null ? semester.Name : "Không tìm thấy",
-                            LecturerName = instructor != null ? instructor.FullName : "Không tìm thấy"
+                            Semester = _mapper.Map<SemesterDto>(semester),
+                            Lecturer = _mapper.Map<UserDto>(instructor),
+                            Subject = _mapper.Map<SubjectDto>(subject),
                         }; 
             if( await query.CountAsync() == 0)
             {
@@ -162,9 +164,9 @@ namespace KLTN.Api.Controllers
                             CreatedAt = course.CreatedAt,
                             UpdatedAt = course.UpdatedAt,
                             DeletedAt = course.DeletedAt,
-                            SubjectName = subject != null ? subject.Name : "Không tìm thấy",
-                            SemesterName = semester != null ? semester.Name : "Không tìm thấy",
-                            LecturerName = instructor != null ? instructor.FullName : "Không tìm thấy"
+                            Semester = _mapper.Map<SemesterDto>(semester),
+                            Lecturer = _mapper.Map<UserDto>(instructor),
+                            Subject = _mapper.Map<SubjectDto>(subject),
                         };
             var totalRecords = await query.CountAsync();
             var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();

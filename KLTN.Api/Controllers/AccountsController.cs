@@ -3,6 +3,8 @@ using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Accounts;
 using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Courses;
+using KLTN.Application.DTOs.Semesters;
+using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
@@ -74,15 +76,17 @@ namespace KLTN.Api.Controllers
                 await _userManager.AddToRoleAsync(user, Constants.Role.Student);
 
                 DateTime expiresAt = DateTime.Now.AddDays(2);
+                DateTime refreshTokenExpiresAt = DateTime.Now.AddMonths(2);
                 var authResponse = new AuthResponseDto
                 {
                     Token = await _tokenService.GenerateTokens(user,expiresAt),
                     RefreshToken = _tokenService.GenerateRefreshToken(),
-                    ExpiresAt = expiresAt,
+                    TokenExpiresAt = expiresAt,
+                    RefreshTokenExpiresAt = refreshTokenExpiresAt,
                     User = _mapper.Map<UserDto>(user),
                 };
                 user.RefreshToken = authResponse.RefreshToken;
-                user.RefreshTokenExpiry = authResponse.ExpiresAt;
+                user.RefreshTokenExpiry = refreshTokenExpiresAt;
 
                 await _userManager.UpdateAsync(user);
                 return Ok(new ApiResponse<AuthResponseDto>(200,"Đăng kí thành công",authResponse));
@@ -111,15 +115,17 @@ namespace KLTN.Api.Controllers
                 return Unauthorized(new ApiResponse<string>(401, "Thông tin đăng nhập không chính xác"));
             }
             DateTime expiresAt = DateTime.Now.AddDays(2);
-            var authResponse  = new AuthResponseDto
+            DateTime refreshTokenExpiresAt = DateTime.Now.AddMonths(2);
+            var authResponse = new AuthResponseDto
             {
-                Token = await _tokenService.GenerateTokens(user,expiresAt),
+                Token = await _tokenService.GenerateTokens(user, expiresAt),
                 RefreshToken = _tokenService.GenerateRefreshToken(),
-                ExpiresAt = expiresAt, //access_token
-                User = _mapper.Map<UserDto>(user), 
+                TokenExpiresAt = expiresAt,
+                RefreshTokenExpiresAt = refreshTokenExpiresAt,
+                User = _mapper.Map<UserDto>(user),
             };
             user.RefreshToken = authResponse.RefreshToken;
-            user.RefreshTokenExpiry = DateTime.Now.AddHours(12);
+            user.RefreshTokenExpiry = refreshTokenExpiresAt;
 
             await _userManager.UpdateAsync(user);
             return Ok(new ApiSuccessResponse<AuthResponseDto>(200,"Đăng nhập thành công",authResponse));
@@ -140,7 +146,7 @@ namespace KLTN.Api.Controllers
             var response = new RefreshTokenResponseDto
             {
                 Token = await _tokenService.GenerateTokens(user, expiresAt),
-                ExpiresAt = expiresAt, //access_token
+                TokenExpiresAt = expiresAt, //access_token
             };
             return Ok(new ApiSuccessResponse<RefreshTokenResponseDto>(200,"Refresh token thành công",response));
         }
@@ -170,9 +176,9 @@ namespace KLTN.Api.Controllers
                                      CreatedAt = course.CreatedAt,
                                      UpdatedAt = course.UpdatedAt,
                                      DeletedAt = course.DeletedAt,
-                                     SubjectName = subject != null ? subject.Name : "Không tìm thấy",
-                                     SemesterName = semester != null ? semester.Name : "Không tìm thấy",
-                                     LecturerName = user != null ? user.FullName : "Không tìm thấy"
+                                     Semester = _mapper.Map<SemesterDto>(semester),
+                                     Lecturer = _mapper.Map<UserDto>(user),
+                                     Subject = _mapper.Map<SubjectDto>(subject),
                                  };
             #endregion
             #region lay cac khoa nguoi dung tham gia hoc
@@ -196,9 +202,9 @@ namespace KLTN.Api.Controllers
                                      CreatedAt = course.CreatedAt,
                                      UpdatedAt = course.UpdatedAt,
                                      DeletedAt = course.DeletedAt,
-                                     SubjectName = subject != null ? subject.Name : "Không tìm thấy",
-                                     SemesterName = semester != null ? semester.Name : "Không tìm thấy",
-                                     LecturerName = user != null ? user.FullName : "Không tìm thấy"
+                                     Semester = _mapper.Map<SemesterDto>(semester),
+                                     Lecturer = _mapper.Map<UserDto>(user),
+                                     Subject = _mapper.Map<SubjectDto>(subject),
                                  };
             #endregion
 

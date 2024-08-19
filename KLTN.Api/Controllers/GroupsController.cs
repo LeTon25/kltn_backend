@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Groups;
+using KLTN.Application.DTOs.Projects;
+using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
@@ -44,7 +46,8 @@ namespace KLTN.Api.Controllers
                             CreatedAt=g.CreatedAt,
                             UpdatedAt=g.UpdatedAt,
                             DeletedAt=g.DeletedAt,
-                            CourseGroup= course != null ? course.CourseGroup :"Không tìm thấy"
+                            CourseGroup= course != null ? course.CourseGroup :"Không tìm thấy",
+                            Project = _mapper.Map<ProjectDto>(project),
                         };
 
             var groupDtos = await query.ToListAsync();
@@ -74,7 +77,9 @@ namespace KLTN.Api.Controllers
                                 CreatedAt = g.CreatedAt,
                                 UpdatedAt = g.UpdatedAt,
                                 DeletedAt = g.DeletedAt,
-                                CourseGroup = course != null ? course.CourseGroup : "Không tìm thấy"
+                                CourseGroup = course != null ? course.CourseGroup : "Không tìm thấy",
+                                Project = _mapper.Map<ProjectDto>(project),
+
                             };
             var totalRecords = await finalQuery.CountAsync();
             var items = await finalQuery.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
@@ -107,7 +112,9 @@ namespace KLTN.Api.Controllers
                             CreatedAt = g.CreatedAt,
                             UpdatedAt = g.UpdatedAt,
                             DeletedAt = g.DeletedAt,
-                            CourseGroup = course != null ? course.CourseGroup : "Không tìm thấy"
+                            CourseGroup = course != null ? course.CourseGroup : "Không tìm thấy",
+                            Project = _mapper.Map<ProjectDto>(project),
+
                         };
 
             if (await query.CountAsync() == 0)
@@ -256,7 +263,7 @@ namespace KLTN.Api.Controllers
                            CreatedAt = member.CreatedAt,
                            DeletedAt = member.DeletedAt,
                            UpdatedAt = member.UpdatedAt,
-                           StudentName = user.FullName
+                           StudentObj = _mapper.Map<UserDto>(user)
                        };
             return Ok(new ApiResponse<List<GroupMemberDto>>(200,"Thành công", await data.ToListAsync()));
         }
