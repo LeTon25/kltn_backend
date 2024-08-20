@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Announcements;
+using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
@@ -45,7 +46,7 @@ namespace KLTN.Api.Controllers
                             CreatedAt=announcement.CreatedAt,
                             UpdatedAt=announcement.UpdatedAt,
                             DeletedAt=announcement.DeletedAt,
-                            CreateUserName=user.FullName
+                            CreateUser = _mapper.Map<UserDto>(user)
                         };
             var announcementDtos = await query.ToListAsync();
             return Ok(new ApiResponse<List<AnnouncementDto>>(200,"Thành công", _mapper.Map<List<AnnouncementDto>>(announcementDtos)));
@@ -66,7 +67,7 @@ namespace KLTN.Api.Controllers
                             CreatedAt = announcement.CreatedAt,
                             UpdatedAt = announcement.UpdatedAt,
                             DeletedAt = announcement.DeletedAt,
-                            CreateUserName = user.FullName
+                            CreateUser = _mapper.Map<UserDto>(user)
                         };
             var totalRecords = await query.CountAsync();
             var items= await query.Skip((pageIndex-1)*pageSize).Take(pageSize).ToListAsync();
@@ -97,7 +98,7 @@ namespace KLTN.Api.Controllers
                             CreatedAt = announcement.CreatedAt,
                             UpdatedAt = announcement.UpdatedAt,
                             DeletedAt = announcement.DeletedAt,
-                            CreateUserName = user.FullName
+                            CreateUser = _mapper.Map<UserDto>(user)
                         };
             if (await query.CountAsync() == 0)
             {

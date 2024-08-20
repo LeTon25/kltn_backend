@@ -153,7 +153,7 @@ namespace KLTN.Api.Controllers
 
         [HttpGet("courses")]
         [Authorize]
-        public async Task<IActionResult> GetAllCoursesByCurrentUser()
+        public async Task<IActionResult> GetAllCoursesByCurrentUserAsync()
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             #region lay cac khoa nguoi dung giang day
@@ -217,7 +217,7 @@ namespace KLTN.Api.Controllers
 
         [HttpGet("announcements/filter")]
         [Authorize]
-        public async Task<IActionResult> GetAllAnnouncementsByCurrentUser(string filter,int pageIndex, int pageSize)
+        public async Task<IActionResult> GetAllAnnouncementsByCurrentUserAsync(string filter,int pageIndex, int pageSize)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var query = from announcement in _db.Announcements where announcement.UserId == userId

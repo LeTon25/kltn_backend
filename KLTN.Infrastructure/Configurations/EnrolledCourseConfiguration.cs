@@ -15,7 +15,7 @@ namespace KLTN.Infrastructure.Configurations
         {
             builder.ToTable("EnrolledCourse");
 
-            builder.HasKey(e => new  { e.StudentId, e.CourseId} );
+            builder.HasKey(e => new  { e.StudentId, e.CourseId } );
         }
     }
 }
