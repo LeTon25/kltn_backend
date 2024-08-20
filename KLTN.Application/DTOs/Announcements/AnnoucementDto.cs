@@ -13,7 +13,6 @@ namespace KLTN.Application.DTOs.Announcements
         public string AnnouncementId { get; set; }
         public string UserId { get; set; }
         public string CourseId { get; set; }
-
         public string Content { get; set; }
         public string[] AttachedLinks { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -21,5 +20,6 @@ namespace KLTN.Application.DTOs.Announcements
         public DateTime? DeletedAt { get; set; }
         public UserDto? CreateUser { get; set; }
         public CourseDto? Course { get; set; }
+        public bool IsPinned { get; set; }
     }
 }

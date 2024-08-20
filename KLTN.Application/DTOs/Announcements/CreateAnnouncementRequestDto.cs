@@ -14,5 +14,6 @@ namespace KLTN.Application.DTOs.Announcements
         public string[] AttachedLinks { get; set; }
 
         public string Content { get; set; }
+        public bool IsPinned { get; set; }
     }
 }

@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.EnvironmentVariables;
+using System.Diagnostics.Eventing.Reader;
 using System.Net.WebSockets;
 
 namespace KLTN.Api.Controllers
@@ -82,6 +83,23 @@ namespace KLTN.Api.Controllers
             };
             return Ok(new ApiResponse<Pagination<AnnouncementDto>>(200,"Thành công",pagination));
         }
+        [HttpPatch("{announcementId}/pinned")]
+        public async Task<IActionResult> PatchAnnouncementsAsync(string announcementId,bool isPinned)
+        {
+            var query = from an in _db.Announcements where an.AnnouncementId == announcementId select an ;
+            var currentAnnouncement = await query.FirstOrDefaultAsync();
+            if (currentAnnouncement == null) 
+            { 
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy thông báo"));  
+            }
+
+            currentAnnouncement.IsPinned = isPinned;
+            _db.Announcements.Update(currentAnnouncement);
+            await _db.SaveChangesAsync();
+
+            return Ok(new ApiResponse<string>(200, "Thành công"));
+            
+        }
         [HttpGet("{announcementId}")]
         public async Task<IActionResult> GetByIdAsync(string announcementId)
         {
@@ -124,6 +142,7 @@ namespace KLTN.Api.Controllers
                 CreatedAt = DateTime.Now,
                 UpdatedAt = null,
                 DeletedAt = null,
+                IsPinned = requestDto.IsPinned,
             };
             await _db.AddAsync(newAnnouncement);
             await _db.SaveChangesAsync();
@@ -141,7 +160,7 @@ namespace KLTN.Api.Controllers
             announcement.Content = requestDto.Content;
             announcement.AttachedLinks = requestDto.AttachedLinks;
             announcement.UpdatedAt = DateTime.Now;
-
+            announcement.IsPinned = requestDto.IsPinned;
             _db.Announcements.Update(announcement);
             var result = await _db.SaveChangesAsync();
             if(result > 0)
