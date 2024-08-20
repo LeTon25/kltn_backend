@@ -73,8 +73,8 @@ namespace KLTN.Api.Controllers
                             CreatedAt = project.CreatedAt,
                             UpdatedAt = project.UpdatedAt,
                             DeletedAt = project.DeletedAt,
-                            SubjectName = subject != null ? subject.Name : "Không xác định",
-                            CreateUserName = user != null ? user.FullName : "Không xác định",
+                            Subject = _mapper.Map<SubjectDto>(subject),
+                            CreateUser = _mapper.Map<UserDto>(user)
                         };
             var totalRecords = await finalQuery.CountAsync();
             var items = await finalQuery.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();

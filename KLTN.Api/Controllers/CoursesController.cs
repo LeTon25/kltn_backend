@@ -8,12 +8,14 @@ using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
+using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Runtime.CompilerServices;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 
 namespace KLTN.Api.Controllers
@@ -24,7 +26,8 @@ namespace KLTN.Api.Controllers
         private readonly ApplicationDbContext _db;
         private readonly IMapper _mapper;
         public CoursesController(ApplicationDbContext _db,
-            IMapper _mapper) 
+            IMapper _mapper
+          ) 
         { 
             this._db = _db;
             this._mapper = _mapper;
@@ -131,12 +134,19 @@ namespace KLTN.Api.Controllers
                             Semester = _mapper.Map<SemesterDto>(semester),
                             Lecturer = _mapper.Map<UserDto>(instructor),
                             Subject = _mapper.Map<SubjectDto>(subject),
-                        }; 
-            if( await query.CountAsync() == 0)
+                        };
+            var returnCourse = await query.FirstOrDefaultAsync();
+            if ( await query.CountAsync() == 0)
             {
                 return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy khóa học với id : {id}"));
             }
-            return Ok(new ApiResponse<CourseDto>(200,"Thành công", await query.FirstOrDefaultAsync()));
+
+            var queryStudent = from student in _db.Users
+                        join enrollData in _db.EnrolledCourse on student.Id equals enrollData.StudentId
+                        where enrollData.CourseId == id
+                        select student;
+            returnCourse.Students = _mapper.Map<List<UserDto>>( await queryStudent.ToListAsync());
+            return Ok(new ApiResponse<CourseDto>(200,"Thành công", returnCourse));
         }
         [HttpGet("{lecturerId}/filter")]
         public async Task<IActionResult> GetByLecturerIdAsync(string lecturerId, int pageIndex, int pageSize)
@@ -257,7 +267,44 @@ namespace KLTN.Api.Controllers
             }
             return BadRequest(new ApiBadRequestResponse<string>("Cập nhật mã mời thất bại"));
         }
+        [HttpGet("{courseId}/inviteCode/{inviteCode:length(1,100)}")]
+        [Authorize]
+        public async Task<IActionResult> GetApplyCodeAsync(string courseId, string inviteCode)
+        {
+            var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
+            if (course == null)
+            {
+                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy lớp học"));
+            }
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (course.InviteCode != inviteCode)
+            {
+                return BadRequest(new ApiBadRequestResponse<string>("Mã lớp học không chính xác"));
+            }
+            if (!await _db.EnrolledCourse.AnyAsync(c=>c.CourseId == courseId && c.StudentId == userId))
+            {
+                await _db.EnrolledCourse.AddAsync(new EnrolledCourse()
+                {
+                    CourseId = courseId,
+                    StudentId = userId,
+                    CreatedAt = DateTime.Now,
+                });
+                var result = await _db.SaveChangesAsync();
+                if (result > 0)
+                {
+                    return RedirectToAction("GetById", new { id = courseId });
+                }
+                else
+                {
+                    return BadRequest(new ApiBadRequestResponse<string>("Không thể tham gia lớp học"));
+                }
+            }
+            else
+            {
+                return RedirectToAction("GetById", new { id = courseId });
+            }
 
+        }
         [HttpDelete("{courseId}")]
         public async Task<IActionResult> DeleteCourseAsync(string courseId)
         {
@@ -273,33 +320,6 @@ namespace KLTN.Api.Controllers
                 return Ok(new ApiResponse<CourseDto>(200,"Xóa thành công",_mapper.Map<CourseDto>(course)));
             }
             return BadRequest(new ApiBadRequestResponse<string>("Xóa thông tin lớp học thất bại"));
-        }
-        [HttpPost("{courseId}/apply-code")]
-        public async Task<IActionResult> PostApplyCode(string courseId,JoinCourseViaCodeDto requestDto )
-        {
-            var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
-            if (course == null) { 
-                return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy lớp học"));
-            }
-            
-            if(course.InviteCode != requestDto.InviteCode)
-            {
-                return BadRequest(new ApiBadRequestResponse<string>("Mã lớp học không chính xác"));
-            }
-
-            await _db.EnrolledCourse.AddAsync(new EnrolledCourse()
-            {
-                CourseId = courseId,
-                StudentId = "tmp"
-            });
-            var result = await _db.SaveChangesAsync();
-            if (result > 0) {
-                return Ok();
-            }
-            else
-            {
-                return BadRequest(new ApiBadRequestResponse<string>("Không thể tham gia lớp học"));
-            }
         }
         [HttpGet("{courseId}/groups")]
         public async Task<IActionResult> GetCourseGroupsAsync(string courseId)
@@ -343,7 +363,7 @@ namespace KLTN.Api.Controllers
                             CreatedAt = announcement.CreatedAt,
                             UpdatedAt = announcement.UpdatedAt,
                             DeletedAt = announcement.DeletedAt,
-                            CreateUserName = user.FullName
+                            CreateUser = _mapper.Map<UserDto>(user)
                         };
             var totalRecords = await query.CountAsync();
             var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
@@ -358,27 +378,25 @@ namespace KLTN.Api.Controllers
             };
             return Ok(new ApiResponse<Pagination<AnnouncementDto>>(200, "Thành công", pagination));
         }
-        [HttpGet("{courseId}/students")]
-        public async Task<IActionResult> GetStudentsInCourseAsync(string courseId,string filter, int pageIndex, int pageSize)
-        {
-            var query = from student in _db.Users
-                        join enrollData in _db.EnrolledCourse on student.Id equals enrollData.StudentId
-                        where enrollData.CourseId == courseId
-                        select student;
-            var totalRecords = await query.CountAsync();
-            var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+        //[HttpGet("{courseId}/students")]
+        //public async Task<IActionResult> GetStudentsInCourseAsync(string courseId,string filter, int pageIndex, int pageSize)
+        //{
+        //    var query = from student in _db.Users
+        //                join enrollData in _db.EnrolledCourse on student.Id equals enrollData.StudentId
+        //                where enrollData.CourseId == courseId
+        //                select student;
+        //    var totalRecords = await query.CountAsync();
+        //    var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            var pagination = new Pagination<UserDto>
-            {
-                Items = _mapper.Map<List<UserDto>>(items),
-                TotalRecords = totalRecords,
-                PageIndex = pageIndex,
-                PageSize = pageSize
-            };
-            return Ok(new ApiResponse<Pagination<UserDto>>(200, "Thành công", pagination));
-        }
-
-
+        //    var pagination = new Pagination<UserDto>
+        //    {
+        //        Items = _mapper.Map<List<UserDto>>(items),
+        //        TotalRecords = totalRecords,
+        //        PageIndex = pageIndex,
+        //        PageSize = pageSize
+        //    };
+        //    return Ok(new ApiResponse<Pagination<UserDto>>(200, "Thành công", pagination));
+        //}
         private string GenerateRandomNumericString(int length)
         {
             Random random = new Random();

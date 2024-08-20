@@ -27,6 +27,7 @@ namespace KLTN.Application.DTOs.Courses
         public SubjectDto? Subject { get; set; }   
         public UserDto? Lecturer { get ; set; }    
         public SemesterDto? Semester { get; set; } 
+        public List<UserDto>? Students {get; set; }
 
     }
 }
