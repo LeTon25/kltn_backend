@@ -25,15 +25,12 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> GetProjectsAsync()
         {
             var query = from project in _db.Projects
-                        join subject in _db.Subjects on project.SubjectId equals subject.SubjectId into projectSubjects
-                        from subject in projectSubjects.DefaultIfEmpty()
-
                         join user in _db.Users on project.CreateUserId equals user.Id into projectUser
                         from user in projectUser.DefaultIfEmpty()
                         select new ProjectDto
                         {
                             ProjectId = project.ProjectId,
-                            SubjectId = project.SubjectId,
+                            CourseId = project.CourseId,
                             CreateUserId =project.CreateUserId,
                             Description =project.Description,
                             IsApproved = project.IsApproved,
@@ -41,7 +38,6 @@ namespace KLTN.Api.Controllers
                             CreatedAt = project.CreatedAt,
                             UpdatedAt =project.UpdatedAt,
                             DeletedAt =project.DeletedAt,
-                            Subject = _mapper.Map<SubjectDto>(subject),
                             CreateUser = _mapper.Map<UserDto>(user),
 
                         };
@@ -57,15 +53,13 @@ namespace KLTN.Api.Controllers
                 query = query.Where(e => e.Title.Contains(filter));
             }
             var finalQuery = from project in _db.Projects
-                        join subject in _db.Subjects on project.SubjectId equals subject.SubjectId into projectSubjects
-                        from subject in projectSubjects.DefaultIfEmpty()
 
                         join user in _db.Users on project.CreateUserId equals user.Id into projectUser
                         from user in projectUser.DefaultIfEmpty()
                         select new ProjectDto
                         {
                             ProjectId = project.ProjectId,
-                            SubjectId = project.SubjectId,
+                            CourseId = project.CourseId,
                             CreateUserId = project.CreateUserId,
                             Description = project.Description,
                             IsApproved = project.IsApproved,
@@ -73,7 +67,6 @@ namespace KLTN.Api.Controllers
                             CreatedAt = project.CreatedAt,
                             UpdatedAt = project.UpdatedAt,
                             DeletedAt = project.DeletedAt,
-                            Subject = _mapper.Map<SubjectDto>(subject),
                             CreateUser = _mapper.Map<UserDto>(user)
                         };
             var totalRecords = await finalQuery.CountAsync();
@@ -91,15 +84,13 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> GetByIdAsync(string projectId)
         {
             var finalQuery = from project in _db.Projects where project.ProjectId == projectId
-                             join subject in _db.Subjects on project.SubjectId equals subject.SubjectId into projectSubjects
-                             from subject in projectSubjects.DefaultIfEmpty()
 
                              join user in _db.Users on project.CreateUserId equals user.Id into projectUser
                              from user in projectUser.DefaultIfEmpty()
                              select new ProjectDto
                              {
                                  ProjectId = project.ProjectId,
-                                 SubjectId = project.SubjectId,
+                                 CourseId = project.CourseId,
                                  CreateUserId = project.CreateUserId,
                                  Description = project.Description,
                                  IsApproved = project.IsApproved,
@@ -107,7 +98,6 @@ namespace KLTN.Api.Controllers
                                  CreatedAt = project.CreatedAt,
                                  UpdatedAt = project.UpdatedAt,
                                  DeletedAt = project.DeletedAt,
-                                 Subject = _mapper.Map<SubjectDto>(subject),
                                  CreateUser = _mapper.Map<UserDto>(user),
                              };
             if(await finalQuery.CountAsync() == 0)
@@ -131,7 +121,7 @@ namespace KLTN.Api.Controllers
             {
                 ProjectId = newProjectId.ToString(),
                 Title = requestDto.Title,
-                SubjectId = requestDto.SubjectId,
+                CourseId = requestDto.CourseId,
                 Description = requestDto.Description,
                 CreatedAt = DateTime.Now,
                 IsApproved = requestDto.IsApproved,

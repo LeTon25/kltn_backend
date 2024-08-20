@@ -10,7 +10,7 @@ namespace KLTN.Domain.Entities
     public class Project : IDateTracking
     {
         public string ProjectId { get; set; }
-        public string SubjectId { get; set; }
+        public string CourseId { get; set; }
         public string CreateUserId { get; set; }
         public string Description { get; set; }
         public bool IsApproved {  get; set; }
