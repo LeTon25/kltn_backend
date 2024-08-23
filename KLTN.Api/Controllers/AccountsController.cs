@@ -77,9 +77,10 @@ namespace KLTN.Api.Controllers
 
                 DateTime expiresAt = DateTime.Now.AddDays(2);
                 DateTime refreshTokenExpiresAt = DateTime.Now.AddMonths(2);
+                string token = await _tokenService.GenerateTokens(user, expiresAt);
                 var authResponse = new AuthResponseDto
                 {
-                    Token = await _tokenService.GenerateTokens(user,expiresAt),
+                    Token = token,
                     RefreshToken = _tokenService.GenerateRefreshToken(),
                     TokenExpiresAt = expiresAt,
                     RefreshTokenExpiresAt = refreshTokenExpiresAt,
@@ -116,9 +117,11 @@ namespace KLTN.Api.Controllers
             }
             DateTime expiresAt = DateTime.Now.AddDays(2);
             DateTime refreshTokenExpiresAt = DateTime.Now.AddMonths(2);
+            string token = await _tokenService.GenerateTokens(user, expiresAt);
+
             var authResponse = new AuthResponseDto
             {
-                Token = await _tokenService.GenerateTokens(user, expiresAt),
+                Token = token,
                 RefreshToken = _tokenService.GenerateRefreshToken(),
                 TokenExpiresAt = expiresAt,
                 RefreshTokenExpiresAt = refreshTokenExpiresAt,
@@ -143,9 +146,10 @@ namespace KLTN.Api.Controllers
             if (user is null || user.RefreshToken != model.RefreshToken || user.RefreshTokenExpiry < DateTime.Now)
                 return BadRequest(new ApiBadRequestResponse<string>("Không thể cấp mới token"));
             DateTime expiresAt = DateTime.Now.AddDays(2);
+            string token = await _tokenService.GenerateTokens(user, expiresAt);
             var response = new RefreshTokenResponseDto
             {
-                Token = await _tokenService.GenerateTokens(user, expiresAt),
+                Token = token,
                 TokenExpiresAt = expiresAt, //access_token
             };
             return Ok(new ApiSuccessResponse<RefreshTokenResponseDto>(200,"Refresh token thành công",response));
