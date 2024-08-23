@@ -105,13 +105,13 @@ namespace KLTN.Api.Controllers
             }
             subject.Name = requestDto.Name;
             subject.Description  = requestDto.Description;
-            subject.SubjectCode = requestDto.SubjectCode;
+            subject.SubjectCode = requestDto.SubjectCode ?? subject.SubjectCode;
 
             _db.Subjects.Update(subject);
             var result = await _db.SaveChangesAsync();
             if(result > 0)
             {
-                return Ok(new ApiResponse<string>(200, "Thành công"));
+                return Ok(new ApiResponse<SubjectDto>(200,"Cập nhật thành công",_mapper.Map<SubjectDto>(subject)));
 
             }
             return BadRequest(new ApiBadRequestResponse<string>("Cập nhật môn học thất bại"));

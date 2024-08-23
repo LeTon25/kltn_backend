@@ -112,7 +112,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PostProjectAsync(CreateProjectRequestDto requestDto)
         {
             var projects = _db.Projects;
-            if (await projects.AnyAsync(c => c.Title.Equals(requestDto.Title)))
+            if (await projects.AnyAsync(c => c.Title.Equals(requestDto.Title) && c.CourseId == requestDto.CourseId))
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Tên đề tài không được trùng"));
             }
@@ -142,7 +142,7 @@ namespace KLTN.Api.Controllers
             {
                 return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy đề tài với id : {projectId}"));
             }
-            if (await _db.Projects.AnyAsync(e => e.Title == requestDto.Title && e.ProjectId != projectId))
+            if (await _db.Projects.AnyAsync(e => e.Title == requestDto.Title && e.CourseId == requestDto.CourseId && e.ProjectId != projectId))
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Tên đề tài không được trùng"));
             }
@@ -155,7 +155,7 @@ namespace KLTN.Api.Controllers
             var result = await _db.SaveChangesAsync();
             if (result > 0)
             {
-                return NoContent();
+                return Ok(new ApiResponse<ProjectDto>(200,"Thành công",_mapper.Map<ProjectDto>(project)));
             }
             return BadRequest(new ApiBadRequestResponse<string>("Cập nhật đề tài thất bại"));
         }
