@@ -18,6 +18,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using KLTN.Application.Helpers.Middleware;
+using System.Net.WebSockets;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -55,6 +56,8 @@ builder.Services.AddAuthentication(options =>
 });
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddAuthorization();
+//Add Aws Service
+builder.Services.AddAwsStorageService(builder.Configuration);
 //Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {

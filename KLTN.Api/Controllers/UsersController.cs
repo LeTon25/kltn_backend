@@ -7,6 +7,7 @@ using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace KLTN.Api.Controllers
 {
+    [Authorize]
     public class UsersController : BaseController
     {
         private readonly UserManager<User> _userManager;

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KLTN.Api.Controllers
 {
+    [Authorize]
     public class CommentController : BaseController
     {
         public ApplicationDbContext _db;    

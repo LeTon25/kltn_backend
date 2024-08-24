@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Announcements;
+using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
@@ -13,7 +14,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.EnvironmentVariables;
 using System.Diagnostics.Eventing.Reader;
+using System.Net.Mail;
 using System.Net.WebSockets;
+using File = KLTN.Domain.Entities.File;
 
 namespace KLTN.Api.Controllers
 {
@@ -31,7 +34,6 @@ namespace KLTN.Api.Controllers
             this._storageService = storageService;
         }
         [HttpGet]
-        [CustomAuthorizationAttribute]
         public async Task<IActionResult> GetAnnouncementsAsync()
         {
             var query = from announcement in _db.Announcements
@@ -44,13 +46,14 @@ namespace KLTN.Api.Controllers
                             CourseId=announcement.CourseId,
                             Content=announcement.Content,
                             AttachedLinks=announcement.AttachedLinks,
+                            Attachments= _mapper.Map<List<FileDto>>(announcement.Attachments),
                             CreatedAt=announcement.CreatedAt,
                             UpdatedAt=announcement.UpdatedAt,
                             DeletedAt=announcement.DeletedAt,
                             CreateUser = _mapper.Map<UserDto>(user)
                         };
             var announcementDtos = await query.ToListAsync();
-            return Ok(new ApiResponse<List<AnnouncementDto>>(200,"Thành công", _mapper.Map<List<AnnouncementDto>>(announcementDtos)));
+            return Ok(new ApiResponse<List<AnnouncementDto>>(200,"Thành công",announcementDtos));
         }
         [HttpGet("filter")]
         public async Task<IActionResult> GetAnnouncementsPagingAsync(string filter,int pageIndex,int pageSize)
@@ -65,6 +68,7 @@ namespace KLTN.Api.Controllers
                             CourseId = announcement.CourseId,
                             Content = announcement.Content,
                             AttachedLinks = announcement.AttachedLinks,
+                            Attachments =_mapper.Map<List<FileDto>>(announcement.Attachments),
                             CreatedAt = announcement.CreatedAt,
                             UpdatedAt = announcement.UpdatedAt,
                             DeletedAt = announcement.DeletedAt,
@@ -113,6 +117,7 @@ namespace KLTN.Api.Controllers
                             CourseId = announcement.CourseId,
                             Content = announcement.Content,
                             AttachedLinks = announcement.AttachedLinks,
+                            Attachments = _mapper.Map<List<FileDto>>(announcement.Attachments),
                             CreatedAt = announcement.CreatedAt,
                             UpdatedAt = announcement.UpdatedAt,
                             DeletedAt = announcement.DeletedAt,
@@ -139,6 +144,7 @@ namespace KLTN.Api.Controllers
                 UserId = requestDto.UserId,
                 CourseId = requestDto.CourseId,
                 AttachedLinks = requestDto.AttachedLinks,
+                Attachments = _mapper.Map<List<File>>(requestDto.Attachments),
                 CreatedAt = DateTime.Now,
                 UpdatedAt = null,
                 DeletedAt = null,

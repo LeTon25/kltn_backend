@@ -5,6 +5,7 @@ using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Projects;
 using KLTN.Application.DTOs.Semesters;
 using KLTN.Application.DTOs.Subjects;
+using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
 using KLTN.Domain.Entities;
 using System;
@@ -12,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using File = KLTN.Domain.Entities.File;
 
 namespace KLTN.Application
 {
@@ -35,6 +37,10 @@ namespace KLTN.Application
             CreateMap<Group,GroupDto>();
 
             CreateMap<Subject,SubjectDto>();
+
+            CreateMap<File, FileDto>();
+            CreateMap<FileDto, File>();
+
         }
     }
 }
