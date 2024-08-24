@@ -7,11 +7,13 @@ using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace KLTN.Api.Controllers
 {
+    [Authorize]
     public class ProjectsController : BaseController
     {
         private readonly ApplicationDbContext _db;

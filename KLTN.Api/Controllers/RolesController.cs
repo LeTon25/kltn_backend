@@ -6,9 +6,11 @@ using KLTN.Application.DTOs.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KLTN.Api.Controllers
 {
+    [Authorize]
     public class RolesController : BaseController
     {
         private readonly RoleManager<IdentityRole> _roleManager;

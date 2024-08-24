@@ -1,4 +1,5 @@
 ﻿using KLTN.Application.DTOs.Courses;
+using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,7 @@ namespace KLTN.Application.DTOs.Announcements
         public string CourseId { get; set; }
         public string Content { get; set; }
         public string[] AttachedLinks { get; set; }
+        public List<FileDto> Attachments { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }

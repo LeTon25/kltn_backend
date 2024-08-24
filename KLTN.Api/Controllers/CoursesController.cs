@@ -2,6 +2,7 @@
 using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
+using KLTN.Application.DTOs.Projects;
 using KLTN.Application.DTOs.Semesters;
 using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Users;
@@ -397,6 +398,28 @@ namespace KLTN.Api.Controllers
         //    };
         //    return Ok(new ApiResponse<Pagination<UserDto>>(200, "Thành công", pagination));
         //}
+        [HttpGet("{courseId}/projects")]
+        public async Task<IActionResult> GetProjectsInCourseAsync(string courseId)
+        {
+            var query = from project in _db.Projects
+                        where project.CourseId == courseId
+                        join user in _db.Users on project.CreateUserId equals user.Id into projectUsers
+                        from user in projectUsers.DefaultIfEmpty()
+                        select new ProjectDto
+                        {
+                            ProjectId = project.ProjectId,
+                            CourseId =project.CourseId,
+                            CreateUserId = project.CreateUserId,
+                            Description = project.Description,
+                            IsApproved = project.IsApproved,
+                            Title = project.Title,
+                            CreatedAt = project.CreatedAt,
+                            UpdatedAt = project.UpdatedAt,
+                            DeletedAt =project.DeletedAt,
+                            CreateUser = _mapper.Map<UserDto>(user)
+                        };
+            return Ok(new ApiResponse<List<ProjectDto>>(200, "Thành công", await query.ToListAsync()));
+        }
         private string GenerateRandomNumericString(int length)
         {
             Random random = new Random();

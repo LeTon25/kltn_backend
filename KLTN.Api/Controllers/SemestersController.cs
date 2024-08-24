@@ -5,6 +5,7 @@ using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.EnvironmentVariables;
@@ -12,6 +13,7 @@ using System.Net.WebSockets;
 
 namespace KLTN.Api.Controllers
 {
+    [Authorize]
     public class SemestersController : BaseController
     {
         private readonly ApplicationDbContext _db;

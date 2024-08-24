@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KLTN.Application.DTOs.Uploads;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,8 +11,8 @@ namespace KLTN.Application.DTOs.Announcements
     {
         public string UserId { get; set; }
         public string CourseId { get; set; }
-
         public string[] AttachedLinks { get; set; }
+        public List<FileDto> Attachments { get; set; }
 
         public string Content { get; set; }
         public bool IsPinned { get; set; }
