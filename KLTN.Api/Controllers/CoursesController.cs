@@ -5,6 +5,7 @@ using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Projects;
 using KLTN.Application.DTOs.Semesters;
 using KLTN.Application.DTOs.Subjects;
+using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
@@ -348,10 +349,11 @@ namespace KLTN.Api.Controllers
 
         }
 
-        [HttpGet("{courseId}/announcements/filter")]
-        public async Task<IActionResult> GetAnnouncementsInCourseAsync(string courseId,string filter, int pageIndex, int pageSize)
+        [HttpGet("{courseId}/announcements/")]
+        public async Task<IActionResult> GetAnnouncementsInCourseAsync(string courseId, string filter, int pageIndex, int pageSize)
         {
-            var query = from announcement in _db.Announcements where announcement.CourseId == courseId
+            var query = from announcement in _db.Announcements
+                        where announcement.CourseId == courseId
                         join user in _db.Users on announcement.UserId equals user.Id into announcementUsers
                         from user in announcementUsers.DefaultIfEmpty()
                         select new AnnouncementDto
@@ -361,23 +363,13 @@ namespace KLTN.Api.Controllers
                             CourseId = announcement.CourseId,
                             Content = announcement.Content,
                             AttachedLinks = announcement.AttachedLinks,
+                            Attachments = _mapper.Map<List<FileDto>>(announcement.Attachments),
                             CreatedAt = announcement.CreatedAt,
                             UpdatedAt = announcement.UpdatedAt,
                             DeletedAt = announcement.DeletedAt,
                             CreateUser = _mapper.Map<UserDto>(user)
                         };
-            var totalRecords = await query.CountAsync();
-            var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
-            var data = items.Select(e => _mapper.Map<AnnouncementDto>(e)).ToList();
-
-            var pagination = new Pagination<AnnouncementDto>
-            {
-                Items = data,
-                TotalRecords = totalRecords,
-                PageIndex = pageIndex,
-                PageSize = pageSize
-            };
-            return Ok(new ApiResponse<Pagination<AnnouncementDto>>(200, "Thành công", pagination));
+            return Ok(new ApiResponse<List<AnnouncementDto>>(200, "Thành công", await query.ToListAsync() ));
         }
         //[HttpGet("{courseId}/students")]
         //public async Task<IActionResult> GetStudentsInCourseAsync(string courseId,string filter, int pageIndex, int pageSize)
