@@ -20,6 +20,7 @@ using File = KLTN.Domain.Entities.File;
 
 namespace KLTN.Api.Controllers
 {
+    [Authorize]
     public class AnnouncementsController : BaseController
     {
         private readonly ApplicationDbContext _db;
