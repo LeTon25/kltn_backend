@@ -135,7 +135,7 @@ namespace KLTN.Api.Controllers
             await _db.SaveChangesAsync();
             return Ok(new ApiResponse<ProjectDto>(200, "Thành công", _mapper.Map<ProjectDto>(newProject)));
         }
-        [HttpPut("{projectId}")]
+        [HttpPatch("{projectId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutProjectId(string projectId, [FromBody] CreateProjectRequestDto requestDto)
         {

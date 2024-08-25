@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Announcements;
+using KLTN.Application.DTOs.Comments;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Projects;
@@ -34,12 +35,15 @@ namespace KLTN.Application
 
             CreateMap<Project, ProjectDto>();
 
-            CreateMap<Group,GroupDto>();
+            CreateMap<Group,GroupDto>().ReverseMap();
 
-            CreateMap<Subject,SubjectDto>();
+            CreateMap<Subject,SubjectDto>().ReverseMap();
+
 
             CreateMap<File, FileDto>();
             CreateMap<FileDto, File>();
+            
+            CreateMap<Comment, CommentDto>().ReverseMap();
 
         }
     }

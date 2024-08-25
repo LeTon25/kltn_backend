@@ -130,7 +130,7 @@ namespace KLTN.Api.Controllers
             return Ok(new ApiResponse<UserDto>(200, "Thành công", _mapper.Map<UserDto>(user)) );
         }
 
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         [ApiValidationFilter]
 
         public async Task<IActionResult> PutUserAsync(string id, [FromBody] CreateUserRequestDto request)
@@ -165,7 +165,7 @@ namespace KLTN.Api.Controllers
             return BadRequest(new ApiBadRequestResponse<string>(result));
         }
 
-        [HttpPut("{id}/change-password")]
+        [HttpPatch("{id}/change-password")]
         public async Task<IActionResult> PutUserPasswordAsync(string id, [FromBody] ChangeUserPasswordRequestDto request)
         {
             var user = await _userManager.FindByIdAsync(id);

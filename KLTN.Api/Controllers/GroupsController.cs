@@ -152,7 +152,7 @@ namespace KLTN.Api.Controllers
             await _db.SaveChangesAsync();
             return Ok(new ApiResponse<GroupDto>(200,"Thành công", _mapper.Map<GroupDto>(newGroup)));
         }
-        [HttpPut("{groupId}")]
+        [HttpPatch("{groupId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutGroupIdAsync(string groupId, [FromBody] CreateGroupRequestDto requestDto)
         {

@@ -98,7 +98,7 @@ namespace KLTN.Api.Controllers
             return Ok(new ApiResponse<RoleDto>(200, "Thành công",roleVm));
         }
 
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutRoleAsync(string id, [FromBody] CreateRoleRequestDto roleVm)
         {

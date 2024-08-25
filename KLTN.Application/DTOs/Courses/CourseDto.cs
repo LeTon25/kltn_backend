@@ -1,4 +1,5 @@
-﻿using KLTN.Application.DTOs.Semesters;
+﻿using KLTN.Application.DTOs.Announcements;
+using KLTN.Application.DTOs.Semesters;
 using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Users;
 using KLTN.Domain.Entities;
@@ -28,6 +29,7 @@ namespace KLTN.Application.DTOs.Courses
         public UserDto? Lecturer { get ; set; }    
         public SemesterDto? Semester { get; set; } 
         public List<UserDto>? Students {get; set; }
+        public List<AnnouncementDto>? Announcements { get; set; }
 
     }
 }

@@ -18,7 +18,7 @@ namespace KLTN.Api.Controllers
             this._s3Client = _s3Client;
             this._bucketName = configuration["AWS:BucketName"];
         }
-        [HttpPost("/s3/multiple")]
+        [HttpPost("s3/multiple")]
         public async Task<IActionResult> UploadMultipleFilesAsync([FromForm] List<IFormFile> files)
         {
             if (files == null || files.Count == 0)
@@ -42,7 +42,7 @@ namespace KLTN.Api.Controllers
             }
             return Ok(new ApiResponse<List<FileDto>>(200,"Thêm thành công",uploadResults));
         }
-        [HttpDelete("/s3/mutiple")]
+        [HttpDelete("s3/mutiple")]
         public async Task<IActionResult> DeleteMultipleFilesAsync(string[] fileNames)
         {
             if (fileNames == null || fileNames.Count() == 0)

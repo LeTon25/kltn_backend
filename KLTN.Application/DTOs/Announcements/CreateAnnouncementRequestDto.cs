@@ -13,7 +13,7 @@ namespace KLTN.Application.DTOs.Announcements
         public string CourseId { get; set; }
         public string[] AttachedLinks { get; set; }
         public List<FileDto> Attachments { get; set; }
-
+        public string[] Mentions { get; set; }
         public string Content { get; set; }
         public bool IsPinned { get; set; }
     }
