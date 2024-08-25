@@ -9,6 +9,7 @@ using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
+using KLTN.Application.Services;
 using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
@@ -30,20 +31,21 @@ namespace KLTN.Api.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
-        private readonly ApplicationDbContext _db;
+        private readonly AccountService _accountService;
         public AccountsController(UserManager<User> userManager,
             SignInManager<User> signInManager,
             RoleManager<IdentityRole> roleManager,
             ITokenService tokenService,
             IMapper mapper,
-            ApplicationDbContext _db) 
+            AccountService accountService
+          ) 
         {
             this._userManager = userManager;
             this._signInManager = signInManager;
             this._roleManager = roleManager;
             this._tokenService = tokenService;  
             this._mapper = mapper;
-            this._db = _db;
+            this._accountService = accountService;  
         }
         [HttpPost("register")]
         [ApiValidationFilter]
@@ -150,7 +152,7 @@ namespace KLTN.Api.Controllers
             var response = new RefreshTokenResponseDto
             {
                 Token = token,
-                TokenExpiresAt = expiresAt, //access_token
+                TokenExpiresAt = expiresAt, 
             };
             return Ok(new ApiSuccessResponse<RefreshTokenResponseDto>(200,"Refresh token thành công",response));
         }
@@ -160,96 +162,56 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> GetAllCoursesByCurrentUserAsync()
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            #region lay cac khoa nguoi dung giang day
-            var teachingCourse = from user in _db.Users where user.Id == userId
-                                 join course in _db.Courses on user.Id equals course.LecturerId
-                                 join subject in _db.Subjects on course.SubjectId equals subject.SubjectId into courseSubject
-                                 from subject in courseSubject.DefaultIfEmpty()
-                                 join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemester
-                                 from semester in courseSemester.DefaultIfEmpty()
-                                 select new CourseDto
-                                 {
-                                     CourseId = course.CourseId,
-                                     SubjectId = course.SubjectId,
-                                     SemesterId = course.SemesterId,
-                                     CourseGroup = course.CourseGroup,
-                                     Background = course.Background,
-                                     InviteCode = course.InviteCode,
-                                     EnableInvite = course.EnableInvite,
-                                     LecturerId = course.LecturerId,
-                                     CreatedAt = course.CreatedAt,
-                                     UpdatedAt = course.UpdatedAt,
-                                     DeletedAt = course.DeletedAt,
-                                     Semester = _mapper.Map<SemesterDto>(semester),
-                                     Lecturer = _mapper.Map<UserDto>(user),
-                                     Subject = _mapper.Map<SubjectDto>(subject),
-                                 };
-            #endregion
-            #region lay cac khoa nguoi dung tham gia hoc
-            var enrolledCourses = from user in _db.Users where user.Id == userId
-                                 join enrolledStudent in _db.EnrolledCourse on user.Id equals enrolledStudent.StudentId
-                                 join course in _db.Courses on enrolledStudent.CourseId equals course.CourseId
-                                 join subject in _db.Subjects on course.SubjectId equals subject.SubjectId into courseSubject
-                                 from subject in courseSubject.DefaultIfEmpty()
-                                 join semester in _db.Semesters on course.SemesterId equals semester.SemesterId into courseSemester
-                                 from semester in courseSemester.DefaultIfEmpty()
-                                 select new CourseDto
-                                 {
-                                     CourseId = course.CourseId,
-                                     SubjectId = course.SubjectId,
-                                     SemesterId = course.SemesterId,
-                                     CourseGroup = course.CourseGroup,
-                                     Background = course.Background,
-                                     InviteCode = course.InviteCode,
-                                     EnableInvite = course.EnableInvite,
-                                     LecturerId = course.LecturerId,
-                                     CreatedAt = course.CreatedAt,
-                                     UpdatedAt = course.UpdatedAt,
-                                     DeletedAt = course.DeletedAt,
-                                     Semester = _mapper.Map<SemesterDto>(semester),
-                                     Lecturer = _mapper.Map<UserDto>(user),
-                                     Subject = _mapper.Map<SubjectDto>(subject),
-                                 };
-            #endregion
-
-            return Ok(new ApiResponse<CourseByUserDto>(200,"Thành công",new CourseByUserDto()
-            {
-                CreatedCourses = await teachingCourse.ToListAsync(),
-                EnrolledCourses = await enrolledCourses.ToListAsync(),
-            }));
+            return SetResponse( await _accountService.GetCoursesByCurrentUserAsync(userId));
         }
 
-        [HttpGet("announcements/filter")]
-        [Authorize]
-        public async Task<IActionResult> GetAllAnnouncementsByCurrentUserAsync(string filter,int pageIndex, int pageSize)
-        {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var query = from announcement in _db.Announcements where announcement.UserId == userId
-                        join user in _db.Users on announcement.UserId equals user.Id into announcementUsers
-                        from user in announcementUsers.DefaultIfEmpty()
-                        select new AnnouncementDto
-                        {
-                            AnnouncementId = announcement.AnnouncementId,
-                            UserId = announcement.UserId,
-                            CourseId = announcement.CourseId,
-                            Content = announcement.Content,
-                            AttachedLinks = announcement.AttachedLinks,
-                            CreatedAt = announcement.CreatedAt,
-                            UpdatedAt = announcement.UpdatedAt,
-                            DeletedAt = announcement.DeletedAt,
-                            CreateUser = _mapper.Map<UserDto>(user)
-                        };
-            var totalRecords = await query.CountAsync();
-            var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+        //[HttpGet("announcements/filter")]
+        //[Authorize]
+        //public async Task<IActionResult> GetAllAnnouncementsByCurrentUserAsync(string filter,int pageIndex, int pageSize)
+        //{
+        //    var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //    var query = from announcement in _db.Announcements where announcement.UserId == userId
+        //                join user in _db.Users on announcement.UserId equals user.Id into announcementUsers
+        //                from user in announcementUsers.DefaultIfEmpty()
+        //                select new AnnouncementDto
+        //                {
+        //                    AnnouncementId = announcement.AnnouncementId,
+        //                    UserId = announcement.UserId,
+        //                    CourseId = announcement.CourseId,
+        //                    Content = announcement.Content,
+        //                    AttachedLinks = announcement.AttachedLinks,
+        //                    CreatedAt = announcement.CreatedAt,
+        //                    UpdatedAt = announcement.UpdatedAt,
+        //                    DeletedAt = announcement.DeletedAt,
+        //                    CreateUser = _mapper.Map<UserDto>(user)
+        //                };
+        //    var totalRecords = await query.CountAsync();
+        //    var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            var pagination = new Pagination<AnnouncementDto>
+        //    var pagination = new Pagination<AnnouncementDto>
+        //    {
+        //        Items = await query.ToListAsync(),
+        //        TotalRecords = totalRecords,
+        //        PageIndex = pageIndex,
+        //        PageSize = pageSize
+        //    };
+        //    return Ok(new ApiResponse<Pagination<AnnouncementDto>>(200, "Thành công", pagination));
+        //}
+        protected IActionResult SetResponse(ApiResponse<object> api)
+        {
+            switch (api.StatusCode)
             {
-                Items = await query.ToListAsync(),
-                TotalRecords = totalRecords,
-                PageIndex = pageIndex,
-                PageSize = pageSize
-            };
-            return Ok(new ApiResponse<Pagination<AnnouncementDto>>(200, "Thành công", pagination));
+                case 200:
+                    return Ok(api);
+                case 400:
+                    return BadRequest(api);
+                case 401:
+                    return Unauthorized(api);
+                case 404:
+                    return NotFound(api);
+                default:
+                    return Ok(api);
+            }
         }
 
     }

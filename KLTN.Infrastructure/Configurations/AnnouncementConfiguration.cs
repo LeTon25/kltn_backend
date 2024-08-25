@@ -28,6 +28,11 @@ namespace KLTN.Infrastructure.Configurations
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<KLTN.Domain.Entities.File>>(v, (JsonSerializerOptions)null)
             );
+            builder.Property(e => e.Mentions)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+                v => JsonSerializer.Deserialize<string[]>(v, (JsonSerializerOptions)null)
+);
         }
     }
 }

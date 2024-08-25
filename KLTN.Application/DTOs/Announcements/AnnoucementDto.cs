@@ -1,4 +1,5 @@
-﻿using KLTN.Application.DTOs.Courses;
+﻿using KLTN.Application.DTOs.Comments;
+using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
 using System;
@@ -17,11 +18,12 @@ namespace KLTN.Application.DTOs.Announcements
         public string Content { get; set; }
         public string[] AttachedLinks { get; set; }
         public List<FileDto> Attachments { get; set; }
+        public string[] Mentions { get; set; }  
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public UserDto? CreateUser { get; set; }
-        public CourseDto? Course { get; set; }
+        public List<CommentDto> Comments { get; set; }
         public bool IsPinned { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using KLTN.Application.Helpers.Pagination;
+﻿using KLTN.Application.DTOs.Users;
+using KLTN.Application.Helpers.Pagination;
 using KLTN.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -17,8 +18,7 @@ namespace KLTN.Application.DTOs.Comments
         public string AnnouncementId { get; set; }
 
         public string OwnerUserId { get; set; }
-
-        public string OwnerName { get; set; }
+        public UserDto? User { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
