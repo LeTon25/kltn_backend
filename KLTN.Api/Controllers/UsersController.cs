@@ -91,7 +91,7 @@ namespace KLTN.Api.Controllers
 
             var uservms = await users.Select(u=> _mapper.Map<UserDto>(u)).ToListAsync();
 
-            return Ok(uservms);
+            return Ok(new ApiResponse<List<UserDto>>(200,"Thành công",uservms));
         }
 
         [HttpGet("filter")]
@@ -116,7 +116,7 @@ namespace KLTN.Api.Controllers
                 PageSize = pageSize,
                 PageIndex = pageIndex
             };
-            return Ok(pagination);
+            return Ok(new ApiResponse<Pagination<UserDto>>(200, "Thành công", pagination));
         }
 
         //URL: GET: http://localhost:5001/api/users/{id}
@@ -127,7 +127,7 @@ namespace KLTN.Api.Controllers
             if (user == null)
                 return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy User với id: {id}"));
 
-            return Ok(_mapper.Map<UserDto>(user));
+            return Ok(new ApiResponse<UserDto>(200, "Thành công", _mapper.Map<UserDto>(user)) );
         }
 
         [HttpPut("{id}")]
@@ -199,7 +199,7 @@ namespace KLTN.Api.Controllers
 
             if (result.Succeeded)
             {
-               return Ok(_mapper.Map<UserDto>(user));
+               return Ok(new ApiResponse<UserDto>(200,"Thành công", _mapper.Map<UserDto>(user)) );
             }
             return BadRequest(new ApiBadRequestResponse<string>(result));
         }
@@ -210,7 +210,7 @@ namespace KLTN.Api.Controllers
             if (user == null)
                 return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy người dùng với id : {userId}"));
             var roles = await _userManager.GetRolesAsync(user);
-            return Ok(roles);
+            return Ok(new ApiResponse<List<string>>(200, "Thành công",roles.ToList()));
         }
 
         [HttpPost("{userId}/roles")]

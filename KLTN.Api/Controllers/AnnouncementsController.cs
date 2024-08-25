@@ -153,7 +153,7 @@ namespace KLTN.Api.Controllers
             };
             await _db.AddAsync(newAnnouncement);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<AnnouncementDto>(newAnnouncement));
+            return Ok(new ApiResponse<AnnouncementDto>(200, "Cập nhập thành công", _mapper.Map<AnnouncementDto>(newAnnouncement)));
         }
         [HttpPut("{announcementId}")]
         [ApiValidationFilter]
@@ -172,7 +172,7 @@ namespace KLTN.Api.Controllers
             var result = await _db.SaveChangesAsync();
             if(result > 0)
             {
-                return Ok(new ApiResponse<string>(200,"Cập nhập thành công")); 
+                return Ok(new ApiResponse<AnnouncementDto>(200, "Cập nhập thành công", _mapper.Map<AnnouncementDto>(announcement))); 
             }
             return BadRequest(new ApiBadRequestResponse<string>("Cập nhật thông báo thất bại"));
         }
@@ -187,7 +187,7 @@ namespace KLTN.Api.Controllers
             _db.Announcements.Remove(announcement);
             var result = await _db.SaveChangesAsync();
             if (result > 0) {
-                return Ok(_mapper.Map<AnnouncementDto>(announcement));
+                return Ok( _mapper.Map<AnnouncementDto>(announcement));
             }
             return BadRequest(new ApiBadRequestResponse<string>("Xóa thông tin thông báo thất bại"));
         }

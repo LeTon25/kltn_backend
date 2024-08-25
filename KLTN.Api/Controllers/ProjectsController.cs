@@ -106,7 +106,7 @@ namespace KLTN.Api.Controllers
             {
                 return NotFound(new ApiNotFoundResponse<string>("Không tìm thấy đề tài cần tìm"));
             }    
-            return Ok(await finalQuery.FirstOrDefaultAsync());
+            return Ok(new ApiResponse<ProjectDto>(200, "Thành công", _mapper.Map<ProjectDto>(await finalQuery.FirstOrDefaultAsync())));
 
         }
         [HttpPost]
@@ -133,7 +133,7 @@ namespace KLTN.Api.Controllers
             };
             var result = await _db.AddAsync(newProject);
             await _db.SaveChangesAsync();
-            return Ok(_mapper.Map<ProjectDto>(newProject));
+            return Ok(new ApiResponse<ProjectDto>(200, "Thành công", _mapper.Map<ProjectDto>(newProject)));
         }
         [HttpPut("{projectId}")]
         [ApiValidationFilter]
@@ -174,7 +174,7 @@ namespace KLTN.Api.Controllers
             var result = await _db.SaveChangesAsync();
             if (result > 0)
             {
-                return Ok(_mapper.Map<ProjectDto>(project));
+                return Ok(new ApiResponse<ProjectDto>(200, "Thành công", _mapper.Map<ProjectDto>(project)));
             }
             return BadRequest(new ApiBadRequestResponse<string>("Xóa thông tin đề tài thất bại"));
         }

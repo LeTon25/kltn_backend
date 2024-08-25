@@ -18,7 +18,7 @@ namespace KLTN.Api.Controllers
         {
             _db = db;
         }
-        [HttpGet("{announcementId}/comments/filter")]
+        [HttpGet("{announcementId}/comments")]
         public async Task<IActionResult> GetCommentsPagingAsync(string announcementId,string filter, int pageIndex,int pageSize)
         {
             var query = from c in _db.Comments
@@ -30,7 +30,6 @@ namespace KLTN.Api.Controllers
             {
                 query = query.Where(x => x.c.Content.Contains(filter));
             }
-            var totalRecords = await query.CountAsync();
             var items = await query.OrderByDescending(x => x.c.CreatedAt)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
@@ -45,14 +44,8 @@ namespace KLTN.Api.Controllers
                 })
                 .ToListAsync();
 
-            var pagination = new Pagination<CommentDto>
-            {
-                Items = items,
-                TotalRecords = totalRecords,
-                PageIndex = pageIndex,
-                PageSize = pageSize
-            };
-            return Ok(new ApiResponse<Pagination<CommentDto>>(200,"Thành công",pagination));
+
+            return Ok(new ApiResponse<List<CommentDto>>(200,"Thành công",items));
         }
         
         [HttpPost("{announcementId}/comments")]
