@@ -17,6 +17,8 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using KLTN.Application.DTOs.Projects;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using KLTN.Application.DTOs.Groups;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -25,12 +27,18 @@ namespace KLTN.Application.Services
         private readonly UserManager<User> _userManager;
         private readonly IMapper mapper;
         private readonly AnnoucementService annoucementService;
-        public CourseService(IUnitOfWork unitOfWork,UserManager<User> userManager,IMapper mapper,AnnoucementService annoucementService) 
+        private readonly GroupService groupService;
+        public CourseService(IUnitOfWork unitOfWork,
+            UserManager<User> userManager,
+            IMapper mapper,
+            AnnoucementService annoucementService,
+            GroupService groupService) 
         { 
             this._unitOfWork = unitOfWork;
             this._userManager = userManager;
             this.mapper = mapper;  
             this.annoucementService = annoucementService;
+            this.groupService = groupService;
         }
         #region for controller
         public async Task<ApiResponse<object>> GetAllCoursesAsync()
@@ -182,6 +190,16 @@ namespace KLTN.Application.Services
                 projectDto.CreateUser = mapper.Map<UserDto>(await _userManager.FindByIdAsync(projectDto.CreateUserId));
             }
             return new ApiResponse<object>(200, "Thành công", projectDtos);
+        }
+        public async Task<ApiResponse<object>> GetGroupsInCourseAsync(string courseId)
+        {
+            var groupIds = _unitOfWork.GroupRepository.GetAll(c => c.CourseId == courseId).Select(c => c.GroupId);
+            var groupsDto = new List<GroupDto>();
+            foreach(var groupId in groupIds)
+            {
+                groupsDto.Add(await groupService.GetGroupDtoAsync(groupId));
+            }
+            return new ApiSuccessResponse<object>(200, "Lấy dữ liệu thành công", groupsDto);
         }
         #endregion
         public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId)
