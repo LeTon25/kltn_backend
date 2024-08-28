@@ -79,30 +79,11 @@ namespace KLTN.Api.Controllers
             return SetResponse( await _courseService.DeleteCourseAsync(courseId));
         }
 
-        //[HttpGet("{courseId}/groups")]
-        //public async Task<IActionResult> GetCourseGroupsAsync(string courseId)
-        //{
-        //    var groups = from course in _db.Courses where course.CourseId == courseId
-        //                 join g in _db.Groups on course.CourseId equals g.CourseId into gCourse
-        //                 from g in gCourse.DefaultIfEmpty()
-        //                 select new GroupDto
-        //                 {
-        //                     GroupId = g.GroupId,
-        //                     GroupName = g.GroupName,
-        //                     ProjectId = g.ProjectId,
-        //                     CourseId= courseId,
-        //                     NumberOfMembers = g.NumberOfMembers,
-        //                     CreatedAt = g.CreatedAt,
-        //                     UpdatedAt = g.UpdatedAt,
-        //                     DeletedAt = g.DeletedAt,
-        //                     CourseGroup = course.CourseGroup,
-        //                 };
-        //    if (groups == null)
-        //    {
-        //        return NotFound(new ApiNotFoundResponse<string>($"Không thể tìm thấy lớp học với id : {courseId}"));
-        //    }
-        //    return Ok(await groups.ToListAsync());
-        //}
+        [HttpGet("{courseId}/groups")]
+        public async Task<IActionResult> GetCourseGroupsAsync(string courseId)
+        {
+            return SetResponse(await _courseService.GetGroupsInCourseAsync(courseId));
+        }
         [HttpGet("{courseId}/projects")]
         public async Task<IActionResult> GetProjectsInCourseAsync(string courseId)
         {

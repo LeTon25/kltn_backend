@@ -25,6 +25,8 @@ namespace KLTN.Api.Extensions
             services.AddScoped<AnnoucementService>();
             services.AddScoped<CourseService>();
             services.AddScoped<AccountService>();
+            services.AddScoped<ProjectService>();
+            services.AddScoped<GroupService>();
 
             return services;
         }
