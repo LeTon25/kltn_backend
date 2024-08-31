@@ -174,6 +174,11 @@ namespace KLTN.Application.Services
                     return new ApiBadRequestResponse<object>("Không thể tham gia lớp học");
                 }
             }
+            else
+            {
+                return new ApiBadRequestResponse<object>("Bạn đã tham gia lớp học");
+
+            }
              return await GetCourseByIdAsync(course.CourseId);
         }
 
