@@ -107,7 +107,7 @@ namespace KLTN.Application.Services
             course.LecturerId = requestDto.LecturerId;
             course.SemesterId = requestDto.SemesterId;
             course.SubjectId = requestDto.SubjectId;
-
+            course.IsHidden = requestDto.IsHidden;
             _unitOfWork.CourseRepository.Update(course);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -115,30 +115,6 @@ namespace KLTN.Application.Services
                 return new ApiResponse<object>(200, "Cập nhật thành công", mapper.Map<CourseDto>(course));
             }
             return new ApiBadRequestResponse<object>("Cập nhật lớp học thất bại");
-        }
-        public async Task<ApiResponse<object>> UpdateInviteCodeAsync(string courseId,string inviteCode)
-        {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
-            if (course == null)
-            {
-                return new ApiNotFoundResponse<object>("Không tìm thấy lớp");
-            }
-            if (string.IsNullOrEmpty(inviteCode))
-            {
-                return new ApiBadRequestResponse<object>("Mã mời không được trống");
-            }
-            if (await _unitOfWork.CourseRepository.AnyAsync(c=>c.CourseId != courseId && c.InviteCode == inviteCode))
-            {
-                return new ApiBadRequestResponse<object>("Mã mời không được trùng");
-            }
-            course.InviteCode = inviteCode;
-            _unitOfWork.CourseRepository.Update(course);
-            var result = await _unitOfWork.SaveChangesAsync();
-            if (result > 0)
-            {
-                return new ApiResponse<object>(200, "Cập nhật mã mời thành công", mapper.Map<CourseDto>(course));
-            }
-            return new ApiBadRequestResponse<object>("Cập nhật mã mời thất bại");
         }
         public async Task<ApiResponse<object>> GetCourseByIdAsync(string courseId)
         {
@@ -159,6 +135,10 @@ namespace KLTN.Application.Services
             if (course.InviteCode != inviteCode)
             {
                 return new ApiBadRequestResponse<object>("Mã lớp học không chính xác");
+            }
+            if(course.EnableInvite == false)
+            {
+                return new ApiBadRequestResponse<object>("Lớp học hiện đang không cho phép tham gia qua lời mời");
             }
             if (!await _unitOfWork.EnrolledCourseRepository.AnyAsync(c => c.CourseId == course.CourseId && c.StudentId == userId))
             {
@@ -236,6 +216,19 @@ namespace KLTN.Application.Services
         {
             var code = await SuggestInviteCode();   
             return new ApiResponse<object>(200, "Tạo mã mời thành công", code);
+        }
+        public async Task<ApiResponse<object>> GetToggleInviteCodeAsync(string courseId,bool isHidden)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            if (course == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy lớp");
+            }
+            course.IsHidden = isHidden;
+            _unitOfWork.CourseRepository.Update(course);
+            await _unitOfWork.SaveChangesAsync();
+
+            return new ApiResponse<object>(200, "Thành công");
         }
         #endregion
         public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId)

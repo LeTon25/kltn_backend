@@ -15,5 +15,7 @@ namespace KLTN.Application.DTOs.Courses
         public string? InviteCode { get; set; }
         public bool EnableInvite { get; set; }
         public string LecturerId { get; set; }
+        public bool IsHidden { get; set; } = false;
+
     }
 }

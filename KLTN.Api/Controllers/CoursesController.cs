@@ -64,7 +64,7 @@ namespace KLTN.Api.Controllers
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             return SetResponse(await _courseService.ApplyInviteCodeAsync(inviteCode, userId));
         }
-        [HttpGet("{courseId}/inviteCode")]
+        [HttpGet("{courseId}/regenerateCode")]
         public async Task<IActionResult> GetRegenerateInviteCodeAsync(string courseId)
         {
             return SetResponse(await _courseService.GetRegenerateInviteCodeAsync(courseId));
@@ -73,6 +73,16 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> GetRenerateInviteCodeAsync()
         {
             return SetResponse(await _courseService.GetSuggestInviteCodeAsync());
+        }
+        [HttpGet("{courseId}/hide-code")]
+        public async Task<IActionResult> GetHideSuggestCodeAsync(string courseId)
+        {
+            return SetResponse(await _courseService.GetToggleInviteCodeAsync(courseId,true));
+        }
+        [HttpGet("{courseId}/show-code")]
+        public async Task<IActionResult> GetShowSuggestCodeAsync(string courseId)
+        {
+            return SetResponse(await _courseService.GetToggleInviteCodeAsync(courseId,false));
         }
         [HttpDelete("{courseId}")]
         public async Task<IActionResult> DeleteCourseAsync(string courseId)
