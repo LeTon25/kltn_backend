@@ -66,7 +66,7 @@ namespace KLTN.Api.Controllers
             return SetResponse(await _courseService.UpdateInviteCodeAsync(courseId, inviteCode));
         }
 
-        [HttpGet("{courseId}/inviteCode/{inviteCode:length(1,100)}")]
+        [HttpGet("invite/{inviteCode:length(1,100)}")]
         public async Task<IActionResult> GetApplyCodeAsync(string courseId, string inviteCode)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
