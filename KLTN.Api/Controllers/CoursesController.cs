@@ -114,9 +114,9 @@ namespace KLTN.Api.Controllers
             return SetResponse(await _courseService.GetProjectsInCourseAsync(courseId));
         }
         [HttpDelete("{courseId}/students")]
-        public async Task<IActionResult> DeleteRemoveStudentFromCourseAsync(string courseId,string studentId)
+        public async Task<IActionResult> DeleteRemoveStudentFromCourseAsync(string courseId,RemoveStudentRequestDto dto)
         {
-            var data = new string[] { studentId };
+            var data = new string[] { dto.StudentId };
             return SetResponse(await _courseService.RemoveStudentFromCourseAsync(courseId,data));
         }
         [HttpDelete("{courseId}/students/multiple")]

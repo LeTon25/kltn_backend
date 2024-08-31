@@ -14,10 +14,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Group = KLTN.Domain.Entities.Group;
 
 namespace KLTN.Application.Services
 {
@@ -142,18 +144,34 @@ namespace KLTN.Application.Services
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
             }
+            var groupMemberData = await _unitOfWork.GroupMemberRepository.GetAllAsync();
+            var currentMembersCount = groupMemberData.Where(c=>c.GroupId == groupId).Count();
+
             if (requestDto.studentIds.Length > 0)
             {
                 foreach (var id in requestDto.studentIds)
                 {
                     var student = await _userManager.FindByIdAsync(id);
+
                     if (student != null)
                     {
+                        if (!await _unitOfWork.EnrolledCourseRepository.AnyAsync(c => c.CourseId == group.CourseId && c.StudentId == student.Id))
+                        {
+                            return new ApiBadRequestResponse<object>("Có người dùng chưa tham gia lớp học");
+                        }
+                        if(!await CheckValidMemberAsync(student.Id, group))
+                        {
+                            return new ApiBadRequestResponse<object>("Có người dùng đã tham gia nhóm khác");
+                        }
+                        if(currentMembersCount + 1 > group.NumberOfMembers)
+                        {
+                            return new ApiBadRequestResponse<object>("Số lượng thành viên vượt quá số lượng cho phép");
+                        }    
                         await _unitOfWork.GroupMemberRepository.AddAsync(new GroupMember()
                         {
                             GroupId = groupId,
                             StudentId = student.Id,
-                            IsLeader = student.Id == requestDto.leaderId,
+                            IsLeader = false,
                         });
                     }
                 }
@@ -196,6 +214,7 @@ namespace KLTN.Application.Services
             {
                 return null;
             }
+
             var groupDto = mapper.Map<GroupDto>(group);
             if(groupDto.ProjectId != null)
             {
@@ -204,6 +223,20 @@ namespace KLTN.Application.Services
             groupDto.GroupMembers = await GetGroupMemberDtoAsync(groupId);
 
             return groupDto;
+        }
+        public async Task<bool> CheckValidMemberAsync(string studentId,Group group)
+        {
+            var allGroup = await _unitOfWork.GroupRepository.GetAllAsync();
+            var groupsInCourse = allGroup.Where(c => c.CourseId == group.CourseId).ToList();
+            
+            foreach(var gr in groupsInCourse)
+            {
+                var checkExisted = await _unitOfWork.GroupMemberRepository.GetFirstOrDefault(c=>c.GroupId == gr.GroupId && c.StudentId ==studentId );
+                if (checkExisted != null) {
+                    return false;
+                }
+            }   
+            return true;
         }
 
         public async Task<List<GroupMemberDto>?> GetGroupMemberDtoAsync(string groupId)
