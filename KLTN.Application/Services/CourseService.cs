@@ -165,34 +165,6 @@ namespace KLTN.Application.Services
              return await GetCourseByIdAsync(courseId);
         }
 
-        public async Task<ApiResponse<object>> ApplyInviteCodeAsync(string inviteCode, string userId)
-        {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.InviteCode == inviteCode);
-            if (course == null)
-            {
-                return new ApiNotFoundResponse<object>("Không tìm thấy lớp học");
-            }
-            if (course.InviteCode != inviteCode)
-            {
-                return new ApiBadRequestResponse<object>("Mã lớp học không chính xác");
-            }
-            if (!await _unitOfWork.EnrolledCourseRepository.AnyAsync(c => c.CourseId == course.CourseId && c.StudentId == userId))
-            {
-                await _unitOfWork.EnrolledCourseRepository.AddAsync(new EnrolledCourse()
-                {
-                    CourseId = course.CourseId,
-                    StudentId = userId,
-                    CreatedAt = DateTime.Now,
-                });
-                var result = await _unitOfWork.SaveChangesAsync();
-                if (result < 0)
-                {
-                    return new ApiBadRequestResponse<object>("Không thể tham gia lớp học");
-                }
-            }
-            return await GetCourseByIdAsync(course.CourseId);
-        }
-
         public async Task<ApiResponse<object>> DeleteCourseAsync(string courseId)
         {
             var course = await  _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
