@@ -15,6 +15,7 @@ namespace KLTN.Application.DTOs.Groups
         public string? ProjectId { get; set; }
         public string CourseId { get; set; }
         public int? NumberOfMembers { get; set; }
+        public bool IsApproved { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }

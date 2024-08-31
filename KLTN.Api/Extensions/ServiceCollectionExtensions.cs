@@ -19,14 +19,14 @@ namespace KLTN.Api.Extensions
             services.AddScoped<ITokenService, TokenService>();  
 
             //
-            services.AddScoped<IUnitOfWork,UnitOfWork>();
-            services.AddScoped<SubjectService>();
-            services.AddScoped<CommentService>();
-            services.AddScoped<AnnoucementService>();
-            services.AddScoped<CourseService>();
-            services.AddScoped<AccountService>();
-            services.AddScoped<ProjectService>();
-            services.AddScoped<GroupService>();
+            services.AddTransient<IUnitOfWork,UnitOfWork>();
+            services.AddTransient<SubjectService>();
+            services.AddTransient<CommentService>();
+            services.AddTransient<AnnoucementService>();
+            services.AddTransient<CourseService>();
+            services.AddTransient<AccountService>();
+            services.AddTransient<ProjectService>();
+            services.AddTransient<GroupService>();
 
             return services;
         }

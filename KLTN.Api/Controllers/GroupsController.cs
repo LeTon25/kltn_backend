@@ -22,11 +22,12 @@ namespace KLTN.Api.Controllers
         private readonly ApplicationDbContext _db;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        private readonly GroupService groupService; 
+        private readonly GroupService groupService;
         public GroupsController(ApplicationDbContext _db,
             IMapper _mapper,
             UserManager<User> userManager,
-            GroupService groupService)
+            GroupService groupService,
+            IHttpContextAccessor httpContextAccessor)
         {
             this._db = _db;
             this._mapper = _mapper;
