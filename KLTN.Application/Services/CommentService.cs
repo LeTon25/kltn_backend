@@ -61,7 +61,7 @@ namespace KLTN.Application.Services
 
             foreach(var comment in commentDtos)
             {
-                var user = await userManager.FindByIdAsync(comment.OwnerUserId);
+                var user = await userManager.FindByIdAsync(comment.UserId);
                 comment.User = mapper.Map<UserDto>(user);
             }    
             return commentDtos;
@@ -102,9 +102,9 @@ namespace KLTN.Application.Services
                     CommentId = comment.CommentId,
                     Content = comment.Content,
                     CreatedAt = comment.CreatedAt,
-                    AnnouncementId = comment.AnnoucementId,
+                    AnnoucementId = comment.AnnoucementId,
                     UpdatedAt = comment.UpdatedAt,
-                    OwnerUserId = comment.UserId,
+                    UserId = comment.UserId,
                 };
                 return new ApiResponse<object>(200, "Xóa thành công", commentVm);
             }

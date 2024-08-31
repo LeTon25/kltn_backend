@@ -157,6 +157,8 @@ namespace KLTN.Api.Controllers
             return Ok(new ApiSuccessResponse<RefreshTokenResponseDto>(200,"Refresh token thành công",response));
         }
 
+        //public async Task<IActionResult> GeneratePasswordResetTokenAsync(GeneratePasswordRequestDto requestDto)
+
         [HttpGet("courses")]
         [Authorize]
         public async Task<IActionResult> GetAllCoursesByCurrentUserAsync()
