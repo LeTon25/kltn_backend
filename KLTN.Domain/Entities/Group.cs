@@ -13,6 +13,7 @@ namespace KLTN.Domain.Entities
         public string CourseId { get; set; }
         public string GroupName { get; set; }
         public string? ProjectId { get; set; }
+        public bool IsApproved { get; set; }
         public int? NumberOfMembers { get; set; }
         public DateTime CreatedAt { get ; set ; }
         public DateTime? UpdatedAt { get ; set ; }

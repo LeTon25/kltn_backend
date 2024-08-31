@@ -11,6 +11,7 @@ namespace KLTN.Application.DTOs.Groups
         public string GroupName { get; set; }
         public string? ProjectId { get; set; }
         public string CourseId {  get; set; }
-
+        public int NumberOfMembers { get; set; }
+        
     }
 }

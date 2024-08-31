@@ -6,12 +6,15 @@ using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -24,11 +27,17 @@ namespace KLTN.Application.Services
         private readonly UserManager<User> _userManager;
         private readonly IMapper mapper;
         private readonly ProjectService projectService;
-        public GroupService(IUnitOfWork unitOfWork, UserManager<User> userManager, IMapper mapper)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public GroupService(IUnitOfWork unitOfWork,
+            UserManager<User> userManager,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             this.mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
         #region for controller
         public async Task<ApiResponse<object>> GetByIdAsync(string Id)
@@ -46,21 +55,45 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Tên nhóm đã tồn tại");
             }
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == requestDto.CourseId);
+            if(userId == null)
+            {
+                return new ApiBadRequestResponse<object>("Người dùng hiện không đăng nhập");
+            }    
+            if(course == null)
+            {
+                return new ApiBadRequestResponse<object>("Không tìm thấy lớp học");
+
+            }
             var newGroupId = Guid.NewGuid();
             var newGroup = new KLTN.Domain.Entities.Group()
             {
                 GroupId = newGroupId.ToString(),
                 GroupName = requestDto.GroupName,
                 ProjectId = requestDto.ProjectId,
-                NumberOfMembers = 0,
+                NumberOfMembers = requestDto.NumberOfMembers,
                 CourseId = requestDto.CourseId,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = null,
                 DeletedAt = null,
+                
             };
             await _unitOfWork.GroupRepository.AddAsync(newGroup);
+
+            if (userId != course.LecturerId)
+            {
+                await _unitOfWork.GroupMemberRepository.AddAsync(new GroupMember
+                {
+                    StudentId = userId,
+                    IsLeader = true,
+                    GroupId = newGroupId.ToString(),
+                    CreatedAt = DateTime.Now
+                });
+            }    
             await _unitOfWork.SaveChangesAsync();
-            return new ApiResponse<object>(200, "Thêm nhóm thành công", mapper.Map<GroupDto>(newGroup));
+            var groupDto = await GetGroupDtoAsync(newGroupId.ToString());
+            return new ApiResponse<object>(200, "Thêm nhóm thành công", mapper.Map<GroupDto>(groupDto));
         }
         public async Task<ApiResponse<object>> PutGroupAsync(string groupId,CreateGroupRequestDto requestDto)
         {
@@ -78,12 +111,14 @@ namespace KLTN.Application.Services
             group.ProjectId = requestDto.ProjectId;
             group.UpdatedAt = DateTime.Now;
             group.CourseId = requestDto.CourseId;
+            group.NumberOfMembers = requestDto.NumberOfMembers;
 
             _unitOfWork.GroupRepository.Update(group);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
             {
-                return new ApiResponse<object>(200, "Thành công");
+                var groupDto = await GetGroupDtoAsync(groupId);
+                return new ApiResponse<object>(200,"Thành công",groupDto);
             }
             return new ApiBadRequestResponse<object>("Cập nhật nhóm thất bại");
         }
@@ -122,7 +157,6 @@ namespace KLTN.Application.Services
                         });
                     }
                 }
-                group.NumberOfMembers += requestDto.studentIds.Length;
             }
             await _unitOfWork.SaveChangesAsync();
             var groupMemberDto = await GetGroupMemberDtoAsync(groupId);
@@ -150,7 +184,6 @@ namespace KLTN.Application.Services
                         }
                     }
                 }
-                group.NumberOfMembers -= requestDto.studentIds.Length;
             }
             await _unitOfWork.SaveChangesAsync();
             return new ApiResponse<object>(200, "Thêm thành công");
@@ -164,7 +197,10 @@ namespace KLTN.Application.Services
                 return null;
             }
             var groupDto = mapper.Map<GroupDto>(group);
-            groupDto.Project = await projectService.GetProjectDtoAsync(groupDto.ProjectId);
+            if(groupDto.ProjectId != null)
+            {
+                groupDto.Project = await projectService.GetProjectDtoAsync(groupDto.ProjectId);
+            }    
             groupDto.GroupMembers = await GetGroupMemberDtoAsync(groupId);
 
             return groupDto;
