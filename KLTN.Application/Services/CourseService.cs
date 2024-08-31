@@ -260,7 +260,8 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> RemoveStudentFromCourseAsync(string courseId, string[] studentIds)
         {
-            foreach(var studentId in studentIds)
+
+            foreach (var studentId in studentIds)
             {
                 var enrollData = await _unitOfWork.EnrolledCourseRepository.GetFirstOrDefault(c => c.StudentId == studentId && c.CourseId == courseId);
                 if(enrollData != null)

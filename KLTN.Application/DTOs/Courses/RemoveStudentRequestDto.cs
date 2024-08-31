@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KLTN.Application.DTOs.Groups
+namespace KLTN.Application.DTOs.Courses
 {
-    public class AddMemberToGroupDto
+    public class RemoveStudentRequestDto
     {
-        public string[] studentIds { get; set; }    
+        public string StudentId { get; set; }
     }
 }
