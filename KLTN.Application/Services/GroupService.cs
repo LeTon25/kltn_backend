@@ -142,7 +142,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
             }
-            if (requestDto.studentIds.Length > 0 && !string.IsNullOrEmpty(requestDto.leaderId))
+            if (requestDto.studentIds.Length > 0)
             {
                 foreach (var id in requestDto.studentIds)
                 {
@@ -178,7 +178,7 @@ namespace KLTN.Application.Services
                     if (student != null)
                     {
                         var groupMember = await _unitOfWork.GroupMemberRepository.GetFirstOrDefault(c => c.GroupId == groupId && c.StudentId == id);
-                        if (groupMember != null)
+                        if (groupMember != null && !groupMember.IsLeader)
                         {
                             _unitOfWork.GroupMemberRepository.Delete(groupMember);
                         }
