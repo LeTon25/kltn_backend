@@ -263,7 +263,8 @@ namespace KLTN.Application.Services
             foreach(var studentId in studentIds)
             {
                 var enrollData = await _unitOfWork.EnrolledCourseRepository.GetFirstOrDefault(c => c.StudentId == studentId && c.CourseId == courseId);
-                _unitOfWork.EnrolledCourseRepository.Delete(enrollData);
+                if(enrollData != null)
+                    _unitOfWork.EnrolledCourseRepository.Delete(enrollData);
             }
             await _unitOfWork.SaveChangesAsync();
             return new ApiResponse<object>(200, "Xóa thành viên thành công");
