@@ -58,21 +58,22 @@ namespace KLTN.Api.Controllers
         {
             return SetResponse(await _courseService.UpdateCourseAsync(courseId,requestDto));
         }
-
-        [HttpPatch("{courseId}/inviteCode")]
-        [ApiValidationFilter]
-        public async Task<IActionResult> PutCourseInviteCodeAsync(string courseId,[FromBody]string inviteCode)
-        {
-            return SetResponse(await _courseService.UpdateInviteCodeAsync(courseId, inviteCode));
-        }
-
-        [HttpGet("{courseId}/inviteCode/{inviteCode:length(1,100)}")]
-        public async Task<IActionResult> GetApplyCodeAsync(string courseId, string inviteCode)
+        [HttpPost("inviteCode/{inviteCode:length(1,100)}")]
+        public async Task<IActionResult> GetApplyCodeAsync(string inviteCode)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await _courseService.ApplyInviteCodeAsync(courseId, inviteCode, userId));
+            return SetResponse(await _courseService.ApplyInviteCodeAsync(inviteCode, userId));
         }
-
+        [HttpGet("{courseId}/inviteCode")]
+        public async Task<IActionResult> GetRegenerateInviteCodeAsync(string courseId)
+        {
+            return SetResponse(await _courseService.GetRegenerateInviteCodeAsync(courseId));
+        }
+        [HttpGet("suggest-inviteCode")]
+        public async Task<IActionResult> GetRenerateInviteCodeAsync()
+        {
+            return SetResponse(await _courseService.GetSuggestInviteCodeAsync());
+        }
         [HttpDelete("{courseId}")]
         public async Task<IActionResult> DeleteCourseAsync(string courseId)
         {

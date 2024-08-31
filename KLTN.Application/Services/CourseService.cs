@@ -62,7 +62,11 @@ namespace KLTN.Application.Services
             if (await _unitOfWork.CourseRepository.AnyAsync(c => c.CourseGroup == requestDto.CourseGroup && c.SemesterId == requestDto.SemesterId && c.SubjectId == requestDto.SubjectId))
             {
                 return new ApiBadRequestResponse<object>("Nhóm môn học được mở không được trùng");
-            }    
+            }
+            if (await _unitOfWork.CourseRepository.AnyAsync(c => c.InviteCode == requestDto.InviteCode))
+            {
+                return new ApiBadRequestResponse<object>("Mã mời không được trùng");
+            }
             var newCourseId = Guid.NewGuid();
             var newCourse = new Course()
             {
@@ -92,6 +96,10 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Nhóm môn học được mở không được trùng");
             }
+            if (await _unitOfWork.CourseRepository.AnyAsync(c => c.CourseId != courseId && c.InviteCode == requestDto.InviteCode))
+            {
+                return new ApiBadRequestResponse<object>("Mã mời không được trùng");
+            }
             course.CourseGroup = requestDto.CourseGroup;
             course.EnableInvite = requestDto.EnableInvite;
             course.InviteCode = requestDto.InviteCode;
@@ -119,6 +127,10 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Mã mời không được trống");
             }
+            if (await _unitOfWork.CourseRepository.AnyAsync(c=>c.CourseId != courseId && c.InviteCode == inviteCode))
+            {
+                return new ApiBadRequestResponse<object>("Mã mời không được trùng");
+            }
             course.InviteCode = inviteCode;
             _unitOfWork.CourseRepository.Update(course);
             var result = await _unitOfWork.SaveChangesAsync();
@@ -137,9 +149,9 @@ namespace KLTN.Application.Services
             }
             return new ApiResponse<object>(200, "Thành công", data);
         }
-        public async Task<ApiResponse<object>> ApplyInviteCodeAsync(string courseId,string inviteCode,string userId)
+        public async Task<ApiResponse<object>> ApplyInviteCodeAsync(string inviteCode,string userId)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.InviteCode == inviteCode);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp học");
@@ -148,11 +160,11 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Mã lớp học không chính xác");
             }
-            if (!await _unitOfWork.EnrolledCourseRepository.AnyAsync(c => c.CourseId == courseId && c.StudentId == userId))
+            if (!await _unitOfWork.EnrolledCourseRepository.AnyAsync(c => c.CourseId == course.CourseId && c.StudentId == userId))
             {
                 await _unitOfWork.EnrolledCourseRepository.AddAsync(new EnrolledCourse()
                 {
-                    CourseId = courseId,
+                    CourseId = course.CourseId,
                     StudentId = userId,
                     CreatedAt = DateTime.Now,
                 });
@@ -162,7 +174,12 @@ namespace KLTN.Application.Services
                     return new ApiBadRequestResponse<object>("Không thể tham gia lớp học");
                 }
             }
-             return await GetCourseByIdAsync(courseId);
+            else
+            {
+                return new ApiBadRequestResponse<object>("Bạn đã tham gia lớp học");
+
+            }
+             return await GetCourseByIdAsync(course.CourseId);
         }
 
         public async Task<ApiResponse<object>> DeleteCourseAsync(string courseId)
@@ -193,13 +210,32 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetGroupsInCourseAsync(string courseId)
         {
-            var groupIds = _unitOfWork.GroupRepository.GetAll(c => c.CourseId == courseId).Select(c => c.GroupId);
+            var groups = await _unitOfWork.GroupRepository.GetAllAsync();
+            var groupIds = groups.Select(c=>c.GroupId).ToList();
             var groupsDto = new List<GroupDto>();
             foreach(var groupId in groupIds)
             {
                 groupsDto.Add(await groupService.GetGroupDtoAsync(groupId));
             }
             return new ApiSuccessResponse<object>(200, "Lấy dữ liệu thành công", groupsDto);
+        }
+
+        public async Task<ApiResponse<object>> GetRegenerateInviteCodeAsync(string courseId)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            if (course == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy lớp");
+            }
+            course.InviteCode = await SuggestInviteCode();
+            _unitOfWork.CourseRepository.Update(course);
+            await _unitOfWork.SaveChangesAsync();
+            return new ApiResponse<object>(200, "Tạo mã mời thành công", course.InviteCode);
+        }
+        public async Task<ApiResponse<object>> GetSuggestInviteCodeAsync()
+        {
+            var code = await SuggestInviteCode();   
+            return new ApiResponse<object>(200, "Tạo mã mời thành công", code);
         }
         #endregion
         public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId)
@@ -223,6 +259,15 @@ namespace KLTN.Application.Services
             courseDto.Students = mapper.Map<List<UserDto>>(users.ToList());
             return courseDto;
 
+        }
+        public async Task<string> SuggestInviteCode()
+        {
+            var suggestCode = GenerateRandomNumericString(6);
+            while(await _unitOfWork.CourseRepository.AnyAsync(c=>c.InviteCode == suggestCode))
+            {
+                suggestCode = GenerateRandomNumericString(6);
+            }    
+            return suggestCode;
         }
         private string GenerateRandomNumericString(int length)
         {
