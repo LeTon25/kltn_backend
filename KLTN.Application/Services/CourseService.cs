@@ -164,6 +164,10 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Lớp học hiện đang không cho phép tham gia qua lời mời");
             }
+            if(userId == course.LecturerId)
+            {
+                return new ApiBadRequestResponse<object>("Bạn là giáo viên của lớp");
+            }
             if (!await _unitOfWork.EnrolledCourseRepository.AnyAsync(c => c.CourseId == course.CourseId && c.StudentId == userId))
             {
                 await _unitOfWork.EnrolledCourseRepository.AddAsync(new EnrolledCourse()
@@ -253,6 +257,16 @@ namespace KLTN.Application.Services
             await _unitOfWork.SaveChangesAsync();
 
             return new ApiResponse<object>(200, "Thành công");
+        }
+        public async Task<ApiResponse<object>> RemoveStudentFromCourseAsync(string courseId, string[] studentIds)
+        {
+            foreach(var studentId in studentIds)
+            {
+                var enrollData = await _unitOfWork.EnrolledCourseRepository.GetFirstOrDefault(c => c.StudentId == studentId && c.CourseId == courseId);
+                _unitOfWork.EnrolledCourseRepository.Delete(enrollData);
+            }
+            await _unitOfWork.SaveChangesAsync();
+            return new ApiResponse<object>(200, "Xóa thành viên thành công");
         }
         #endregion
         public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId)

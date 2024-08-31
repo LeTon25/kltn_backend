@@ -21,6 +21,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace KLTN.Api.Controllers
 {
@@ -111,6 +112,17 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> GetProjectsInCourseAsync(string courseId)
         {
             return SetResponse(await _courseService.GetProjectsInCourseAsync(courseId));
+        }
+        [HttpDelete("{courseId}/students")]
+        public async Task<IActionResult> DeleteRemoveStudentFromCourseAsync(string courseId,string studentId)
+        {
+            var data = new string[] { studentId };
+            return SetResponse(await _courseService.RemoveStudentFromCourseAsync(courseId,data));
+        }
+        [HttpDelete("{courseId}/students/multiple")]
+        public async Task<IActionResult> DeleteRemoveStudentsFromCourseAsync(string courseId, string[] studentIds)
+        {
+            return SetResponse(await _courseService.RemoveStudentFromCourseAsync(courseId, studentIds));
         }
     }
 }
