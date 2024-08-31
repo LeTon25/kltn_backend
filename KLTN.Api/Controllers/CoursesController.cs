@@ -58,8 +58,16 @@ namespace KLTN.Api.Controllers
         {
             return SetResponse(await _courseService.UpdateCourseAsync(courseId,requestDto));
         }
-        [HttpPost("inviteCode/{inviteCode:length(1,100)}")]
-        public async Task<IActionResult> GetApplyCodeAsync(string inviteCode)
+
+        [HttpPatch("{courseId}/inviteCode")]
+        [ApiValidationFilter]
+        public async Task<IActionResult> PutCourseInviteCodeAsync(string courseId,[FromBody]string inviteCode)
+        {
+            return SetResponse(await _courseService.UpdateInviteCodeAsync(courseId, inviteCode));
+        }
+
+        [HttpPost("invite/{inviteCode:length(1,100)}")]
+        public async Task<IActionResult> GetApplyCodeAsync( string inviteCode)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             return SetResponse(await _courseService.ApplyInviteCodeAsync(inviteCode, userId));

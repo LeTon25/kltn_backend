@@ -56,6 +56,30 @@ namespace KLTN.Application.Services
             }
             return new ApiResponse<object>(200, "Thành công", courseDtos);
         }
+        public async Task<ApiResponse<object>> UpdateInviteCodeAsync(string courseId, string inviteCode)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            if (course == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy lớp");
+            }
+            if (string.IsNullOrEmpty(inviteCode))
+            {
+                return new ApiBadRequestResponse<object>("Mã mời không được trống");
+            }
+            if (await _unitOfWork.CourseRepository.AnyAsync(c => c.CourseId != courseId && c.InviteCode == inviteCode))
+            {
+                return new ApiBadRequestResponse<object>("Mã mời không được trùng");
+            }
+            course.InviteCode = inviteCode;
+            _unitOfWork.CourseRepository.Update(course);
+            var result = await _unitOfWork.SaveChangesAsync();
+            if (result > 0)
+            {
+                return new ApiResponse<object>(200, "Cập nhật mã mời thành công", mapper.Map<CourseDto>(course));
+            }
+            return new ApiBadRequestResponse<object>("Cập nhật mã mời thất bại");
+        }
         public async Task<ApiResponse<object>> CreateCourseAsync(CreateCourseRequestDto requestDto)
         {
 
