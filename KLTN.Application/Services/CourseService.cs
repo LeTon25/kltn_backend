@@ -298,5 +298,15 @@ namespace KLTN.Application.Services
 
             return new string(result);
         }
+
+        public async Task<ApiResponse<object>> GetFindCourseByInviteCodeAsync(string inviteCode)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.InviteCode == inviteCode);
+            if(course == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy khóa học");
+            }
+            return new ApiResponse<object>(200, "Tìm thấy khóa học", course);
+        }
     }
 }
