@@ -24,7 +24,8 @@ namespace KLTN.Application.DTOs.Courses
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
-        
+        public bool IsHidden { get; set; } = false;
+
         public SubjectDto? Subject { get; set; }   
         public UserDto? Lecturer { get ; set; }    
         public SemesterDto? Semester { get; set; } 
