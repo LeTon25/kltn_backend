@@ -97,13 +97,15 @@ namespace KLTN.Application.Services
             var groupDto = await GetGroupDtoAsync(newGroupId.ToString());
             return new ApiResponse<object>(200, "Thêm nhóm thành công", mapper.Map<GroupDto>(groupDto));
         }
-        public async Task<ApiResponse<object>> PutGroupAsync(string groupId,CreateGroupRequestDto requestDto)
+        public async Task<ApiResponse<object>> PutGroupAsync(string groupId,CreateGroupRequestDto requestDto,string currentUserId)
         {
             var group = await _unitOfWork.GroupRepository.GetFirstOrDefault(c=>c.GroupId == groupId);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>($"Không tìm thấy nhóm với id : {groupId}");
             }
+            var coures = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == group.CourseId);
+           
             if (await _unitOfWork.GroupRepository.AnyAsync(e => e.GroupName == requestDto.GroupName && e.GroupId != groupId && e.CourseId == requestDto.CourseId))
             {
                 return new ApiBadRequestResponse<object>("Tên nhóm không được trùng");
@@ -137,13 +139,19 @@ namespace KLTN.Application.Services
             await _unitOfWork.SaveChangesAsync();
             return new ApiResponse<object>(200, "Thành công", mapper.Map<GroupDto>(group));
         }
-        public async Task<ApiResponse<object>> PostAddMembersToGroupAsync(string groupId, AddMemberToGroupDto requestDto)
+        public async Task<ApiResponse<object>> PostAddMembersToGroupAsync(string groupId, AddMemberToGroupDto requestDto,string userId)
         {
             var group = await _unitOfWork.GroupRepository.GetFirstOrDefault(c=>c.GroupId==groupId);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
             }
+            var groupMemberByCurrentUser = await _unitOfWork.GroupMemberRepository.GetFirstOrDefault(c => c.GroupId == groupId && c.StudentId == userId);
+            if(groupMemberByCurrentUser == null || groupMemberByCurrentUser.IsLeader == false)
+            {
+                return new ApiBadRequestResponse<object>("Bạn không có quyền thêm thành viên vào");
+            }
+
             var groupMemberData = await _unitOfWork.GroupMemberRepository.GetAllAsync();
             var currentMembersCount = groupMemberData.Where(c=>c.GroupId == groupId).Count();
 
@@ -181,12 +189,17 @@ namespace KLTN.Application.Services
             return new ApiSuccessResponse<object>(200, "Thêm thành viên thành công", groupMemberDto);
         }
 
-        public async Task<ApiResponse<object>> DeleteRemoveMemberAsync(string groupId, RemoveMemberFromGroupDto requestDto)
+        public async Task<ApiResponse<object>> DeleteRemoveMemberAsync(string groupId, RemoveMemberFromGroupDto requestDto,string userId)
         {
             var group = await _unitOfWork.GroupRepository.GetFirstOrDefault(c => c.GroupId == groupId);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
+            }
+            var groupMemberByCurrentUser = await _unitOfWork.GroupMemberRepository.GetFirstOrDefault(c => c.GroupId == groupId && c.StudentId == userId);
+            if (groupMemberByCurrentUser == null || groupMemberByCurrentUser.IsLeader == false)
+            {
+                return new ApiBadRequestResponse<object>("Bạn không có quyền xóa thành viên vào");
             }
             if (requestDto.studentIds.Length > 0)
             {

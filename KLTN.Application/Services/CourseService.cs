@@ -109,12 +109,16 @@ namespace KLTN.Application.Services
             await _unitOfWork.SaveChangesAsync();
             return new ApiResponse<object>(200, "Thành công", mapper.Map<CourseDto>(newCourse));
         }
-        public async Task<ApiResponse<object>> UpdateCourseAsync(string courseId,CreateCourseRequestDto requestDto)
+        public async Task<ApiResponse<object>> UpdateCourseAsync(string courseId,CreateCourseRequestDto requestDto,string userId)
         {
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp");
+            }
+            if (course.LecturerId != userId)
+            {
+                return new ApiBadRequestResponse<object>("Giáo viên mới có quyền chỉnh sửa");
             }
             if (await _unitOfWork.CourseRepository.AnyAsync(c => c.CourseGroup == requestDto.CourseGroup && c.SemesterId == requestDto.SemesterId && c.SubjectId == requestDto.SemesterId && c.CourseId != course.CourseId))
             {
@@ -219,7 +223,7 @@ namespace KLTN.Application.Services
         public async Task<ApiResponse<object>> GetGroupsInCourseAsync(string courseId)
         {
             var groups = await _unitOfWork.GroupRepository.GetAllAsync();
-            var groupIds = groups.Select(c=>c.GroupId).ToList();
+            var groupIds = groups.Where(c=>c.CourseId == courseId).Select(c=>c.GroupId).ToList();
             var groupsDto = new List<GroupDto>();
             foreach(var groupId in groupIds)
             {
@@ -258,9 +262,17 @@ namespace KLTN.Application.Services
 
             return new ApiResponse<object>(200, "Thành công");
         }
-        public async Task<ApiResponse<object>> RemoveStudentFromCourseAsync(string courseId, string[] studentIds)
+        public async Task<ApiResponse<object>> RemoveStudentFromCourseAsync(string courseId, string[] studentIds,string currentUserId)
         {
-
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            if (course == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy khóa học");
+            }
+            if(course.LecturerId != currentUserId)
+            {
+                return new ApiBadRequestResponse<object>("Chỉ giáo viên mới có quyền xóa học viên");
+            }
             foreach (var studentId in studentIds)
             {
                 var enrollData = await _unitOfWork.EnrolledCourseRepository.GetFirstOrDefault(c => c.StudentId == studentId && c.CourseId == courseId);

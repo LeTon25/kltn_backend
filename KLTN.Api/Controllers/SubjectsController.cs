@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KLTN.Api.Controllers
 {
+    [Authorize]
     public class SubjectsController : BaseController
     {
         private readonly SubjectService _subjectService;    
