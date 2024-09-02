@@ -10,6 +10,7 @@ using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
@@ -139,6 +140,8 @@ namespace KLTN.Api.Controllers
         [ApiValidationFilter]
         public async Task<IActionResult> PutProjectId(string projectId, [FromBody] CreateProjectRequestDto requestDto)
         {
+            var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             var project = await _db.Projects.FirstOrDefaultAsync(c => c.ProjectId == projectId);
             if (project == null)
             {
@@ -148,12 +151,18 @@ namespace KLTN.Api.Controllers
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Tên đề tài không được trùng"));
             }
-
+            var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == project.CourseId);
+            if (project.IsApproved != requestDto.IsApproved && currentUserId != course.LecturerId)
+            {
+                return BadRequest(new ApiBadRequestResponse<string>("Chỉ có giáo viên mới có thể xét duyệt đề tài"));
+            }
             project.Title = requestDto.Title;
             project.Description = requestDto.Description;
             project.UpdatedAt=DateTime.Now;
             project.IsApproved = requestDto.IsApproved;
+            
             _db.Projects.Update(project);
+
             var result = await _db.SaveChangesAsync();
             if (result > 0)
             {
@@ -165,11 +174,17 @@ namespace KLTN.Api.Controllers
         [HttpDelete("{projectId}")]
         public async Task<IActionResult> DeleteProjectAsync(string projectId)
         {
+            var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var project = await _db.Projects.FirstOrDefaultAsync(c => c.ProjectId == projectId);
             if (project == null)
             {
                 return NotFound(new ApiNotFoundResponse<string>("Không thể tìm thấy đề tài với id"));
             }
+            var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == project.CourseId);
+            if(!(course.LecturerId == currentUserId  || project.CreateUserId == currentUserId))
+            {
+                return BadRequest(new ApiBadRequestResponse<object>("Bạn không có quyền xóa đề tài này"));
+            }    
             _db.Projects.Remove(project);
             var result = await _db.SaveChangesAsync();
             if (result > 0)

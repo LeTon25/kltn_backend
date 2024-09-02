@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net.WebSockets;
+using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
@@ -49,7 +50,8 @@ namespace KLTN.Api.Controllers
         [ApiValidationFilter]
         public async Task<IActionResult> PutGroupIdAsync(string groupId, [FromBody] CreateGroupRequestDto requestDto)
         {
-            return SetResponse(await groupService.PutGroupAsync(groupId,requestDto));
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return SetResponse(await groupService.PutGroupAsync(groupId,requestDto,userId));
         }
 
         [HttpDelete("{groupId}")]
@@ -61,13 +63,15 @@ namespace KLTN.Api.Controllers
         [HttpPost("{groupId}/members")]
         public async Task<IActionResult> PostAddMembersToGroupAsync(string groupId, AddMemberToGroupDto requestDto)
         {
-            return SetResponse(await groupService.PostAddMembersToGroupAsync(groupId, requestDto));
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return SetResponse(await groupService.PostAddMembersToGroupAsync(groupId, requestDto,userId));
 
         }
         [HttpDelete("{groupId}/members")]
         public async Task<IActionResult> DeleteRemoveMemberAsync(string groupId,RemoveMemberFromGroupDto requestDto)
         {
-            return SetResponse(await groupService.DeleteRemoveMemberAsync(groupId, requestDto));
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return SetResponse(await groupService.DeleteRemoveMemberAsync(groupId, requestDto,userId));
         }
     }
 }

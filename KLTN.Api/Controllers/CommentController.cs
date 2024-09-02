@@ -9,6 +9,7 @@ using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
@@ -30,14 +31,16 @@ namespace KLTN.Api.Controllers
         [ApiValidationFilter]
         public async Task<IActionResult> PostComment(string announcementId, [FromBody] CreateCommentRequestDto request)
         {
-            return SetResponse(await commentService.CreateCommentsAsync(announcementId, request));
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return SetResponse(await commentService.CreateCommentsAsync(announcementId, request,userId));
         }
 
         [HttpPatch("{announcementId}/comments/{commentId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutComment(string commentId, [FromBody] CreateCommentRequestDto request)
         {
-            return SetResponse(await commentService.UpdateCommentAsync(commentId, request));
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return SetResponse(await commentService.UpdateCommentAsync(commentId, request,userId));
         }
 
         [HttpDelete("{announcementId}/comments/{commentId}")]

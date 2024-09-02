@@ -1,4 +1,5 @@
 ﻿
+using KLTN.Api.Filters;
 using KLTN.Api.Services.Implements;
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application;
@@ -16,7 +17,7 @@ namespace KLTN.Api.Extensions
             services.AddAutoMapper(typeof(MappingProfile));
             services.AddTransient<IStorageService, FileLocalStorageService>();
             services.AddTransient<DbInitializer>();
-            services.AddScoped<ITokenService, TokenService>();  
+            services.AddTransient<ITokenService, TokenService>();  
 
             //
             services.AddTransient<IUnitOfWork,UnitOfWork>();
@@ -27,7 +28,8 @@ namespace KLTN.Api.Extensions
             services.AddTransient<AccountService>();
             services.AddTransient<ProjectService>();
             services.AddTransient<GroupService>();
-
+            //
+            services.AddScoped<CourseResourceAccessFilter>();
             return services;
         }
     }

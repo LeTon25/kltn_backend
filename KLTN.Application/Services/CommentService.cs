@@ -32,14 +32,14 @@ namespace KLTN.Application.Services
             var data = await GetCommentDtosFromAnnoucementAsync(announcementId); 
             return new ApiResponse<object>(200, "Thành công",data);
         }
-        public async Task<ApiResponse<object>> CreateCommentsAsync(string announcementId, CreateCommentRequestDto request)
+        public async Task<ApiResponse<object>> CreateCommentsAsync(string announcementId, CreateCommentRequestDto request,string userId)
         {
 
             var comment = new Comment()
             {
                 Content = request.Content,
-                AnnoucementId = announcementId,
-                UserId = request.UserId,
+                AnnouncementId = announcementId,
+                UserId = userId,
                 CreatedAt = DateTime.Now,
                 CommentId = Guid.NewGuid().ToString(),
             };
@@ -47,7 +47,10 @@ namespace KLTN.Application.Services
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
             {
-                return new ApiResponse<object>(200, "Thành công",comment);
+                var commentDto = mapper.Map<CommentDto>(comment);
+                var user = await userManager.FindByIdAsync(userId);
+                commentDto.User = mapper.Map<UserDto>(user);
+                return new ApiResponse<object>(200, "Thành công",commentDto);
             }
             else
             {
@@ -56,7 +59,7 @@ namespace KLTN.Application.Services
         }
         public async Task<List<CommentDto>> GetCommentDtosFromAnnoucementAsync(string annoucementId)
         {
-            var comments =  _unitOfWork.CommentRepository.GetAll(c=>c.AnnoucementId == annoucementId).ToList();
+            var comments =  _unitOfWork.CommentRepository.GetAll(c=>c.AnnouncementId == annoucementId).ToList();
             var commentDtos =  mapper.Map<List<CommentDto>>(comments);
 
             foreach(var comment in commentDtos)
@@ -66,12 +69,12 @@ namespace KLTN.Application.Services
             }    
             return commentDtos;
         }
-        public async Task<ApiResponse<object>> UpdateCommentAsync(string commentId, CreateCommentRequestDto request)
+        public async Task<ApiResponse<object>> UpdateCommentAsync(string commentId, CreateCommentRequestDto request,string userId)
         {
             var comment = await _unitOfWork.CommentRepository.GetFirstOrDefault(c=>c.CommentId == commentId);
             if (comment == null)
                 return new ApiBadRequestResponse<object>($"Không thể tìm thấy bình luận với id : {commentId}");
-            if (comment.UserId != request.UserId)
+            if (comment.UserId != userId)
                 return new ApiResponse<object>(403,"Không thể cập nhật comment");
 
             comment.Content = request.Content;
@@ -82,7 +85,10 @@ namespace KLTN.Application.Services
 
             if (result > 0)
             {
-                return new ApiResponse<object>(200, "Cập nhật thành công");
+                var commentDto = mapper.Map<CommentDto>(comment);
+                var user = await userManager.FindByIdAsync(userId);
+                commentDto.User = mapper.Map<UserDto>(user);
+                return new ApiResponse<object>(200, "Cập nhật thành công",commentDto);
             }
             return new ApiBadRequestResponse<object>($"Update comment failed");
         }
@@ -102,7 +108,7 @@ namespace KLTN.Application.Services
                     CommentId = comment.CommentId,
                     Content = comment.Content,
                     CreatedAt = comment.CreatedAt,
-                    AnnoucementId = comment.AnnoucementId,
+                    AnnouncementId = comment.AnnouncementId,
                     UpdatedAt = comment.UpdatedAt,
                     UserId = comment.UserId,
                 };
