@@ -8,7 +8,6 @@ namespace KLTN.Application.DTOs.Comments
 {
     public class CreateCommentRequestDto
     {
-        public string UserId { get; set; }
         public string Content { get; set; }
     }
 }
