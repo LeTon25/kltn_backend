@@ -11,9 +11,11 @@ using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using System.Net.WebSockets;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace KLTN.Api.Controllers
 {
@@ -24,34 +26,55 @@ namespace KLTN.Api.Controllers
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
         private readonly GroupService groupService;
+        private readonly CourseService courseService;
         public GroupsController(ApplicationDbContext _db,
             IMapper _mapper,
             UserManager<User> userManager,
             GroupService groupService,
+            CourseService courseService,
             IHttpContextAccessor httpContextAccessor)
         {
             this._db = _db;
             this._mapper = _mapper;
             this._userManager = userManager;
             this.groupService = groupService;
+            this.courseService = courseService;
         }
         [HttpGet("{groupId}")]
         public async Task<IActionResult> GetByIdAsync(string groupId)
         {
-            return SetResponse(await groupService.GetByIdAsync(groupId));
+            var data = await groupService.GetByIdAsync(groupId);
+            if(data.StatusCode == 200)
+            {
+                var courseDto = await courseService.GetCourseDtoByIdAsync((data.Data as GroupDto).CourseId);
+                (data.Data as GroupDto).Course = courseDto;
+            }
+            return SetResponse(data);
         }
         [HttpPost]
         [ApiValidationFilter]
         public async Task<IActionResult> PostGroupAsync(CreateGroupRequestDto requestDto)
         {
-            return SetResponse(await groupService.PostGroupAsync(requestDto));
+            var data = await groupService.PostGroupAsync(requestDto);
+            if (data.StatusCode == 200)
+            {
+                var courseDto = await courseService.GetCourseDtoByIdAsync((data.Data as GroupDto).CourseId);
+                (data.Data as GroupDto).Course = courseDto;
+            }
+            return SetResponse(data);
         }
         [HttpPatch("{groupId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutGroupIdAsync(string groupId, [FromBody] CreateGroupRequestDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await groupService.PutGroupAsync(groupId,requestDto,userId));
+            var data = await groupService.PutGroupAsync(groupId, requestDto, userId);
+            if (data.StatusCode == 200)
+            {
+                var courseDto = await courseService.GetCourseDtoByIdAsync((data.Data as GroupDto).CourseId);
+                (data.Data as GroupDto).Course = courseDto;
+            }
+            return SetResponse(data);
         }
 
         [HttpDelete("{groupId}")]

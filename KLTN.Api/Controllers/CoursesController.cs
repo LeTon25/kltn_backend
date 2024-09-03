@@ -19,6 +19,7 @@ using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
@@ -112,8 +113,16 @@ namespace KLTN.Api.Controllers
         [ServiceFilter(typeof(CourseResourceAccessFilter))]
         public async Task<IActionResult> GetCourseGroupsAsync(string courseId)
         {
-
-            return SetResponse(await _courseService.GetGroupsInCourseAsync(courseId));
+            var data = await _courseService.GetGroupsInCourseAsync(courseId);
+            if(data.StatusCode == 200)
+            {
+                var course = await _courseService.GetCourseDtoByIdAsync(courseId);
+                foreach (var group in data.Data as List<GroupDto>)
+                {
+                    group.Course = course;
+                }
+            }
+            return SetResponse(data);
         }
         [HttpGet("{courseId}/projects")]
         [ServiceFilter(typeof(CourseResourceAccessFilter))]
