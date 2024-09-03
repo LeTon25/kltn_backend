@@ -34,11 +34,13 @@ namespace KLTN.Application.Services
         public GroupService(IUnitOfWork unitOfWork,
             UserManager<User> userManager,
             IMapper mapper,
+            ProjectService projectService,
             IHttpContextAccessor httpContextAccessor)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             this.mapper = mapper;
+            this.projectService = projectService;
             _httpContextAccessor = httpContextAccessor;
         }
         #region for controller
