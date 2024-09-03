@@ -47,42 +47,6 @@ namespace KLTN.Api.Controllers
             var projectDtos = await query.ToListAsync();
             return Ok(new ApiResponse<List<ProjectDto>>(200,"Thành công",projectDtos));
         }
-        [HttpGet("filter")]
-        public async Task<IActionResult> GetProjectsPagingAsync(string filter, int pageIndex, int pageSize)
-        {
-            var query = _db.Projects.AsQueryable();
-            if (!string.IsNullOrEmpty(filter))
-            {
-                query = query.Where(e => e.Title.Contains(filter));
-            }
-            var finalQuery = from project in _db.Projects
-
-                        join user in _db.Users on project.CreateUserId equals user.Id into projectUser
-                        from user in projectUser.DefaultIfEmpty()
-                        select new ProjectDto
-                        {
-                            ProjectId = project.ProjectId,
-                            CourseId = project.CourseId,
-                            CreateUserId = project.CreateUserId,
-                            Description = project.Description,
-                            IsApproved = project.IsApproved,
-                            Title = project.Title,
-                            CreatedAt = project.CreatedAt,
-                            UpdatedAt = project.UpdatedAt,
-                            DeletedAt = project.DeletedAt,
-                            CreateUser = _mapper.Map<UserDto>(user)
-                        };
-            var totalRecords = await finalQuery.CountAsync();
-            var items = await finalQuery.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
-            var pagination = new Pagination<ProjectDto>
-            {
-                Items = items,
-                TotalRecords = totalRecords,
-                PageIndex = pageIndex,
-                PageSize = pageSize
-            };
-            return Ok(new ApiResponse<Pagination<ProjectDto>>(200,"Thành công", pagination));
-        }
         [HttpGet("{projectId}")]
         public async Task<IActionResult> GetByIdAsync(string projectId)
         {
@@ -114,6 +78,14 @@ namespace KLTN.Api.Controllers
         [ApiValidationFilter]
         public async Task<IActionResult> PostProjectAsync(CreateProjectRequestDto requestDto)
         {
+            var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == requestDto.CourseId);
+   
+            if (!(await _db.EnrolledCourse.AnyAsync(c => c.StudentId == currentUserId && c.CourseId ==course.CourseId)) && currentUserId != course.LecturerId)
+            {
+                return BadRequest(new ApiBadRequestResponse<string>("Không có quyền tạo/sửa đề tài trong lớp này"));
+            }
             var projects = _db.Projects;
             if (await projects.AnyAsync(c => c.Title.Equals(requestDto.Title) && c.CourseId == requestDto.CourseId))
             {
