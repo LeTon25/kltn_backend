@@ -22,18 +22,34 @@ namespace KLTN.Api.Filters
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
             var userId = context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var courseId = context.RouteData.Values["courseId"].ToString();
+            var courseId = context.RouteData.Values["courseId"]?.ToString();
 
-            var course = await _db.Courses.FirstOrDefaultAsync(c=>c.CourseId == courseId);
+            if (string.IsNullOrEmpty(courseId))
+            {
+                context.Result = new BadRequestObjectResult(new ApiBadRequestResponse<object>("Invalid course ID"));
+                return;
+            }
+
+            var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
+
+            if (course == null)
+            {
+                context.Result = new BadRequestObjectResult(new ApiBadRequestResponse<object>("Course not found"));
+                return;
+            }
+
             if (course.LecturerId == userId)
             {
                 return;
             }
-            if(await _db.EnrolledCourse.AnyAsync(c=>c.StudentId == userId && c.CourseId == courseId))
+
+            if (await _db.EnrolledCourse.AnyAsync(c => c.StudentId == userId && c.CourseId == courseId))
             {
                 return;
-            }    
+            }
+
             context.Result = new BadRequestObjectResult(new ApiBadRequestResponse<object>("Bạn không có quyền truy cập vào tài nguyên lớp này"));
         }
+
     }
 }
