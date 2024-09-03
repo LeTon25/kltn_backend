@@ -1,4 +1,5 @@
-﻿using KLTN.Application.DTOs.Projects;
+﻿using KLTN.Application.DTOs.Courses;
+using KLTN.Application.DTOs.Projects;
 using KLTN.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,7 @@ namespace KLTN.Application.DTOs.Groups
         public DateTime? DeletedAt { get; set; }
         public string CourseGroup {  get; set; }   
         public ProjectDto? Project { get; set; }
+        public CourseDto? Course { get; set; }
         public List<GroupMemberDto>? GroupMembers { get; set; }
     }
 }
