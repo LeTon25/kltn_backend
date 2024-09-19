@@ -32,12 +32,16 @@ namespace KLTN.Api.Controllers
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
         private readonly AccountService _accountService;
+        //private readonly IEmailSender _emailSender;
+        private readonly IConfiguration _configuration;
         public AccountsController(UserManager<User> userManager,
             SignInManager<User> signInManager,
             RoleManager<IdentityRole> roleManager,
             ITokenService tokenService,
             IMapper mapper,
-            AccountService accountService
+            AccountService accountService,
+            //IEmailSender emailSender,
+            IConfiguration configuration
           ) 
         {
             this._userManager = userManager;
@@ -45,7 +49,9 @@ namespace KLTN.Api.Controllers
             this._roleManager = roleManager;
             this._tokenService = tokenService;  
             this._mapper = mapper;
-            this._accountService = accountService;  
+            this._accountService = accountService;
+            //this._emailSender = emailSender;
+            this._configuration  = configuration;
         }
         [HttpPost("register")]
         [ApiValidationFilter]
@@ -167,38 +173,38 @@ namespace KLTN.Api.Controllers
             return SetResponse( await _accountService.GetCoursesByCurrentUserAsync(userId));
         }
 
-        //[HttpGet("announcements/filter")]
-        //[Authorize]
-        //public async Task<IActionResult> GetAllAnnouncementsByCurrentUserAsync(string filter,int pageIndex, int pageSize)
+        //[HttpPost("forgot-password")]
+        //public async Task<IActionResult> ForgotPassword(ForgetPasswordRequestDto forgotPasswordDto)
         //{
-        //    var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        //    var query = from announcement in _db.Announcements where announcement.UserId == userId
-        //                join user in _db.Users on announcement.UserId equals user.Id into announcementUsers
-        //                from user in announcementUsers.DefaultIfEmpty()
-        //                select new AnnouncementDto
-        //                {
-        //                    AnnouncementId = announcement.AnnouncementId,
-        //                    UserId = announcement.UserId,
-        //                    CourseId = announcement.CourseId,
-        //                    Content = announcement.Content,
-        //                    AttachedLinks = announcement.AttachedLinks,
-        //                    CreatedAt = announcement.CreatedAt,
-        //                    UpdatedAt = announcement.UpdatedAt,
-        //                    DeletedAt = announcement.DeletedAt,
-        //                    CreateUser = _mapper.Map<UserDto>(user)
-        //                };
-        //    var totalRecords = await query.CountAsync();
-        //    var items = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+        //    var user = await _userManager.FindByEmailAsync(forgotPasswordDto.Email);
+        //    if (user == null)
+        //        return BadRequest(new ApiBadRequestResponse<string>("Email không hợp lệ"));
 
-        //    var pagination = new Pagination<AnnouncementDto>
-        //    {
-        //        Items = await query.ToListAsync(),
-        //        TotalRecords = totalRecords,
-        //        PageIndex = pageIndex,
-        //        PageSize = pageSize
-        //    };
-        //    return Ok(new ApiResponse<Pagination<AnnouncementDto>>(200, "Thành công", pagination));
+        //    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        //    var callbackUrl = $"{_configuration.GetSection("ClientUrl").Value}/reset-password?token={resetToken}&email={user.Email}";
+
+        //    await _emailSender.SendEmailAsync(forgotPasswordDto.Email, "Đặt lại mật khẩu",
+        //        $"Vui lòng click vào link sau đây để đặt lại mật khẩu : <a href='{callbackUrl}'>here</a>.");
+
+        //    return Ok(new ApiResponse<string>(200,"Vui lòng kiểm tra email"));
         //}
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto resetPasswordDto)
+        {
+            var user = await _userManager.FindByEmailAsync(resetPasswordDto.Email);
+            if (user == null)
+                return BadRequest(new ApiBadRequestResponse<string>("Email không hợp lệ"));
+
+            var result = await _userManager.ResetPasswordAsync(user, resetPasswordDto.Token, resetPasswordDto.Password);
+
+            if (!result.Succeeded)
+                return BadRequest(new ApiBadRequestResponse<string>(result));
+
+            return Ok(new ApiResponse<string>(200,"Đổi mật khẩu thành công"));
+        }
+
         protected IActionResult SetResponse(ApiResponse<object> api)
         {
             switch (api.StatusCode)
