@@ -17,7 +17,7 @@ namespace KLTN.Domain.Repositories
         public ISubjectRepository SubjectRepository { get; }
         public IGroupMemberRepository  GroupMemberRepository { get; }
         public IEnrolledCourseRepository EnrolledCourseRepository { get; }
-
+        public IAssignmentRepository AssignmentRepository { get; }
         public Task<int> SaveChangesAsync();
     }
 }

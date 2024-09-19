@@ -28,6 +28,7 @@ namespace KLTN.Api.Extensions
             services.AddTransient<AccountService>();
             services.AddTransient<ProjectService>();
             services.AddTransient<GroupService>();
+            services.AddTransient<AssignmentService>();
             //
             services.AddScoped<CourseResourceAccessFilter>();
             return services;

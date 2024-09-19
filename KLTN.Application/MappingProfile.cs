@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Announcements;
+using KLTN.Application.DTOs.Assignments;
 using KLTN.Application.DTOs.Comments;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
@@ -45,6 +46,7 @@ namespace KLTN.Application
             
             CreateMap<Comment, CommentDto>().ReverseMap();
 
+            CreateMap<AssignmentDto, Assignment>().ReverseMap();
         }
     }
 }

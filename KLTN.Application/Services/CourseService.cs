@@ -282,8 +282,19 @@ namespace KLTN.Application.Services
             await _unitOfWork.SaveChangesAsync();
             return new ApiResponse<object>(200, "Xóa thành viên thành công");
         }
+        public async Task<ApiResponse<object>> GetFindCourseByInviteCodeAsync(string inviteCode)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.InviteCode == inviteCode);
+            if (course == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy khóa học");
+            }
+            return new ApiResponse<object>(200, "Tìm thấy khóa học", course);
+        }
         #endregion
-        public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId)
+
+        #region for_service
+        public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId, bool isLoadAnnoucements = true, bool isLoadStudent = true)
         {
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
             if (course == null)
@@ -294,25 +305,44 @@ namespace KLTN.Application.Services
             courseDto.Semester = mapper.Map<SemesterDto>(await _unitOfWork.SemesterRepository.GetFirstOrDefault(c => c.SemesterId == courseDto.SemesterId));
             courseDto.Subject = mapper.Map<SubjectDto>(await _unitOfWork.SubjectRepository.GetFirstOrDefault(c => c.SubjectId == courseDto.SubjectId));
             courseDto.Lecturer = mapper.Map<UserDto>(await _userManager.FindByIdAsync(courseDto.LecturerId));
-            courseDto.Announcements = await annoucementService.GetAnnouncementDtosInCourseAsync(courseId);
-
-            var enrolledData = await _unitOfWork.EnrolledCourseRepository.GetAllAsync();
-            var usersData = await _userManager.Users.ToListAsync();
-            var users = from user in  usersData
-                           join enroll in enrolledData on user.Id equals enroll.StudentId where enroll.CourseId == courseId
-                           select user;
-            courseDto.Students = mapper.Map<List<UserDto>>(users.ToList());
+            if (isLoadAnnoucements)
+            {
+                courseDto.Announcements = await annoucementService.GetAnnouncementDtosInCourseAsync(courseId);
+            }
+            if (isLoadStudent)
+            {
+                var enrolledData = await _unitOfWork.EnrolledCourseRepository.GetAllAsync();
+                var usersData = await _userManager.Users.ToListAsync();
+                var users = from user in usersData
+                            join enroll in enrolledData on user.Id equals enroll.StudentId
+                            where enroll.CourseId == courseId
+                            select user;
+                courseDto.Students = mapper.Map<List<UserDto>>(users.ToList());
+            }
             return courseDto;
 
         }
         public async Task<string> SuggestInviteCode()
         {
             var suggestCode = GenerateRandomNumericString(6);
-            while(await _unitOfWork.CourseRepository.AnyAsync(c=>c.InviteCode == suggestCode))
+            while (await _unitOfWork.CourseRepository.AnyAsync(c => c.InviteCode == suggestCode))
             {
                 suggestCode = GenerateRandomNumericString(6);
-            }    
+            }
             return suggestCode;
+        }
+        public async Task<bool> CheckIsTeacherAsync(string userId,string courseId)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c=>c.CourseId == courseId);   
+            if(course == null)
+            {
+                return false;
+            }
+            if(course.LecturerId != userId)
+            {
+                return false;
+            }
+            return true;
         }
         private string GenerateRandomNumericString(int length)
         {
@@ -326,15 +356,10 @@ namespace KLTN.Application.Services
 
             return new string(result);
         }
+        
+        #endregion
 
-        public async Task<ApiResponse<object>> GetFindCourseByInviteCodeAsync(string inviteCode)
-        {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.InviteCode == inviteCode);
-            if(course == null)
-            {
-                return new ApiNotFoundResponse<object>("Không tìm thấy khóa học");
-            }
-            return new ApiResponse<object>(200, "Tìm thấy khóa học", course);
-        }
+
+
     }
 }

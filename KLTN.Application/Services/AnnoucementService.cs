@@ -24,11 +24,11 @@ namespace KLTN.Application.Services
             this.userManager = userManager;
             this.mapper = mapper;
         }
-
+        #region for_controller
         public async Task<ApiResponse<object>> TogglePinAnnouncement(string announcementId, bool isPinned)
         {
-            var announcement = await unitOfWork.AnnnouncementRepository.GetFirstOrDefault(c=>c.AnnouncementId == announcementId);
-            if (announcement == null) 
+            var announcement = await unitOfWork.AnnnouncementRepository.GetFirstOrDefault(c => c.AnnouncementId == announcementId);
+            if (announcement == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy thông báo");
             }
@@ -40,7 +40,7 @@ namespace KLTN.Application.Services
         public async Task<ApiResponse<object>> GetAnnouncementByIdAsync(string annoucementId)
         {
             var data = await GetAnnoucementDtoByIdAsync(annoucementId);
-            if(data == null)
+            if (data == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy thông báo");
             }
@@ -103,7 +103,10 @@ namespace KLTN.Application.Services
             await unitOfWork.SaveChangesAsync();
             return new ApiResponse<object>(200, "Cập nhập thành công", mapper.Map<AnnouncementDto>(newAnnouncement));
         }
-        
+        #endregion
+        #region for_service
+
+        #endregion
         public async Task<List<AnnouncementDto>> GetAnnouncementDtosInCourseAsync(string courseId)
         {
             var announcements = unitOfWork.AnnnouncementRepository.GetAll(c=>c.CourseId == courseId);
