@@ -17,8 +17,5 @@ namespace KLTN.Application.DTOs.Assignments
         public string[] AttachedLinks { get; set; }
         public List<FileDto> Attachments { get; set; }
         public string[] StudentAssigned { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-        public DateTime? DeletedAt { get; set; }
     }
 }
