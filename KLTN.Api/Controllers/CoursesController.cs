@@ -1,30 +1,13 @@
-﻿using Amazon.S3.Model.Internal.MarshallTransformations;
-using AutoMapper;
+﻿using AutoMapper;
 using KLTN.Api.Filters;
-using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
-using KLTN.Application.DTOs.Projects;
-using KLTN.Application.DTOs.Semesters;
-using KLTN.Application.DTOs.Subjects;
-using KLTN.Application.DTOs.Uploads;
-using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
-using KLTN.Application.Helpers.Pagination;
-using KLTN.Application.Helpers.Response;
 using KLTN.Application.Services;
-using KLTN.Domain;
-using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
 using System.Security.Claims;
-using System.Text.RegularExpressions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
 namespace KLTN.Api.Controllers
 {
     [Authorize]

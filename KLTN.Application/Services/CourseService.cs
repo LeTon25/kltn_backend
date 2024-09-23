@@ -19,6 +19,7 @@ using KLTN.Application.DTOs.Projects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using KLTN.Application.DTOs.Groups;
+using KLTN.Application.DTOs.Assignments;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -48,8 +49,8 @@ namespace KLTN.Application.Services
             foreach(var courseDto in courseDtos)
             {
                 var lecturer = mapper.Map<UserDto>(await _userManager.FindByIdAsync(courseDto.LecturerId)) ;
-                var subject = mapper.Map<SubjectDto>(await _unitOfWork.SubjectRepository.GetFirstOrDefault(c=>c.SubjectId == courseDto.SubjectId));
-                var semester = mapper.Map<SemesterDto>(await _unitOfWork.SemesterRepository.GetFirstOrDefault(c => c.SemesterId == courseDto.SemesterId));
+                var subject = mapper.Map<SubjectDto>(await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c=>c.SubjectId == courseDto.SubjectId));
+                var semester = mapper.Map<SemesterDto>(await _unitOfWork.SemesterRepository.GetFirstOrDefaultAsync(c => c.SemesterId == courseDto.SemesterId));
                 courseDto.Lecturer = lecturer;
                 courseDto.Semester = semester;
                 courseDto.Subject = subject;
@@ -58,7 +59,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> UpdateInviteCodeAsync(string courseId, string inviteCode)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp");
@@ -111,7 +112,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> UpdateCourseAsync(string courseId,CreateCourseRequestDto requestDto,string userId)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp");
@@ -155,7 +156,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> ApplyInviteCodeAsync(string inviteCode,string userId)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.InviteCode == inviteCode);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.InviteCode == inviteCode);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp học");
@@ -196,7 +197,7 @@ namespace KLTN.Application.Services
 
         public async Task<ApiResponse<object>> DeleteCourseAsync(string courseId)
         {
-            var course = await  _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            var course = await  _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>($"Không thể tìm thấy lớp học với id {courseId}");
@@ -231,10 +232,9 @@ namespace KLTN.Application.Services
             }
             return new ApiSuccessResponse<object>(200, "Lấy dữ liệu thành công", groupsDto);
         }
-
         public async Task<ApiResponse<object>> GetRegenerateInviteCodeAsync(string courseId)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp");
@@ -251,7 +251,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetToggleInviteCodeAsync(string courseId,bool isHidden)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp");
@@ -264,7 +264,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> RemoveStudentFromCourseAsync(string courseId, string[] studentIds,string currentUserId)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy khóa học");
@@ -275,7 +275,7 @@ namespace KLTN.Application.Services
             }
             foreach (var studentId in studentIds)
             {
-                var enrollData = await _unitOfWork.EnrolledCourseRepository.GetFirstOrDefault(c => c.StudentId == studentId && c.CourseId == courseId);
+                var enrollData = await _unitOfWork.EnrolledCourseRepository.GetFirstOrDefaultAsync(c => c.StudentId == studentId && c.CourseId == courseId);
                 if(enrollData != null)
                     _unitOfWork.EnrolledCourseRepository.Delete(enrollData);
             }
@@ -284,7 +284,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetFindCourseByInviteCodeAsync(string inviteCode)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.InviteCode == inviteCode);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.InviteCode == inviteCode);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy khóa học");
@@ -294,16 +294,16 @@ namespace KLTN.Application.Services
         #endregion
 
         #region for_service
-        public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId, bool isLoadAnnoucements = true, bool isLoadStudent = true)
+        public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId, bool isLoadAnnoucements = true, bool isLoadStudent = true,bool isLoadAssignment = true)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c => c.CourseId == courseId);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
             {
                 return null;
             }
             var courseDto = mapper.Map<CourseDto>(course);
-            courseDto.Semester = mapper.Map<SemesterDto>(await _unitOfWork.SemesterRepository.GetFirstOrDefault(c => c.SemesterId == courseDto.SemesterId));
-            courseDto.Subject = mapper.Map<SubjectDto>(await _unitOfWork.SubjectRepository.GetFirstOrDefault(c => c.SubjectId == courseDto.SubjectId));
+            courseDto.Semester = mapper.Map<SemesterDto>(await _unitOfWork.SemesterRepository.GetFirstOrDefaultAsync(c => c.SemesterId == courseDto.SemesterId));
+            courseDto.Subject = mapper.Map<SubjectDto>(await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c => c.SubjectId == courseDto.SubjectId));
             courseDto.Lecturer = mapper.Map<UserDto>(await _userManager.FindByIdAsync(courseDto.LecturerId));
             if (isLoadAnnoucements)
             {
@@ -319,6 +319,11 @@ namespace KLTN.Application.Services
                             select user;
                 courseDto.Students = mapper.Map<List<UserDto>>(users.ToList());
             }
+            if (isLoadAssignment)
+            {
+                var assignments = _unitOfWork.AssignmentRepository.GetAll(c=>c.CourseId == courseDto.CourseId);
+                courseDto.Assignments = mapper.Map<List<AssignmentDto>>(assignments);
+            }
             return courseDto;
 
         }
@@ -333,7 +338,7 @@ namespace KLTN.Application.Services
         }
         public async Task<bool> CheckIsTeacherAsync(string userId,string courseId)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefault(c=>c.CourseId == courseId);   
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c=>c.CourseId == courseId);   
             if(course == null)
             {
                 return false;

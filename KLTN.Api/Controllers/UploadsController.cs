@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using KLTN.Application.Helpers.Response;
 using KLTN.Application.DTOs.Uploads;
 using Amazon.S3.Transfer;
-using System.Xml.Linq;
 using Amazon.S3.Model;
 
 namespace KLTN.Api.Controllers

@@ -27,7 +27,7 @@ namespace KLTN.Application.Services
         #region for_controller
         public async Task<ApiResponse<object>> TogglePinAnnouncement(string announcementId, bool isPinned)
         {
-            var announcement = await unitOfWork.AnnnouncementRepository.GetFirstOrDefault(c => c.AnnouncementId == announcementId);
+            var announcement = await unitOfWork.AnnnouncementRepository.GetFirstOrDefaultAsync(c => c.AnnouncementId == announcementId);
             if (announcement == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy thông báo");
@@ -48,7 +48,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> DeleteAnnouncementAsync(string annoucementId)
         {
-            var subject = await unitOfWork.AnnnouncementRepository.GetFirstOrDefault(c => c.AnnouncementId == annoucementId);
+            var subject = await unitOfWork.AnnnouncementRepository.GetFirstOrDefaultAsync(c => c.AnnouncementId == annoucementId);
             if (subject == null)
             {
                 return new ApiNotFoundResponse<object>("Không thể tìm thấy thông báo với id");
@@ -63,13 +63,13 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> UpdateAnnouncementAsync(string announcementId, CreateAnnouncementRequestDto requestDto)
         {
-            var announcement = await unitOfWork.AnnnouncementRepository.GetFirstOrDefault(c => c.AnnouncementId == announcementId);
+            var announcement = await unitOfWork.AnnnouncementRepository.GetFirstOrDefaultAsync(c => c.AnnouncementId == announcementId);
             if (announcement == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy thông báo");
             }
             announcement.Content = requestDto.Content;
-            announcement.AttachedLinks = requestDto.AttachedLinks;
+            announcement.AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks);
             announcement.UpdatedAt = DateTime.Now;
             announcement.Attachments = mapper.Map<List<KLTN.Domain.Entities.File>>(requestDto.Attachments);
             announcement.Mentions = requestDto.Mentions;
@@ -91,7 +91,7 @@ namespace KLTN.Application.Services
                 Content = requestDto.Content,
                 UserId = requestDto.UserId,
                 CourseId = requestDto.CourseId,
-                AttachedLinks = requestDto.AttachedLinks,
+                AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks),
                 Attachments = mapper.Map<List<File>>(requestDto.Attachments),
                 Mentions = requestDto.Mentions,
                 CreatedAt = DateTime.Now,
@@ -119,7 +119,7 @@ namespace KLTN.Application.Services
         }
         public async Task<AnnouncementDto> GetAnnoucementDtoByIdAsync(string annoucementId)
         {
-            var announcementFromDb = await unitOfWork.AnnnouncementRepository.GetFirstOrDefault(c=>c.AnnouncementId == annoucementId);
+            var announcementFromDb = await unitOfWork.AnnnouncementRepository.GetFirstOrDefaultAsync(c=>c.AnnouncementId == annoucementId);
             if (announcementFromDb == null)
             {
                 return null;

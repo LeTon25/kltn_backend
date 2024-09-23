@@ -31,7 +31,7 @@ namespace KLTN.Application.Services
             {
                 return null;
             }
-            var project = await _unitOfWork.ProjectRepository.GetFirstOrDefault(c => c.ProjectId == id);
+            var project = await _unitOfWork.ProjectRepository.GetFirstOrDefaultAsync(c => c.ProjectId == id);
             if (project == null) {
                 return null;
             }

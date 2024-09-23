@@ -27,7 +27,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetByIdAsync(string Id)
         {
-            var data = await _unitOfWork.SubjectRepository.GetFirstOrDefault(x => x.SubjectId == Id);
+            var data = await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(x => x.SubjectId == Id);
             if(data == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy học kỳ cần tìm");
@@ -61,7 +61,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> DeleteSubjectAsync(string subjectId)
         {
-            var subject = await _unitOfWork.SubjectRepository.GetFirstOrDefault(c => c.SubjectId == subjectId);
+            var subject = await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c => c.SubjectId == subjectId);
             if (subject == null)
             {
                 return new ApiNotFoundResponse<object>("Không thể tìm thấy môn học với id");
@@ -76,7 +76,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> UpdateSubjectAsync(string subjectId, CreateSubjectRequestDto requestDto)
         {
-            var subject = await _unitOfWork.SubjectRepository.GetFirstOrDefault(c => c.SubjectId == subjectId);
+            var subject = await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c => c.SubjectId == subjectId);
             if (subject == null)
             {
                 return new ApiNotFoundResponse<object>($"Không tìm thấy môn học với id : {subjectId}");

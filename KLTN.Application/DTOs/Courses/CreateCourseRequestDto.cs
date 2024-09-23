@@ -10,6 +10,7 @@ namespace KLTN.Application.DTOs.Courses
     {
         public string SubjectId { get; set; }
         public string SemesterId { get; set; }
+        public string Name { get; set; }
         public string CourseGroup { get; set; }
         public string? Background { get; set; }
         public string? InviteCode { get; set; }

@@ -14,7 +14,7 @@ namespace KLTN.Domain.Entities
         public string Title { get; set; }
         public string Content { get; set; }
         public DateTime? DueDate { get; set; }
-        public string[] AttachedLinks { get; set; }
+        public List<MetaLinkData> AttachedLinks { get; set; }
         public List<File> Attachments { get; set; }
         public string[] StudentAssigned { get;set; }
         public DateTime CreatedAt { get ; set ; }

@@ -1,21 +1,13 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Groups;
-using KLTN.Application.DTOs.Projects;
-using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
-using KLTN.Application.Helpers.Pagination;
-using KLTN.Application.Helpers.Response;
 using KLTN.Application.Services;
 using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.EntityFrameworkCore;
-using System.Net.WebSockets;
 using System.Security.Claims;
-using System.Text.RegularExpressions;
 
 namespace KLTN.Api.Controllers
 {

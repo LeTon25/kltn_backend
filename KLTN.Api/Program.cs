@@ -1,15 +1,11 @@
 ﻿using KLTN.Api.Extensions;
-using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog.Events;
 using Serilog;
 using KLTN.Infrastructure.Seeders;
-using Microsoft.Extensions.Hosting;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using FluentValidation.AspNetCore;
 using KLTN.Application.DTOs.Users;
 using Microsoft.OpenApi.Models;
@@ -17,8 +13,6 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using KLTN.Application.Helpers.Middleware;
-using System.Net.WebSockets;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

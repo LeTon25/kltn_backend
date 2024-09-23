@@ -22,7 +22,7 @@ namespace KLTN.Infrastructure.Configurations
             builder.Property(e => e.AttachedLinks)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
-                    v => JsonSerializer.Deserialize<string[]>(v, (JsonSerializerOptions)null)
+                    v => JsonSerializer.Deserialize<List<MetaLinkData>>(v, (JsonSerializerOptions)null)
                 );
             builder.Property(e => e.Attachments)
             .HasConversion(

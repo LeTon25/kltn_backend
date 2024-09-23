@@ -71,7 +71,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> UpdateCommentAsync(string commentId, CreateCommentRequestDto request,string userId)
         {
-            var comment = await _unitOfWork.CommentRepository.GetFirstOrDefault(c=>c.CommentId == commentId);
+            var comment = await _unitOfWork.CommentRepository.GetFirstOrDefaultAsync(c=>c.CommentId == commentId);
             if (comment == null)
                 return new ApiBadRequestResponse<object>($"Không thể tìm thấy bình luận với id : {commentId}");
             if (comment.UserId != userId)
@@ -94,7 +94,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> DeleteCommentAsync(string commentId)
         {
-            var comment = await _unitOfWork.CommentRepository.GetFirstOrDefault(c=>c.CommentId == commentId);
+            var comment = await _unitOfWork.CommentRepository.GetFirstOrDefaultAsync(c=>c.CommentId == commentId);
             if (comment == null)
                 return new ApiNotFoundResponse<object>($"Cannot found the comment with id: {commentId}");
 
