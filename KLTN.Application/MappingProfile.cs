@@ -48,6 +48,7 @@ namespace KLTN.Application
             CreateMap<Comment, CommentDto>().ReverseMap();
 
             CreateMap<AssignmentDto, Assignment>().ReverseMap();
+            CreateMap<AssignmentNoCourseDto,Assignment>().ReverseMap();
 
             CreateMap<ScoreStructure,ScoreStructureDto>().ReverseMap();
             CreateMap<CreateScoreStuctureRequestDto,ScoreStructure>();

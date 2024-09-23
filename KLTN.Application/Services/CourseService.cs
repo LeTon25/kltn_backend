@@ -323,8 +323,8 @@ namespace KLTN.Application.Services
             }
             if (isLoadAssignment)
             {
-                var assignments = _unitOfWork.AssignmentRepository.GetAll(c=>c.CourseId == courseDto.CourseId);
-                courseDto.Assignments = mapper.Map<List<AssignmentDto>>(assignments);
+                var assignments = _unitOfWork.AssignmentRepository.GetAll(c => c.CourseId == courseDto.CourseId);
+                courseDto.Assignments = mapper.Map<List<AssignmentNoCourseDto>>(assignments);
             }
             return courseDto;
 
