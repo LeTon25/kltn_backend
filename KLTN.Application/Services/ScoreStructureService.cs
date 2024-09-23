@@ -35,14 +35,20 @@ namespace KLTN.Application.Services
                     return new ApiNotFoundResponse<object>("Cột điểm cha không tồn tại");
                 }
                 // Tổng trọng số của các tiêu chí con không được vượt quá 100%
-                var totalSubScoreStructurePercent = parentScoreStructure.Childrens.Sum(c => c.Percent);
-                if (totalSubScoreStructurePercent + requestDto.Percent > 100)
+                if(parentScoreStructure.Children != null)
                 {
-                    return new ApiBadRequestResponse<object>("Tổng trọng số của các tiêu chí con không được vượt quá 100%.");
-                }
+                    var totalSubScoreStructurePercent = parentScoreStructure.Children.Sum(c => c.Percent);
+                    if (totalSubScoreStructurePercent + requestDto.Percent > 100)
+                    {
+                        return new ApiBadRequestResponse<object>("Tổng trọng số của các tiêu chí con không được vượt quá 100%.");
+                    }
+                }    
             }
             var entity = _mapper.Map<ScoreStructure>(requestDto);
-
+            if(string.IsNullOrEmpty(entity.ParentId))
+            {
+                entity.ParentId = null;
+            }    
             var newId = Guid.NewGuid().ToString();
             entity.Id = newId;
             await _unitOfWork.ScoreStructureRepository.AddAsync(entity);
@@ -78,6 +84,10 @@ namespace KLTN.Application.Services
             scoreStructure.ColumnName = requestDto.ColumnName;
             scoreStructure.MaxScore = requestDto.MaxScore;
             scoreStructure.Percent = requestDto.Percent;
+            if (string.IsNullOrEmpty(scoreStructure.ParentId))
+            {
+                scoreStructure.ParentId = null;
+            }
             //Kiểm tra điều kiện
             if (!string.IsNullOrEmpty(scoreStructure.ParentId))
             {
@@ -87,11 +97,15 @@ namespace KLTN.Application.Services
                     return new ApiNotFoundResponse<object>("Cột điểm cha không tồn tại");
                 }
                 // Tổng trọng số của các tiêu chí con không được vượt quá 100%
-                var totalSubScoreStructurePercent = parentScoreStructure.Childrens.Where(c=>!c.Id.Equals(id)).Sum(c => c.Percent);
-                if (totalSubScoreStructurePercent + requestDto.Percent > 100)
+                if (parentScoreStructure.Children != null)
                 {
-                    return new ApiBadRequestResponse<object>("Tổng trọng số của các tiêu chí con không được vượt quá 100%.");
+                    var totalSubScoreStructurePercent = parentScoreStructure.Children.Where(c => !c.Id.Equals(id)).Sum(c => c.Percent);
+                    if (totalSubScoreStructurePercent + requestDto.Percent > 100)
+                    {
+                        return new ApiBadRequestResponse<object>("Tổng trọng số của các tiêu chí con không được vượt quá 100%.");
+                    }
                 }
+               
             }
             _unitOfWork.ScoreStructureRepository.Update(scoreStructure);
             var result = await _unitOfWork.SaveChangesAsync();
@@ -117,7 +131,8 @@ namespace KLTN.Application.Services
         #region for_service
         public async Task<ScoreStructureDto> GetScoreStructureDtoAsync(string id)
         {
-            var data = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(id), false, c => c.Parent, c => c.Children);
+            var data = await _unitOfWork.ScoreStructureRepository.GetScoreStructureWithChildAsync(id);
+            
             if(data == null)
             {
                 return null;
@@ -132,20 +147,20 @@ namespace KLTN.Application.Services
             {
                 return null;
             }
-            foreach (var item in data.Childrens)
+            foreach (var item in data.Children)
             {
-                item.Childrens = await GetChildrenAsync(item.Id);
+                item.Children = await GetChildrenAsync(item.Id);
             }
             return data;
         }
         public async Task<List<ScoreStructureDto>> GetChildrenAsync(string id)
         {
             var subScoreStructure = await GetScoreStructureDtoAsync(id);
-            foreach(var item in subScoreStructure.Childrens)
+            foreach(var item in subScoreStructure.Children)
             {
-                item.Childrens = await GetChildrenAsync(item.Id);
+                item.Children = await GetChildrenAsync(item.Id);
             }
-            return subScoreStructure.Childrens.ToList();
+            return subScoreStructure.Children.ToList();
         }
         #endregion
     }

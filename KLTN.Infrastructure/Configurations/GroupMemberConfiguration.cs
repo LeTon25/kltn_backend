@@ -13,9 +13,19 @@ namespace KLTN.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<GroupMember> builder)
         {
+            #region cac_cot
             builder.ToTable("GroupMember");
-
             builder.HasKey(e => new { e.StudentId, e.GroupId });
+            #endregion
+            #region relationship
+            builder.HasOne(e => e.Group)
+                .WithMany(c => c.GroupMembers)
+                .HasForeignKey(e => e.GroupId);
+
+            builder.HasOne(e => e.Member)
+                .WithMany(c => c.GroupMembers)
+                .HasForeignKey(e=>e.StudentId);
+            #endregion
         }
     }
 }

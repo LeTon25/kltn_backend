@@ -14,6 +14,7 @@ namespace KLTN.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Assignment> builder)
         {
+            #region cac_cot
             builder.ToTable("Assignment");
             builder.HasKey(e => e.AssignmentId);
             builder.Property(e => e.Content)
@@ -34,6 +35,15 @@ namespace KLTN.Infrastructure.Configurations
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<string[]>(v, (JsonSerializerOptions)null)
                 );
+            #endregion
+
+            #region relationship
+            builder.HasOne(c => c.Course)
+                .WithMany(c => c.Assignments)
+                .HasForeignKey(c => c.CourseId);
+
+
+            #endregion
         }
     }
 }

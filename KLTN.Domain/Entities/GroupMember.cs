@@ -15,5 +15,7 @@ namespace KLTN.Domain.Entities
         public DateTime CreatedAt { get ; set; }
         public DateTime? UpdatedAt { get ; set ; }
         public DateTime? DeletedAt { get ; set; }
+        public User? Member {  get; set; }  
+        public Group? Group { get; set; }
     }
 }

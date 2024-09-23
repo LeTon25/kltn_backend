@@ -34,7 +34,7 @@ namespace KLTN.Application.DTOs.Courses
         public SemesterDto? Semester { get; set; } 
         public List<UserDto>? Students {get; set; }
         public List<AnnouncementDto>? Announcements { get; set; }
-        public List<AssignmentDto>? Assignments { get; set; }  
+        public List<AssignmentNoCourseDto>? Assignments { get; set; }  
 
     }
 }
