@@ -1,14 +1,10 @@
 ﻿using Amazon.S3.Model.Internal.MarshallTransformations;
 using KLTN.Application.DTOs.Comments;
 using KLTN.Application.Helpers.Filter;
-using KLTN.Application.Helpers.Pagination;
-using KLTN.Application.Helpers.Response;
 using KLTN.Application.Services;
-using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace KLTN.Api.Controllers

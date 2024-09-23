@@ -1,19 +1,15 @@
 ﻿using AutoMapper;
-using FluentValidation.Validators;
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
-using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 using System.Net.Http.Headers;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace KLTN.Api.Controllers
 {

@@ -10,8 +10,8 @@ namespace KLTN.Domain.Repositories
     public interface IRepository<T>
     {
         Task<IEnumerable<T>> GetAllAsync();
-        IEnumerable<T> GetAll(Expression<Func<T, bool>>? filter = null);
-        Task<T> GetFirstOrDefault(Expression<Func<T, bool>> filter,  bool tracked = false);
+        IEnumerable<T> GetAll(Expression<Func<T, bool>>? filter = null, params Expression<Func<T, object>>[] includeProperties);
+        Task<T> GetFirstOrDefaultAsync(Expression<Func<T, bool>> filter,  bool tracked = false,params Expression<Func<T, object>>[] includeProperties);
         Task AddAsync(T entity);
         Task AddRangeAsync(List<T> entities);
         void Delete(T entity);

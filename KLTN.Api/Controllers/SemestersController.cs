@@ -8,8 +8,6 @@ using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration.EnvironmentVariables;
-using System.Net.WebSockets;
 
 namespace KLTN.Api.Controllers
 {

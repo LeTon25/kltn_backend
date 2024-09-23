@@ -13,7 +13,7 @@ namespace KLTN.Domain.Entities
         public string CourseId { get; set; }
         public string UserId { get; set; }    
         public string Content {  get; set; }
-        public string[] AttachedLinks { get; set; }
+        public List<MetaLinkData> AttachedLinks { get; set; }
         public List<File> Attachments { get; set; }
         public string[] Mentions { get; set; }
         public bool IsPinned { get; set; }

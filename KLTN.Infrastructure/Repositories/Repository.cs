@@ -41,16 +41,20 @@ namespace KLTN.Infrastructure.Repositories
             dbSet.RemoveRange(entities);
         }
 
-        public IEnumerable<T> GetAll(Expression<Func<T, bool>>? filter = null)
+        public IEnumerable<T> GetAll(Expression<Func<T, bool>>? filter = null, params Expression<Func<T, object>>[] includeProperties)
         {
             IQueryable<T> query = dbSet;
             if (filter != null)
             {
                 query = query.Where(filter);
             }
+            if(includeProperties.Length > 0)
+            {
+                query = includeProperties.Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
+            }
             return query;
         }
-        public async Task<T> GetFirstOrDefault(Expression<Func<T, bool>> filter, bool tracked = false)
+        public async Task<T> GetFirstOrDefaultAsync(Expression<Func<T, bool>> filter, bool tracked = false, params Expression<Func<T, object>>[] includeProperties)
         {
             IQueryable<T> query = dbSet;
             if(!tracked)
@@ -58,7 +62,11 @@ namespace KLTN.Infrastructure.Repositories
                 query = dbSet.AsNoTracking();
             }   
             query = query.Where(filter);
-             return await query.FirstOrDefaultAsync();
+            if (includeProperties.Length > 0)
+            {
+                query = includeProperties.Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
+            }
+            return await query.FirstOrDefaultAsync();
         }
         public void Update(T entity)
         {

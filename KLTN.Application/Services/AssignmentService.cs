@@ -41,7 +41,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> DeleteAssignmentAsync(string userId,string assignmentId)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefault(c => c.AssignmentId == assignmentId);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId);
             if (assignment == null)
             {
                 return new ApiNotFoundResponse<object>("Không thể tìm thấy bài tập với id");
@@ -60,7 +60,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> UpdateAssignmentAsync(string userId,string assignmentId, UpSertAssignmentRequestDto requestDto)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefault(c => c.AssignmentId == assignmentId);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId);
             if (assignment == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy bài tập");
@@ -75,7 +75,7 @@ namespace KLTN.Application.Services
             assignment.CourseId = requestDto.CourseId;
             assignment.DueDate = requestDto.DueDate;
             assignment.StudentAssigned = requestDto.StudentAssigned;
-            assignment.AttachedLinks = requestDto.AttachedLinks;
+            assignment.AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks);
             assignment.UpdatedAt = DateTime.Now;
             assignment.Attachments = mapper.Map<List<KLTN.Domain.Entities.File>>(requestDto.Attachments);
 
@@ -98,7 +98,7 @@ namespace KLTN.Application.Services
                 CourseId = requestDto.CourseId,
                 Title = requestDto.Title,   
                 DueDate = requestDto.DueDate,
-                AttachedLinks = requestDto.AttachedLinks,
+                AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks),
                 Attachments = mapper.Map<List<File>>(requestDto.Attachments),
                 StudentAssigned = requestDto.StudentAssigned,
                 CreatedAt = DateTime.Now,
@@ -119,7 +119,7 @@ namespace KLTN.Application.Services
         #region for_service
         public async Task<AssignmentDto> GetAssignmentDtoByIdAsync(string assignmentId)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefault(c => c.AssignmentId == assignmentId);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId);
             if (assignment == null)
             {
                 return null;

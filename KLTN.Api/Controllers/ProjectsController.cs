@@ -1,9 +1,7 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Projects;
-using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
-using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;

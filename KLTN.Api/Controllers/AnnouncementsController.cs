@@ -1,23 +1,12 @@
 ﻿using AutoMapper;
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Announcements;
-using KLTN.Application.DTOs.Uploads;
-using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
-using KLTN.Application.Helpers.Pagination;
-using KLTN.Application.Helpers.Response;
 using KLTN.Application.Services;
 using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration.EnvironmentVariables;
-using System.Diagnostics.Eventing.Reader;
-using System.Net.Mail;
-using System.Net.WebSockets;
-using File = KLTN.Domain.Entities.File;
 
 namespace KLTN.Api.Controllers
 {

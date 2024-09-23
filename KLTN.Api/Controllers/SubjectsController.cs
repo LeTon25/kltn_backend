@@ -2,14 +2,9 @@
 using AutoMapper;
 using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.Helpers.Filter;
-using KLTN.Application.Helpers.Pagination;
-using KLTN.Application.Helpers.Response;
 using KLTN.Application.Services;
-using KLTN.Domain.Entities;
-using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace KLTN.Api.Controllers
 {
