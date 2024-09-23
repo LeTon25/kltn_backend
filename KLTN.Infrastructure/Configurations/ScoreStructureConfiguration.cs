@@ -21,7 +21,8 @@ namespace KLTN.Infrastructure.Configurations
             builder.HasOne(e => e.Parent)
                 .WithMany(e => e.Children)
                 .HasForeignKey(e => e.ParentId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
         }
     }
 }

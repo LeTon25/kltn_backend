@@ -9,6 +9,6 @@ namespace KLTN.Domain.Repositories
 {
     public interface IScoreStructureRepository : IRepository<ScoreStructure>
     {
-
+        Task<ScoreStructure> GetScoreStructureWithChildAsync(string id);
     }
 }

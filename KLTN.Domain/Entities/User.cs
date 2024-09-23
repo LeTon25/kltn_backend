@@ -22,5 +22,11 @@ namespace KLTN.Domain.Entities
         public DateTime? DeletedAt { get; set; }
         public string? RefreshToken { get; set; }
         public DateTime RefreshTokenExpiry { get; set; }
+        public ICollection<Announcement>? Announcements { get; set; }
+        public ICollection<Comment>? Comments { get; set; }
+        public ICollection<Course>? CreatedCourses { get; set; } 
+        public ICollection<EnrolledCourse>? EnrolledCourses { get; set; }   
+        public ICollection<GroupMember>? GroupMembers { get; set; }
+
     }
 }

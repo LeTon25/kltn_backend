@@ -15,11 +15,20 @@ namespace KLTN.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Group> builder)
         {
+            #region cac_cot
             builder.ToTable("Group");
-            builder.HasKey(c=>c.GroupId);
+            builder.HasKey(c => c.GroupId);
             builder.Property(c => c.GroupName)
                 .HasMaxLength(255)
                 .IsRequired();
+            #endregion
+
+            #region relationship
+            builder.HasOne(c => c.Course)
+                .WithMany(e => e.Groups)
+                .HasForeignKey(c => c.CourseId); 
+            #endregion
+
         }
     }
 }

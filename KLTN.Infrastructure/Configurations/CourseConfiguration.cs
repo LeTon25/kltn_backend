@@ -13,12 +13,29 @@ namespace KLTN.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Course> builder)
         {
+            #region cac_cot
             builder.ToTable("Course");
             builder.HasKey(c => c.CourseId);
 
             builder.Property(c => c.CourseGroup)
                 .HasMaxLength(255)
                 .IsRequired();
+            #endregion
+
+            #region relationship
+            builder.HasOne(c => c.Subject)
+                .WithMany(e => e.Courses)
+                .HasForeignKey(c => c.SubjectId);
+
+            builder.HasOne(c => c.Semester)
+                   .WithMany(e => e.Courses)
+                    .HasForeignKey(c => c.SemesterId);
+
+            builder.HasOne(c => c.Lecturer)
+                .WithMany(e => e.CreatedCourses)
+                .HasForeignKey(c=>c.LecturerId);
+            #endregion
+
         }
     }
 }

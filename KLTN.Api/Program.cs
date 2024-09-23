@@ -25,7 +25,6 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
     .Enrich.FromLogContext()
-    //.WriteTo.Async(c => c.File("Logs/logs.txt"))
     .WriteTo.Async(c => c.Console())
     .CreateLogger();
 
@@ -141,6 +140,8 @@ using (var scope = app.Services.CreateScope())
         Log.Information("Tạo dữ liệu mẫu");
         var dbInitializer = services.GetService<DbInitializer>();
         dbInitializer.Seed().Wait();
+        Log.Information("Tạo dữ liệu mẫu thành công");
+
     }
     catch (Exception ex)
     {

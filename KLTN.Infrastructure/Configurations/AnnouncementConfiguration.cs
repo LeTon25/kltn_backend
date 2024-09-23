@@ -14,6 +14,7 @@ namespace KLTN.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Announcement> builder)
         {
+            #region cac_cot
             builder.ToTable("Announcement");
             builder.HasKey(e => e.AnnouncementId);
             builder.Property(e => e.Content)
@@ -32,7 +33,19 @@ namespace KLTN.Infrastructure.Configurations
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<string[]>(v, (JsonSerializerOptions)null)
-);
+            );
+            #endregion
+
+            #region relationship
+            builder.HasOne(e => e.CreateUser)
+                .WithMany(c => c.Announcements)
+                .HasForeignKey(e => e.UserId);
+
+            builder.HasOne(e => e.Course)
+                .WithMany(c => c.Annoucements)
+                .HasForeignKey(c=>c.CourseId);
+            #endregion
+
         }
     }
 }

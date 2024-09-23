@@ -22,5 +22,13 @@ namespace KLTN.Domain.Entities
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public bool IsHidden { get; set; }
+        public ICollection<Assignment>? Assignments { get; set; }
+        public ICollection<Announcement>? Annoucements { get; set; }
+        public ICollection<Group>? Groups { get; set; }
+        public ICollection<Project>? Projects { get; set; }
+        public Subject? Subject { get; set; }   
+        public Semester? Semester { get; set; }
+        public User? Lecturer { get; set; }
+        public ICollection<EnrolledCourse>? EnrolledCourses { get; set; }
     }
 }

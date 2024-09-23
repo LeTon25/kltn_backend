@@ -105,6 +105,7 @@ namespace KLTN.Application.Services
                 CreatedAt = DateTime.Now,
                 UpdatedAt = null,
                 DeletedAt = null,
+                Name = requestDto.Name,
             };
             await _unitOfWork.CourseRepository.AddAsync(newCourse);
             await _unitOfWork.SaveChangesAsync();
@@ -137,6 +138,7 @@ namespace KLTN.Application.Services
             course.SemesterId = requestDto.SemesterId;
             course.SubjectId = requestDto.SubjectId;
             course.IsHidden = requestDto.IsHidden;
+            course.Name = requestDto.Name;
             _unitOfWork.CourseRepository.Update(course);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)

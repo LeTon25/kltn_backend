@@ -15,6 +15,7 @@ namespace KLTN.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Project> builder)
         {
+            #region cac_cot
             builder.ToTable("Project");
             builder.HasKey(c=>c.ProjectId);
             builder.Property(c => c.Title)
@@ -22,6 +23,13 @@ namespace KLTN.Infrastructure.Configurations
                 .IsRequired();
             builder.Property(c => c.Description)
                 .IsRequired();
+            #endregion
+
+            #region relationship
+            builder.HasOne(c => c.Course)
+                .WithMany(e => e.Projects)
+                .HasForeignKey(e => e.CourseId);
+            #endregion
         }
     }
 }
