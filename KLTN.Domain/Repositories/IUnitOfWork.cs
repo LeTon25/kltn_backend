@@ -19,6 +19,8 @@ namespace KLTN.Domain.Repositories
         public IEnrolledCourseRepository EnrolledCourseRepository { get; }
         public IAssignmentRepository AssignmentRepository { get; }
         public IScoreStructureRepository ScoreStructureRepository { get; }
+        public IReportRepository ReportRepository { get; }
+        public IReportCommentRepository ReportCommentRepository { get; }
         public Task<int> SaveChangesAsync();
     }
 }

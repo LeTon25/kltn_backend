@@ -82,5 +82,12 @@ namespace KLTN.Infrastructure.Repositories
             !trackChanges
                 ? _db.Set<T>().Where(expression).AsNoTracking()
                 : _db.Set<T>().Where(expression);
+
+        public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression, bool trackChanges = false, params Expression<Func<T, object>>[] includeProperties)
+        {
+            var items = FindByCondition(expression, trackChanges);
+            items = includeProperties.Aggregate(items, (current, includeProperty) => current.Include(includeProperty));
+            return items;
+        }
     }
 }

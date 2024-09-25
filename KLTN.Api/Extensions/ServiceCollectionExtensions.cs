@@ -30,8 +30,11 @@ namespace KLTN.Api.Extensions
             services.AddTransient<GroupService>();
             services.AddTransient<AssignmentService>();
             services.AddTransient<ScoreStructureService>();
+            services.AddTransient<ReportService>(); 
+            services.AddTransient<ReportCommentService>();
             //
             services.AddScoped<CourseResourceAccessFilter>();
+            services.AddScoped<GroupResourceAccessFilter>();
             return services;
         }
     }

@@ -23,6 +23,8 @@ namespace KLTN.Infrastructure.Data
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<Assignment> Assignments { get; set; }   
         public DbSet<ScoreStructure> ScoreStructures { get; set; }
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<ReportComment> ReportComments { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -39,6 +41,8 @@ namespace KLTN.Infrastructure.Data
             builder.ApplyConfiguration(new EnrolledCourseConfiguration()); 
             builder.ApplyConfiguration(new AssignmentConfiguration());
             builder.ApplyConfiguration(new ScoreStructureConfiguration());  
+            builder.ApplyConfiguration(new ReportConfiguration());
+            builder.ApplyConfiguration(new ReportCommentConfiguration());
         }
     }
 }
