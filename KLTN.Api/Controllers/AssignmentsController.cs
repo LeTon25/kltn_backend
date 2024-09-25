@@ -14,9 +14,7 @@ namespace KLTN.Api.Controllers
     public class AssignmentsController : BaseController
     {
         private readonly AssignmentService assignmentService;
-        public AssignmentsController(ApplicationDbContext db,
-            IMapper mapper,
-            IStorageService storageService,
+        public AssignmentsController(
             AssignmentService assignmentService
             )
         {

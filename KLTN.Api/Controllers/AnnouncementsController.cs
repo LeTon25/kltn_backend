@@ -14,9 +14,7 @@ namespace KLTN.Api.Controllers
     public class AnnouncementsController : BaseController
     {
         private readonly AnnoucementService annoucementService;
-        public AnnouncementsController(ApplicationDbContext db,
-            IMapper mapper,
-            IStorageService storageService,
+        public AnnouncementsController(
             AnnoucementService annoucementService
             ) {
             this.annoucementService = annoucementService;
