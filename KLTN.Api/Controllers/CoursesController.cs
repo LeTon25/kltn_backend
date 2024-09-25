@@ -14,8 +14,7 @@ namespace KLTN.Api.Controllers
     public class CoursesController : BaseController
     {
         private readonly CourseService _courseService;
-        public CoursesController(ApplicationDbContext _db,
-            IMapper _mapper,
+        public CoursesController(
             CourseService courseService
           ) 
         { 

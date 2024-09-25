@@ -14,21 +14,14 @@ namespace KLTN.Api.Controllers
     [Authorize]
     public class GroupsController : BaseController
     {
-        private readonly ApplicationDbContext _db;
-        private readonly UserManager<User> _userManager;
-        private readonly IMapper _mapper;
         private readonly GroupService groupService;
         private readonly CourseService courseService;
         public GroupsController(ApplicationDbContext _db,
-            IMapper _mapper,
             UserManager<User> userManager,
             GroupService groupService,
             CourseService courseService,
             IHttpContextAccessor httpContextAccessor)
         {
-            this._db = _db;
-            this._mapper = _mapper;
-            this._userManager = userManager;
             this.groupService = groupService;
             this.courseService = courseService;
         }
