@@ -38,7 +38,7 @@ namespace KLTN.Infrastructure.Data
             builder.ApplyConfiguration(new SubjectConfiguration());
             builder.ApplyConfiguration(new EnrolledCourseConfiguration()); 
             builder.ApplyConfiguration(new AssignmentConfiguration());
-            builder.ApplyConfiguration(new ScoreStructureConfiguration());
+            builder.ApplyConfiguration(new ScoreStructureConfiguration());  
         }
     }
 }

@@ -98,7 +98,7 @@ namespace KLTN.Api.Controllers
             var data = await _courseService.GetGroupsInCourseAsync(courseId);
             if(data.StatusCode == 200)
             {
-                var course = await _courseService.GetCourseDtoByIdAsync(courseId);
+                var course = await _courseService.GetCourseDtoByIdAsync(courseId,false,true,false);
                 foreach (var group in data.Data as List<GroupDto>)
                 {
                     group.Course = course;

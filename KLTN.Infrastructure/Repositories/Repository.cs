@@ -19,7 +19,7 @@ namespace KLTN.Infrastructure.Repositories
             _db = db;
             dbSet = db.Set<T>();
         }
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, params Expression<Func<T, object>>[] includeProperties)
         {
             return await dbSet.ToListAsync();
         }
@@ -60,7 +60,7 @@ namespace KLTN.Infrastructure.Repositories
             if(!tracked)
             {
                 query = dbSet.AsNoTracking();
-            }   
+            }  
             query = query.Where(filter);
             if (includeProperties.Length > 0)
             {
@@ -77,5 +77,10 @@ namespace KLTN.Infrastructure.Repositories
         {
             return await dbSet.AnyAsync(filter);  
         }
+
+        public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression, bool trackChanges = false) =>
+            !trackChanges
+                ? _db.Set<T>().Where(expression).AsNoTracking()
+                : _db.Set<T>().Where(expression);
     }
 }

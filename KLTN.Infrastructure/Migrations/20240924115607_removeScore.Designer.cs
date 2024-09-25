@@ -4,6 +4,7 @@ using KLTN.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KLTN.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240924115607_removeScore")]
+    partial class removeScore
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -342,41 +345,6 @@ namespace KLTN.Infrastructure.Migrations
                     b.HasIndex("CourseId");
 
                     b.ToTable("Project", (string)null);
-                });
-
-            modelBuilder.Entity("KLTN.Domain.Entities.ScoreStructure", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("ColumnName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("CourseId")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<double>("MaxPercent")
-                        .HasColumnType("double");
-
-                    b.Property<string>("ParentId")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<decimal>("Percent")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<string>("divideColumnFirst")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("divideColumnSecond")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentId");
-
-                    b.ToTable("ScoreStructures", (string)null);
                 });
 
             modelBuilder.Entity("KLTN.Domain.Entities.Semester", b =>
@@ -805,16 +773,6 @@ namespace KLTN.Infrastructure.Migrations
                     b.Navigation("Course");
                 });
 
-            modelBuilder.Entity("KLTN.Domain.Entities.ScoreStructure", b =>
-                {
-                    b.HasOne("KLTN.Domain.Entities.ScoreStructure", "Parent")
-                        .WithMany("Children")
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Parent");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -887,11 +845,6 @@ namespace KLTN.Infrastructure.Migrations
             modelBuilder.Entity("KLTN.Domain.Entities.Group", b =>
                 {
                     b.Navigation("GroupMembers");
-                });
-
-            modelBuilder.Entity("KLTN.Domain.Entities.ScoreStructure", b =>
-                {
-                    b.Navigation("Children");
                 });
 
             modelBuilder.Entity("KLTN.Domain.Entities.Semester", b =>

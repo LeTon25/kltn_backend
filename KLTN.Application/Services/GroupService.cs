@@ -1,24 +1,13 @@
 ﻿using AutoMapper;
-using AutoMapper.Execution;
 using KLTN.Application.DTOs.Groups;
-using KLTN.Application.DTOs.Projects;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Group = KLTN.Domain.Entities.Group;
 
 namespace KLTN.Application.Services
@@ -143,13 +132,13 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> PostAddMembersToGroupAsync(string groupId, AddMemberToGroupDto requestDto,string userId)
         {
-            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c=>c.GroupId==groupId);
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c=>c.GroupId==groupId,false,c=>c.Course,c => c.GroupMembers);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
             }
             var groupMemberByCurrentUser = await _unitOfWork.GroupMemberRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId && c.StudentId == userId);
-            if(groupMemberByCurrentUser == null || groupMemberByCurrentUser.IsLeader == false)
+            if ((groupMemberByCurrentUser != null && groupMemberByCurrentUser.IsLeader == false) || userId != group.Course?.LecturerId) 
             {
                 return new ApiBadRequestResponse<object>("Bạn không có quyền thêm thành viên vào");
             }
@@ -173,7 +162,12 @@ namespace KLTN.Application.Services
                         {
                             return new ApiBadRequestResponse<object>("Có người dùng đã tham gia nhóm khác");
                         }
-                        if(currentMembersCount + 1 > group.NumberOfMembers)
+                        if(group.GroupMembers != null && group.GroupMembers.Any(c => c.StudentId.Equals(id)))
+                        {
+                            return new ApiBadRequestResponse<object>("Có người dùng đã tham gia rồi");
+                        }    
+       
+                        if (currentMembersCount + 1 > group.NumberOfMembers)
                         {
                             return new ApiBadRequestResponse<object>("Số lượng thành viên vượt quá số lượng cho phép");
                         }    
@@ -190,18 +184,17 @@ namespace KLTN.Application.Services
             var groupMemberDto = await GetGroupMemberDtoAsync(groupId);
             return new ApiSuccessResponse<object>(200, "Thêm thành viên thành công", groupMemberDto);
         }
-
         public async Task<ApiResponse<object>> DeleteRemoveMemberAsync(string groupId, RemoveMemberFromGroupDto requestDto,string userId)
         {
-            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId);
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId,false,c=>c.Course);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
             }
             var groupMemberByCurrentUser = await _unitOfWork.GroupMemberRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId && c.StudentId == userId);
-            if (groupMemberByCurrentUser == null || groupMemberByCurrentUser.IsLeader == false)
+            if ((groupMemberByCurrentUser != null && groupMemberByCurrentUser.IsLeader == false) || userId != group.Course?.LecturerId)
             {
-                return new ApiBadRequestResponse<object>("Bạn không có quyền xóa thành viên vào");
+                return new ApiBadRequestResponse<object>("Bạn không có quyền xóa thành viên");
             }
             if (requestDto.studentIds.Length > 0)
             {
@@ -219,8 +212,37 @@ namespace KLTN.Application.Services
                 }
             }
             await _unitOfWork.SaveChangesAsync();
+            return new ApiResponse<object>(200, "Xóa thành công");
+        }
+        public async Task<ApiResponse<object>> AssignLeaderAsync(string currentUserId, string groupId , string leaderId)
+        {
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId, false, c => c.Course);
+            if (group == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
+            }
+            var groupMemberByCurrentUser = await _unitOfWork.GroupMemberRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId && c.StudentId == currentUserId);
+            if ((groupMemberByCurrentUser != null && groupMemberByCurrentUser.IsLeader == false) || currentUserId != group.Course?.LecturerId)
+            {
+                return new ApiBadRequestResponse<object>("Bạn không có quyền xóa thành viên");
+            }
+            var oldLeader = await _unitOfWork.GroupMemberRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId && c.IsLeader == true);
+            if(oldLeader != null)
+            {
+                oldLeader.IsLeader = false;
+                _unitOfWork.GroupMemberRepository.Update(oldLeader);
+            }    
+
+            var newLeader = await _unitOfWork.GroupMemberRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId && c.StudentId == leaderId);
+            if (newLeader == null) { 
+                return new ApiBadRequestResponse<object>("Người bạn chọn làm nhóm trưởng vẫn chưa tham gia nhóm");
+            }
+            newLeader.IsLeader = true;
+            _unitOfWork.GroupMemberRepository.Update(newLeader);
+            await _unitOfWork.SaveChangesAsync();
             return new ApiResponse<object>(200, "Thêm thành công");
         }
+
         #endregion
         public async Task<GroupDto?> GetGroupDtoAsync(string groupId )
         {

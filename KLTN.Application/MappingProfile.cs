@@ -51,7 +51,7 @@ namespace KLTN.Application
             CreateMap<AssignmentNoCourseDto,Assignment>().ReverseMap();
 
             CreateMap<ScoreStructure,ScoreStructureDto>().ReverseMap();
-            CreateMap<CreateScoreStuctureRequestDto,ScoreStructure>();
+            CreateMap<UpSertScoreStructureDto, ScoreStructure>();
 
             CreateMap<MetaLinkData, MetaLinkDataDto>().ReverseMap();
         }
