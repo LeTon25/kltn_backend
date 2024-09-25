@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿using Amazon.S3.Model.Internal.MarshallTransformations;
+using AutoMapper;
+using KLTN.Api.Filters;
 using KLTN.Application.DTOs.Groups;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Services;
@@ -26,6 +28,7 @@ namespace KLTN.Api.Controllers
             this.courseService = courseService;
         }
         [HttpGet("{groupId}")]
+        [ServiceFilter(typeof(GroupResourceAccessFilter))]
         public async Task<IActionResult> GetByIdAsync(string groupId)
         {
             var data = await groupService.GetByIdAsync(groupId);
@@ -87,6 +90,13 @@ namespace KLTN.Api.Controllers
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var response = await groupService.AssignLeaderAsync(userId,groupId,leaderId);
+            return StatusCode(response.StatusCode, response);
+        }
+        [HttpGet("{groupId}/report")]
+        [ServiceFilter(typeof(GroupResourceAccessFilter))]
+        public async Task<IActionResult> GetReportInGroupAsync(string groupId)
+        {
+            var response = await groupService.GetReportInGroupAsync(groupId);
             return StatusCode(response.StatusCode, response);
         }
     }

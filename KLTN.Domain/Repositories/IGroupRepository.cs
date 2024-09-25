@@ -8,5 +8,6 @@ namespace KLTN.Domain.Repositories
 {
     public interface IGroupRepository : IRepository<Group>
     {
+        Task<IEnumerable<Report>> GetReportsInGroupAsync(string groupId);
     }
 }

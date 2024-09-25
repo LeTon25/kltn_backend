@@ -20,5 +20,6 @@ namespace KLTN.Domain.Entities
         public DateTime? DeletedAt { get; set; }
         public Course? Course { get; set; } 
         public ICollection<GroupMember>? GroupMembers { get; set; }
+        public ICollection<Report>? Reports { get; set; }
     }
 }

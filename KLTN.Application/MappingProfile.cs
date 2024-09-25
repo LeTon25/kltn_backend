@@ -5,6 +5,8 @@ using KLTN.Application.DTOs.Comments;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Projects;
+using KLTN.Application.DTOs.ReportComments;
+using KLTN.Application.DTOs.Reports;
 using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.DTOs.Semesters;
 using KLTN.Application.DTOs.Subjects;
@@ -54,6 +56,11 @@ namespace KLTN.Application
             CreateMap<UpSertScoreStructureDto, ScoreStructure>();
 
             CreateMap<MetaLinkData, MetaLinkDataDto>().ReverseMap();
+
+            CreateMap<ReportDto,Report>().ReverseMap();
+            CreateMap<CreateReportRequestDto, Report>();
+
+            CreateMap<ReportCommentDto,ReportComment>().ReverseMap();
         }
     }
 }

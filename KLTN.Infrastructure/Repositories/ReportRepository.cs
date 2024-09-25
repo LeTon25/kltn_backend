@@ -10,23 +10,23 @@ using System.Threading.Tasks;
 
 namespace KLTN.Infrastructure.Repositories
 {
-    public class GroupRepository : Repository<Group>, IGroupRepository
+    public class ReportRepository : Repository<Report>,IReportRepository
     {
         private readonly ApplicationDbContext _context;
-        public GroupRepository(ApplicationDbContext db) : base(db)
-        {
+        public ReportRepository(ApplicationDbContext db):base(db) 
+        { 
             _context = db;
         }
 
-        public async Task<IEnumerable<Report>> GetReportsInGroupAsync(string groupId)
+        public async Task<Report> GetDetailReportAsync(string reportId)
         {
-            var entities = await _context.Reports.
-                Where(c => c.GroupId.Equals(groupId))
+            var entity = await _context.Reports.
+                Where(c => c.ReportId.Equals(reportId))
                 .Include(c => c.CreateUser)
                 .Include(c => c.ReportComments)
                 .ThenInclude(e => e.User)
-                .ToListAsync();  
-            return entities;
+                .FirstOrDefaultAsync();
+            return entity;
         }
     }
 }

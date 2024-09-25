@@ -32,6 +32,10 @@ namespace KLTN.Infrastructure.Repositories
         public IEnrolledCourseRepository EnrolledCourseRepository { get; }
         public IAssignmentRepository AssignmentRepository { get; } 
         public IScoreStructureRepository ScoreStructureRepository { get; }
+
+        public IReportRepository ReportRepository { get; }
+
+        public IReportCommentRepository ReportCommentRepository { get; }
         #endregion
         public readonly ApplicationDbContext _context;
 
@@ -49,6 +53,8 @@ namespace KLTN.Infrastructure.Repositories
             EnrolledCourseRepository = new EnrolledCourseRepository(context);
             AssignmentRepository = new AssignmentRepository(context);
             ScoreStructureRepository = new ScoreStructureRepository(context);
+            ReportRepository = new ReportRepository(context);
+            ReportCommentRepository = new ReportCommentRepository(context);
         }
 
         public async Task<int> SaveChangesAsync()
