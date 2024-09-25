@@ -81,5 +81,13 @@ namespace KLTN.Api.Controllers
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             return SetResponse(await groupService.DeleteRemoveMemberAsync(groupId, requestDto,userId));
         }
+
+        [HttpPost("{groupId}/leader")]
+        public async Task<IActionResult> AssignLeaderAsync(string groupId ,[FromBody]string leaderId)
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var response = await groupService.AssignLeaderAsync(userId,groupId,leaderId);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

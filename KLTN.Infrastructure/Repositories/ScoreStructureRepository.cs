@@ -17,13 +17,5 @@ namespace KLTN.Infrastructure.Repositories
         {
             this._context = db;
         }
-
-        public async Task<ScoreStructure> GetScoreStructureWithChildAsync(string id)
-        {
-            var result = await _context.ScoreStructures
-                .Include(c => c.Children)
-                .FirstOrDefaultAsync(c => c.Id.Equals(id));
-            return result;
-        }
     }
 }
