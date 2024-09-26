@@ -18,15 +18,6 @@ namespace KLTN.Infrastructure.Repositories
             _context = db;
         }
 
-        public async Task<IEnumerable<Report>> GetReportsInGroupAsync(string groupId)
-        {
-            var entities = await _context.Reports.
-                Where(c => c.GroupId.Equals(groupId))
-                .Include(c => c.CreateUser)
-                .Include(c => c.ReportComments)
-                .ThenInclude(e => e.User)
-                .ToListAsync();  
-            return entities;
-        }
+        
     }
 }

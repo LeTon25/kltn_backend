@@ -41,8 +41,6 @@ namespace KLTN.Infrastructure.Configurations
             builder.HasOne(c => c.Course)
                 .WithMany(c => c.Assignments)
                 .HasForeignKey(c => c.CourseId);
-
-
             #endregion
         }
     }

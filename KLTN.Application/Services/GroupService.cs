@@ -244,12 +244,6 @@ namespace KLTN.Application.Services
             return new ApiResponse<object>(200, "Thêm thành công");
         }
 
-        public async Task<ApiResponse<object>> GetReportInGroupAsync(string groupId)
-        {
-            var entities = await _unitOfWork.GroupRepository.GetReportsInGroupAsync(groupId);
-            var data = mapper.Map<List<ReportDto>>(entities.ToList());
-            return new ApiResponse<object>(200, "Thành công", data);
-        }
         #endregion
         public async Task<GroupDto?> GetGroupDtoAsync(string groupId )
         {

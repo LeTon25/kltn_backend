@@ -22,7 +22,6 @@ namespace KLTN.Domain.Entities
         public DateTime? DeletedAt { get; set; }
         public Group? Group { get; set; }
         public User? CreateUser { get; set; }
-        public ICollection<ReportComment>? ReportComments { get; set; }
        
 
     }

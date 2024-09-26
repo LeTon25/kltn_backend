@@ -3,6 +3,7 @@ using KLTN.Application.DTOs.Comments;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
+using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,21 +26,37 @@ namespace KLTN.Application.Services
             this.mapper = mapper;
             this.userManager = userManager;
         }
-
-        public async Task<ApiResponse<object>> GetCommentsFromAnnouncementAsync(string announcementId)
+        public async Task<ApiResponse<object>> CreateCommentsAsync(string commentableId, CreateCommentRequestDto request,string userId)
         {
-            
-            var data = await GetCommentDtosFromAnnoucementAsync(announcementId); 
-            return new ApiResponse<object>(200, "Thành công",data);
-        }
-        public async Task<ApiResponse<object>> CreateCommentsAsync(string announcementId, CreateCommentRequestDto request,string userId)
-        {
-
+            string? commentableType =  null;
+            if(await _unitOfWork.AnnnouncementRepository.AnyAsync(c=>c.AnnouncementId.Equals(commentableId)))
+            {
+                commentableType = CommentableType.Announcement;
+            }
+            if (string.IsNullOrEmpty(commentableType))
+            {
+                if (await _unitOfWork.ReportRepository.AnyAsync(c => c.ReportId.Equals(commentableId)))
+                {
+                    commentableType = CommentableType.Report;
+                }
+            }
+            if (string.IsNullOrEmpty(commentableType))
+            {
+                if (await _unitOfWork.AssignmentRepository.AnyAsync(c => c.AssignmentId.Equals(commentableId)))
+                {
+                    commentableType = CommentableType.Assignment;
+                }
+            }
+            if(string.IsNullOrEmpty(commentableType))
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy bài viết");
+            }    
             var comment = new Comment()
             {
                 Content = request.Content,
-                AnnouncementId = announcementId,
                 UserId = userId,
+                CommentableType = commentableType,
+                CommentableId=commentableId,
                 CreatedAt = DateTime.Now,
                 CommentId = Guid.NewGuid().ToString(),
             };
@@ -57,9 +74,9 @@ namespace KLTN.Application.Services
                 return new ApiBadRequestResponse<object>("Bình luận thất bại");
             }
         }
-        public async Task<List<CommentDto>> GetCommentDtosFromAnnoucementAsync(string annoucementId)
+        public async Task<List<CommentDto>> GetCommentDtosFromPostAsync(string postId,string commentableType)
         {
-            var comments =  _unitOfWork.CommentRepository.GetAll(c=>c.AnnouncementId == annoucementId).ToList();
+            var comments =  _unitOfWork.CommentRepository.GetAll(c=>c.CommentableId == postId && c.CommentableType.Equals(commentableType)).ToList();
             var commentDtos =  mapper.Map<List<CommentDto>>(comments);
 
             foreach(var comment in commentDtos)
@@ -90,13 +107,13 @@ namespace KLTN.Application.Services
                 commentDto.User = mapper.Map<UserDto>(user);
                 return new ApiResponse<object>(200, "Cập nhật thành công",commentDto);
             }
-            return new ApiBadRequestResponse<object>($"Update comment failed");
+            return new ApiBadRequestResponse<object>($"Cập nhật thất bại");
         }
         public async Task<ApiResponse<object>> DeleteCommentAsync(string commentId)
         {
             var comment = await _unitOfWork.CommentRepository.GetFirstOrDefaultAsync(c=>c.CommentId == commentId);
             if (comment == null)
-                return new ApiNotFoundResponse<object>($"Cannot found the comment with id: {commentId}");
+                return new ApiNotFoundResponse<object>($"Không thể tìm thấy comment với id : {commentId}");
 
             _unitOfWork.CommentRepository.Delete(comment);
 
@@ -108,7 +125,8 @@ namespace KLTN.Application.Services
                     CommentId = comment.CommentId,
                     Content = comment.Content,
                     CreatedAt = comment.CreatedAt,
-                    AnnouncementId = comment.AnnouncementId,
+                    CommentableId = comment.CommentableId,
+                    CommentableType = comment.CommentableType,
                     UpdatedAt = comment.UpdatedAt,
                     UserId = comment.UserId,
                 };

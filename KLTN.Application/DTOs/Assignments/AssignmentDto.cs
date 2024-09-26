@@ -1,5 +1,7 @@
-﻿using KLTN.Application.DTOs.Courses;
+﻿using KLTN.Application.DTOs.Comments;
+using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Uploads;
+using KLTN.Application.DTOs.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +21,8 @@ namespace KLTN.Application.DTOs.Assignments
         public List<FileDto> Attachments { get; set; }
         public string[] StudentAssigned { get; set; }
         public CourseDto? Course { get; set; }
+        public UserDto? CreateUser { get; set; }
+        public List<CommentDto> Comments { get; set; }  
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }

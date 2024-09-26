@@ -14,9 +14,8 @@ namespace KLTN.Application.DTOs.Comments
         public string CommentId { get; set; }
 
         public string Content { get; set; }
-
-        public string AnnouncementId { get; set; }
-
+        public string CommentableType { get; set; }
+        public string CommentableId { get; set; }
         public string UserId { get; set; }
         public UserDto? User { get; set; }
         public DateTime CreatedAt { get; set; }

@@ -4,6 +4,7 @@ using KLTN.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KLTN.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240925155817_ChangeDb")]
+    partial class ChangeDb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -130,6 +133,9 @@ namespace KLTN.Infrastructure.Migrations
                     b.Property<string>("CommentId")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("AnnouncementId")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<string>("CommentableId")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -156,6 +162,8 @@ namespace KLTN.Infrastructure.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("CommentId");
+
+                    b.HasIndex("AnnouncementId");
 
                     b.HasIndex("UserId");
 
@@ -761,6 +769,10 @@ namespace KLTN.Infrastructure.Migrations
 
             modelBuilder.Entity("KLTN.Domain.Entities.Comment", b =>
                 {
+                    b.HasOne("KLTN.Domain.Entities.Announcement", null)
+                        .WithMany("Comments")
+                        .HasForeignKey("AnnouncementId");
+
                     b.HasOne("KLTN.Domain.Entities.User", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
@@ -935,6 +947,11 @@ namespace KLTN.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("KLTN.Domain.Entities.Announcement", b =>
+                {
+                    b.Navigation("Comments");
                 });
 
             modelBuilder.Entity("KLTN.Domain.Entities.Course", b =>

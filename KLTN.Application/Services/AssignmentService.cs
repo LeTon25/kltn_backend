@@ -3,14 +3,10 @@ using KLTN.Application.DTOs.Assignments;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
+using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.EntityFrameworkCore;
 using File = KLTN.Domain.Entities.File;
 
 namespace KLTN.Application.Services
@@ -19,15 +15,20 @@ namespace KLTN.Application.Services
     {
         private readonly IUnitOfWork unitOfWork;
         private readonly IMapper mapper;
-        private readonly CourseService courseService;   
+        private readonly CourseService courseService;  
+        private readonly UserManager<User> userManager;
+        private readonly CommentService commentService;
         public AssignmentService(IUnitOfWork unitOfWork, 
             CourseService courseService, 
             UserManager<User> userManager, 
+            CommentService commentService,
             IMapper mapper)
         {
             this.unitOfWork = unitOfWork;
             this.mapper = mapper;
+            this.userManager = userManager; 
             this.courseService = courseService;
+            this.commentService = commentService;   
         }
         #region for_controller
         public async Task<ApiResponse<object>> GetAssignmentByIdAsync(string assignmentId)
@@ -126,17 +127,12 @@ namespace KLTN.Application.Services
             }
             var assignmentDto = mapper.Map<AssignmentDto>(assignment);
             assignmentDto.Course = await courseService.GetCourseDtoByIdAsync(assignmentDto.CourseId, false, false);
+
+            var userEntity = await userManager.Users.FirstOrDefaultAsync(c => c.Id.Equals(assignmentDto.Course.LecturerId));
+            assignmentDto.CreateUser = mapper.Map<UserDto>(userEntity);
+
+            assignmentDto.Comments = await commentService.GetCommentDtosFromPostAsync(assignmentId, CommentableType.Assignment);
             return assignmentDto;
-        }
-        public async Task<List<AssignmentDto>> GetAssignmentDtosInCourseAsync(string courseId)
-        {
-            var assignments = unitOfWork.AssignmentRepository.GetAll(c => c.CourseId == courseId);
-            var assignmentDtos = mapper.Map<List<AssignmentDto>>(assignments);
-            for (int i = 0; i < assignmentDtos.Count; i++)
-            {
-                assignmentDtos[i] = await GetAssignmentDtoByIdAsync(assignmentDtos[i].AssignmentId);
-            }
-            return assignmentDtos;
         }
         #endregion
 

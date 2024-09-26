@@ -96,8 +96,7 @@ namespace KLTN.Api.Controllers
         [ServiceFilter(typeof(GroupResourceAccessFilter))]
         public async Task<IActionResult> GetReportInGroupAsync(string groupId)
         {
-            var response = await groupService.GetReportInGroupAsync(groupId);
-            return StatusCode(response.StatusCode, response);
+            return Ok();
         }
     }
 }

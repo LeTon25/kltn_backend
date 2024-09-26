@@ -3,6 +3,7 @@ using KLTN.Application.DTOs.Reports;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
+using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.CSharp;
@@ -16,11 +17,14 @@ namespace KLTN.Application.Services
         private readonly IUnitOfWork unitOfWork;
         private readonly UserManager<User> userManager;
         private readonly IMapper mapper;
-        public ReportService(IUnitOfWork unitOfWork,UserManager<User> userManager,IMapper mapper)
+        private readonly CommentService commentService;
+        public ReportService(IUnitOfWork unitOfWork,UserManager<User> userManager,IMapper mapper,
+            CommentService commentService)
         {
             this.unitOfWork = unitOfWork;   
             this.userManager = userManager;
             this.mapper = mapper;
+            this.commentService = commentService;
         }
         #region for_controller
         public async Task<ApiResponse<object>> TogglePinReport(string reportId, bool isPinned)
@@ -37,12 +41,13 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetReportByIdAsync(string reportId)
         {
-            var entity = await unitOfWork.ReportRepository.GetDetailReportAsync(reportId);
+            var entity = await unitOfWork.ReportRepository.GetFirstOrDefaultAsync(c=>c.ReportId.Equals(reportId),false,c=>c.CreateUser);
             if (entity == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy báo cáo");
             }
             var data = mapper.Map<ReportDto>(entity);
+            data.Comments = await commentService.GetCommentDtosFromPostAsync(data.ReportId,CommentableType.Report);
             return new ApiResponse<object>(200, "Thành công", data);
         }
         public async Task<ApiResponse<object>> DeleteReportAsync(string reportId)

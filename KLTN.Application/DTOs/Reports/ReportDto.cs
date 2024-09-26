@@ -1,6 +1,5 @@
 ﻿using KLTN.Application.DTOs.Comments;
 using KLTN.Application.DTOs.Courses;
-using KLTN.Application.DTOs.ReportComments;
 using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
 using System;
@@ -24,7 +23,7 @@ namespace KLTN.Application.DTOs.Reports
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public UserDto? CreateUser { get; set; }
-        public List<ReportCommentDto> ReportComments { get; set; }
+        public List<CommentDto> Comments { get; set; }  
         public bool IsPinned { get; set; }
     }
 }

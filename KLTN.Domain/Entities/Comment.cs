@@ -10,14 +10,13 @@ namespace KLTN.Domain.Entities
     public class Comment : IDateTracking
     {
         public string CommentId { get; set; }
-        public string AnnouncementId { get; set; }
+        public string CommentableType {  get; set; }
+        public string CommentableId { get; set; }
         public string UserId { get; set; }
         public string Content {  get; set; }
         public DateTime CreatedAt { get ; set ; }
         public DateTime? UpdatedAt { get ; set ; }
         public DateTime? DeletedAt { get; set; }
-
         public User? User { get; set; }
-        public Announcement? Announcement { get; set; }  
     }
 }

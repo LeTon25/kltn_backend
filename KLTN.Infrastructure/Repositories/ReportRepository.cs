@@ -18,15 +18,5 @@ namespace KLTN.Infrastructure.Repositories
             _context = db;
         }
 
-        public async Task<Report> GetDetailReportAsync(string reportId)
-        {
-            var entity = await _context.Reports.
-                Where(c => c.ReportId.Equals(reportId))
-                .Include(c => c.CreateUser)
-                .Include(c => c.ReportComments)
-                .ThenInclude(e => e.User)
-                .FirstOrDefaultAsync();
-            return entity;
-        }
     }
 }

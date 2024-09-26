@@ -9,6 +9,5 @@ namespace KLTN.Domain.Repositories
 {
     public interface IReportRepository : IRepository<Report>
     {
-       Task<Report> GetDetailReportAsync(string reportId);
     }
 }

@@ -3,6 +3,7 @@ using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
+using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.CSharp;
@@ -126,7 +127,7 @@ namespace KLTN.Application.Services
             }
             var announcementDto = mapper.Map<AnnouncementDto>(announcementFromDb);
             var createUser = await userManager.FindByIdAsync(announcementDto.UserId);
-            var commentDtos = await commentService.GetCommentDtosFromAnnoucementAsync(annoucementId);
+            var commentDtos = await commentService.GetCommentDtosFromPostAsync(annoucementId,CommentableType.Announcement);
             announcementDto.CreateUser = mapper.Map<UserDto>(createUser);
             announcementDto.Comments = commentDtos; 
             return announcementDto;

@@ -26,10 +26,6 @@ namespace KLTN.Infrastructure.Configurations
             builder.HasOne(e => e.User)
                 .WithMany(c => c.Comments)
                 .HasForeignKey(e => e.UserId);
-
-            builder.HasOne(e => e.Announcement)
-                .WithMany(c => c.Comments)
-                .HasForeignKey(e => e.AnnouncementId);
             #endregion
         }
     }

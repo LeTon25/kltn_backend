@@ -17,21 +17,15 @@ namespace KLTN.Api.Controllers
         {
             this.commentService = commentService;
         }
-        [HttpGet("{announcementId}/comments")]
-        public async Task<IActionResult> GetCommentsPagingAsync(string announcementId,string filter, int pageIndex,int pageSize)
-        {
-            return SetResponse(await commentService.GetCommentsFromAnnouncementAsync(announcementId) );
-        }
-        
-        [HttpPost("{announcementId}/comments")]
+        [HttpPost("{commentableId}/comments")]
         [ApiValidationFilter]
-        public async Task<IActionResult> PostComment(string announcementId, [FromBody] CreateCommentRequestDto request)
+        public async Task<IActionResult> PostComment(string commentableId, [FromBody] CreateCommentRequestDto request)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await commentService.CreateCommentsAsync(announcementId, request,userId));
+            return SetResponse(await commentService.CreateCommentsAsync(commentableId, request,userId));
         }
 
-        [HttpPatch("{announcementId}/comments/{commentId}")]
+        [HttpPatch("{commentableId}/comments/{commentId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutComment(string commentId, [FromBody] CreateCommentRequestDto request)
         {
@@ -39,8 +33,8 @@ namespace KLTN.Api.Controllers
             return SetResponse(await commentService.UpdateCommentAsync(commentId, request,userId));
         }
 
-        [HttpDelete("{announcementId}/comments/{commentId}")]
-        public async Task<IActionResult> DeleteComment(string announcementId, string commentId)
+        [HttpDelete("{commentableId}/comments/{commentId}")]
+        public async Task<IActionResult> DeleteComment(string commentableId, string commentId)
         {
             return SetResponse(await commentService.DeleteCommentAsync(commentId));
         }
