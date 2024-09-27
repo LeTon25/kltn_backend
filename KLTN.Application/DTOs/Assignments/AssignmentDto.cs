@@ -19,7 +19,6 @@ namespace KLTN.Application.DTOs.Assignments
         public DateTime? DueDate { get; set; }
         public List<MetaLinkDataDto> AttachedLinks { get; set; }
         public List<FileDto> Attachments { get; set; }
-        public string[] StudentAssigned { get; set; }
         public CourseDto? Course { get; set; }
         public UserDto? CreateUser { get; set; }
         public List<CommentDto> Comments { get; set; }  
