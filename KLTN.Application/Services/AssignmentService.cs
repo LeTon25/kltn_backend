@@ -75,7 +75,6 @@ namespace KLTN.Application.Services
             assignment.Content = requestDto.Content;
             assignment.CourseId = requestDto.CourseId;
             assignment.DueDate = requestDto.DueDate;
-            assignment.StudentAssigned = requestDto.StudentAssigned;
             assignment.AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks);
             assignment.UpdatedAt = DateTime.Now;
             assignment.Attachments = mapper.Map<List<KLTN.Domain.Entities.File>>(requestDto.Attachments);
@@ -101,7 +100,6 @@ namespace KLTN.Application.Services
                 DueDate = requestDto.DueDate,
                 AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks),
                 Attachments = mapper.Map<List<File>>(requestDto.Attachments),
-                StudentAssigned = requestDto.StudentAssigned,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = null,
                 DeletedAt = null,
