@@ -26,11 +26,6 @@ namespace KLTN.Infrastructure.Configurations
             builder.HasOne(c => c.Subject)
                 .WithMany(e => e.Courses)
                 .HasForeignKey(c => c.SubjectId);
-
-            builder.HasOne(c => c.Semester)
-                   .WithMany(e => e.Courses)
-                    .HasForeignKey(c => c.SemesterId);
-
             builder.HasOne(c => c.Lecturer)
                 .WithMany(e => e.CreatedCourses)
                 .HasForeignKey(c=>c.LecturerId);

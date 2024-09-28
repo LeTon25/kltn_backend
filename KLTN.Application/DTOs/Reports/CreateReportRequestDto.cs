@@ -16,5 +16,6 @@ namespace KLTN.Application.DTOs.Reports
         public string[] Mentions { get; set; }
         public string Content { get; set; }
         public bool IsPinned { get; set; }
+        public DateTime? DueDate { get; set; }  
     }
 }

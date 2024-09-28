@@ -4,11 +4,13 @@ using KLTN.Application.DTOs.Reports;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
+using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using Group = KLTN.Domain.Entities.Group;
 
 namespace KLTN.Application.Services
@@ -20,17 +22,19 @@ namespace KLTN.Application.Services
         private readonly IMapper mapper;
         private readonly ProjectService projectService;
         private readonly IHttpContextAccessor _httpContextAccessor;
-
+        private readonly CommentService commentService;
         public GroupService(IUnitOfWork unitOfWork,
             UserManager<User> userManager,
             IMapper mapper,
             ProjectService projectService,
+            CommentService commentService,
             IHttpContextAccessor httpContextAccessor)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             this.mapper = mapper;
             this.projectService = projectService;
+            this.commentService = commentService;
             _httpContextAccessor = httpContextAccessor;
         }
         #region for controller
@@ -171,13 +175,14 @@ namespace KLTN.Application.Services
                         if (currentMembersCount + 1 > group.NumberOfMembers)
                         {
                             return new ApiBadRequestResponse<object>("Số lượng thành viên vượt quá số lượng cho phép");
-                        }    
+                        }
                         await _unitOfWork.GroupMemberRepository.AddAsync(new GroupMember()
                         {
                             GroupId = groupId,
                             StudentId = student.Id,
                             IsLeader = false,
                         });
+                        currentMembersCount += 1;
                     }
                 }
             }
@@ -243,7 +248,30 @@ namespace KLTN.Application.Services
             await _unitOfWork.SaveChangesAsync();
             return new ApiResponse<object>(200, "Thêm thành công");
         }
+        public async Task<ApiResponse<object>> GetReportsInGroupAsync(string groupId)
+        {
+            var reports = await _unitOfWork.ReportRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.CreateUser).ToListAsync();
+            var reportDtos = mapper.Map<List<ReportDto>>(reports);
+            foreach (var reportDto in reportDtos)
+            {
+                reportDto.Comments = await commentService.GetCommentDtosFromPostAsync(reportDto.ReportId, CommentableType.Report);
 
+            }
+            return new ApiResponse<object>(200, "Lấy dữ liệu thành công", reportDtos);
+        }
+        public async Task<ApiResponse<object>> GetUpcomingReportsInGroupAsync(string groupId)
+        {
+            var startDate = DateTime.Now;
+            var endDate = startDate.AddDays(7);
+            var reports = await _unitOfWork.ReportRepository.FindByCondition(c => c.GroupId.Equals(groupId) && c.DueDate >= startDate && c.DueDate <= endDate , false, c => c.CreateUser).ToListAsync();
+            var reportDtos = mapper.Map<List<ReportDto>>(reports);
+            foreach(var reportDto in reportDtos)
+            {
+                reportDto.Comments = await commentService.GetCommentDtosFromPostAsync(reportDto.ReportId, CommentableType.Report);
+
+            }
+            return new ApiResponse<object>(200, "Lấy dữ liệu thành công", reportDtos);
+        }
         #endregion
         public async Task<GroupDto?> GetGroupDtoAsync(string groupId )
         {

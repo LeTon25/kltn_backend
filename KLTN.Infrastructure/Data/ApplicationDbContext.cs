@@ -19,7 +19,6 @@ namespace KLTN.Infrastructure.Data
         public DbSet<Group> Groups { get; set; }
         public DbSet<GroupMember> GroupMembers { get; set; }
         public DbSet<Project> Projects { get; set; }    
-        public DbSet<Semester> Semesters { get; set; }
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<Assignment> Assignments { get; set; }   
         public DbSet<ScoreStructure> ScoreStructures { get; set; }
@@ -35,7 +34,6 @@ namespace KLTN.Infrastructure.Data
             builder.ApplyConfiguration(new GroupConfiguration());
             builder.ApplyConfiguration(new GroupMemberConfiguration());
             builder.ApplyConfiguration(new ProjectConfiguration());
-            builder.ApplyConfiguration(new SemesterConfiguration());
             builder.ApplyConfiguration(new SubjectConfiguration());
             builder.ApplyConfiguration(new EnrolledCourseConfiguration()); 
             builder.ApplyConfiguration(new AssignmentConfiguration());

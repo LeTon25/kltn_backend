@@ -7,7 +7,6 @@ using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Projects;
 using KLTN.Application.DTOs.Reports;
 using KLTN.Application.DTOs.ScoreStructures;
-using KLTN.Application.DTOs.Semesters;
 using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
@@ -21,8 +20,6 @@ namespace KLTN.Application
     {
         public MappingProfile() 
         {
-            CreateMap<Semester,SemesterDto>();
-            CreateMap<SemesterDto, Semester>();
 
             CreateMap<User, UserDto>();
             CreateMap<UserDto, User>();
