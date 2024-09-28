@@ -16,15 +16,13 @@ namespace KLTN.Application.DTOs.Reports
         public string UserId { get; set; }
         public string GroupId { get; set; }
         public string Content { get; set; }
+        public string Title { get; set; }
         public List<MetaLinkDataDto> AttachedLinks { get; set; }
         public List<FileDto> Attachments { get; set; }
-        public string[] Mentions { get; set; }  
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public UserDto? CreateUser { get; set; }
         public List<CommentDto> Comments { get; set; }  
-        public bool IsPinned { get; set; }
-        public DateTime? DueDate {  get; set; } 
     }
 }
