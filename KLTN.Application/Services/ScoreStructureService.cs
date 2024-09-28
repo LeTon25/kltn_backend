@@ -47,8 +47,6 @@ namespace KLTN.Application.Services
                 // Cập nhật thực thể đã tồn tại
                 existingEntity.ColumnName = requestDto.ColumnName;
                 existingEntity.Percent = requestDto.Percent;
-                existingEntity.divideColumnFirst = requestDto.divideColumnFirst;
-                existingEntity.divideColumnSecond = requestDto.divideColumnSecond;
                 existingEntity.MaxPercent = requestDto.MaxPercent;
                 existingEntity.ParentId = requestDto.ParentId;
 
@@ -158,8 +156,6 @@ namespace KLTN.Application.Services
                 {
                     existingChild.ColumnName = child.ColumnName;
                     existingChild.Percent = child.Percent;
-                    existingChild.divideColumnFirst = child.divideColumnFirst;
-                    existingChild.divideColumnSecond = child.divideColumnSecond;
                     existingChild.MaxPercent = child.MaxPercent;
 
                      await UpdateChildren(existingChild, child.Children);
