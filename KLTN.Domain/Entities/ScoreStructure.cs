@@ -14,10 +14,6 @@ namespace KLTN.Domain.Entities
         public string? CourseId { get; set; }    
         public double MaxPercent { get; set; }  
         public string? ParentId { get; set; }
-
-        public string? divideColumnFirst {  get; set; }
-        public string? divideColumnSecond { get; set; }
-
         public ScoreStructure? Parent { get; set; } 
         public ICollection<ScoreStructure>? Children { get;set; }
     

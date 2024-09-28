@@ -15,8 +15,6 @@ namespace KLTN.Application.DTOs.ScoreStructures
         public string? CourseId { get; set; }
         public double MaxPercent { get; set; }
         public string? ParentId { get; set; }
-        public string? divideColumnFirst { get; set; }
-        public string? divideColumnSecond { get; set; }
         public List<ScoreStructureDto>? Children { get; set; }
     }
 }
