@@ -162,7 +162,7 @@ namespace KLTN.Application.Services
                 }
             }
         }
-        private async Task  LoadChildrenAsync(ScoreStructure parent)
+        public async Task  LoadChildrenAsync(ScoreStructure parent)
         {
             var children = await _unitOfWork.ScoreStructureRepository
                     .FindByCondition(s => s.ParentId == parent.Id)

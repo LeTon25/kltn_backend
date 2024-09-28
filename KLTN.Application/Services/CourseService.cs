@@ -18,6 +18,8 @@ using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Assignments;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using KLTN.Domain.Util;
+using KLTN.Application.DTOs.ScoreStructures;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -28,11 +30,13 @@ namespace KLTN.Application.Services
         private readonly AnnoucementService annoucementService;
         private readonly GroupService groupService;
         private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly ScoreStructureService scoreStructureService;
         public CourseService(IUnitOfWork unitOfWork,
             UserManager<User> userManager,
             IMapper mapper,
             AnnoucementService annoucementService,
             GroupService groupService,
+            ScoreStructureService scoreStructureService,
             IHttpContextAccessor httpContextAccessor) 
         { 
             this._unitOfWork = unitOfWork;
@@ -40,6 +44,7 @@ namespace KLTN.Application.Services
             this.mapper = mapper;  
             this.annoucementService = annoucementService;
             this.groupService = groupService;
+            this.scoreStructureService = scoreStructureService;
             this.httpContextAccessor = httpContextAccessor;
         }
         #region for controller
@@ -107,8 +112,12 @@ namespace KLTN.Application.Services
                 Name = requestDto.Name,
             };
             await _unitOfWork.CourseRepository.AddAsync(newCourse);
+            var scoreStructure = Generator.GenerateScoreStructureForCourse(newCourseId.ToString());
+            await _unitOfWork.ScoreStructureRepository.AddAsync(scoreStructure);
             await _unitOfWork.SaveChangesAsync();
-            return new ApiResponse<object>(200, "Thành công", mapper.Map<CourseDto>(newCourse));
+            var dto = mapper.Map<CourseDto>(newCourse);
+            dto.ScoreStructure = mapper.Map<ScoreStructureDto>(scoreStructure);
+            return new ApiResponse<object>(200, "Thành công", dto);
         }
         public async Task<ApiResponse<object>> UpdateCourseAsync(string courseId,CreateCourseRequestDto requestDto,string userId)
         {
@@ -327,7 +336,7 @@ namespace KLTN.Application.Services
         #endregion
 
         #region for_service
-        public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId, bool isLoadAnnoucements = true, bool isLoadStudent = true,bool isLoadAssignment = true)
+        public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId, bool isLoadAnnoucements = true, bool isLoadStudent = true,bool isLoadAssignment = true,bool isLoadScore=true)
         {
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
@@ -355,6 +364,16 @@ namespace KLTN.Application.Services
             {
                 var assignments = _unitOfWork.AssignmentRepository.GetAll(c => c.CourseId == courseDto.CourseId);
                 courseDto.Assignments = mapper.Map<List<AssignmentNoCourseDto>>(assignments);
+            }
+            if(isLoadScore)
+            {
+                var score = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false);
+                if(score != null)
+                {
+                    await scoreStructureService.LoadChildrenAsync(score);
+                    courseDto.ScoreStructure=  mapper.Map<ScoreStructureDto>(score);
+                }    
+
             }
             return courseDto;
 
