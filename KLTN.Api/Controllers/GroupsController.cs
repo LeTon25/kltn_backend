@@ -99,12 +99,12 @@ namespace KLTN.Api.Controllers
             var response = await groupService.GetReportsInGroupAsync(groupId);
             return StatusCode(response.StatusCode,response);
         }
-        [HttpGet("{groupId}/upcoming-report")]
-        [ServiceFilter(typeof(GroupResourceAccessFilter))]
-        public async Task<IActionResult> GetUpCommingReportsAsync(string groupId)
-        {
-            var response = await groupService.GetUpcomingReportsInGroupAsync(groupId);
-            return StatusCode(response.StatusCode, response);
-        }
+        //[HttpGet("{groupId}/upcoming-report")]
+        //[ServiceFilter(typeof(GroupResourceAccessFilter))]
+        //public async Task<IActionResult> GetUpCommingReportsAsync(string groupId)
+        //{
+        //    var response = await groupService.GetUpcomingReportsInGroupAsync(groupId);
+        //    return StatusCode(response.StatusCode, response);
+        //}
     }
 }

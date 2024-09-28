@@ -21,12 +21,6 @@ namespace KLTN.Api.Controllers
             ) {
             this.reportService = reportService;
         }
-        [HttpPatch("{groupId}/report/{reportId}/pinned")]
-        public async Task<IActionResult> PatchReportsAsync(string reportId,bool isPinned)
-        {
-            return SetResponse(await reportService.TogglePinReport(reportId, isPinned));
-            
-        }
         [HttpGet("{groupId}/report/{reportId}")]
         [ServiceFilter(typeof(GroupResourceAccessFilter))]
         public async Task<IActionResult> GetByIdAsync(string reportId)

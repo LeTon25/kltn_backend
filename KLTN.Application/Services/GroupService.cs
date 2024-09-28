@@ -259,19 +259,6 @@ namespace KLTN.Application.Services
             }
             return new ApiResponse<object>(200, "Lấy dữ liệu thành công", reportDtos);
         }
-        public async Task<ApiResponse<object>> GetUpcomingReportsInGroupAsync(string groupId)
-        {
-            var startDate = DateTime.Now;
-            var endDate = startDate.AddDays(7);
-            var reports = await _unitOfWork.ReportRepository.FindByCondition(c => c.GroupId.Equals(groupId) && c.DueDate >= startDate && c.DueDate <= endDate , false, c => c.CreateUser).ToListAsync();
-            var reportDtos = mapper.Map<List<ReportDto>>(reports);
-            foreach(var reportDto in reportDtos)
-            {
-                reportDto.Comments = await commentService.GetCommentDtosFromPostAsync(reportDto.ReportId, CommentableType.Report);
-
-            }
-            return new ApiResponse<object>(200, "Lấy dữ liệu thành công", reportDtos);
-        }
         #endregion
         public async Task<GroupDto?> GetGroupDtoAsync(string groupId )
         {

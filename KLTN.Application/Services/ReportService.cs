@@ -5,8 +5,10 @@ using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.CSharp;
+using System.Security.Claims;
 using File = KLTN.Domain.Entities.File;
 
 namespace KLTN.Application.Services
@@ -18,27 +20,19 @@ namespace KLTN.Application.Services
         private readonly UserManager<User> userManager;
         private readonly IMapper mapper;
         private readonly CommentService commentService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         public ReportService(IUnitOfWork unitOfWork,UserManager<User> userManager,IMapper mapper,
-            CommentService commentService)
+            CommentService commentService,
+            IHttpContextAccessor httpContextAccessor
+     )
         {
             this.unitOfWork = unitOfWork;   
             this.userManager = userManager;
             this.mapper = mapper;
             this.commentService = commentService;
+            this._httpContextAccessor = httpContextAccessor;
         }
         #region for_controller
-        public async Task<ApiResponse<object>> TogglePinReport(string reportId, bool isPinned)
-        {
-            var report = await unitOfWork.ReportRepository.GetFirstOrDefaultAsync(c => c.ReportId == reportId);
-            if (report == null)
-            {
-                return new ApiNotFoundResponse<object>("Không tìm thấy báo cáo");
-            }
-            report.IsPinned = isPinned;
-            unitOfWork.ReportRepository.Update(report);
-            await unitOfWork.SaveChangesAsync();
-            return new ApiResponse<object>(200, "Thành công");
-        }
         public async Task<ApiResponse<object>> GetReportByIdAsync(string reportId)
         {
             var entity = await unitOfWork.ReportRepository.GetFirstOrDefaultAsync(c=>c.ReportId.Equals(reportId),false,c=>c.CreateUser);
@@ -67,7 +61,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> UpdateReportAsync(string reportId, CreateReportRequestDto requestDto)
         {
-            var report = await unitOfWork.ReportRepository.GetFirstOrDefaultAsync(c => c.ReportId == reportId);
+            var report = await unitOfWork.ReportRepository.GetFirstOrDefaultAsync(c => c.ReportId == reportId,false,c=>c.CreateUser);
             if (report == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy báo cáo");
@@ -75,10 +69,9 @@ namespace KLTN.Application.Services
             report.Content = requestDto.Content;
             report.AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks);
             report.UpdatedAt = DateTime.Now;
+            report.CreatedAt = requestDto.CreatedAt ?? report.CreatedAt; 
             report.Attachments = mapper.Map<List<KLTN.Domain.Entities.File>>(requestDto.Attachments);
-            report.Mentions = requestDto.Mentions;
-            report.IsPinned = requestDto.IsPinned;
-            report.DueDate = requestDto.DueDate;    
+            report.Title = requestDto.Title;
             unitOfWork.ReportRepository.Update(report);
             var result = await unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -89,25 +82,28 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> CreateReportAsync(string userId,CreateReportRequestDto requestDto)
         {
+            var currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var newReportId = Guid.NewGuid();
             var newReport = new Report()
             {
                 ReportId = newReportId.ToString(),
                 Content = requestDto.Content,
-                UserId = userId,
+                UserId = currentUserId,
+                Title = requestDto.Title,
                 GroupId = requestDto.GroupId,
                 AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks),
                 Attachments = mapper.Map<List<File>>(requestDto.Attachments),
-                Mentions = requestDto.Mentions,
-                CreatedAt = DateTime.Now,
+                CreatedAt = requestDto.CreatedAt ?? DateTime.Now,
                 UpdatedAt = null,
                 DeletedAt = null,
-                DueDate = requestDto.DueDate,
-                IsPinned = requestDto.IsPinned,
             };
+            
             await unitOfWork.ReportRepository.AddAsync(newReport);
             await unitOfWork.SaveChangesAsync();
-            return new ApiResponse<object>(200, "Cập nhập thành công", mapper.Map<ReportDto>(newReport));
+            var dto = mapper.Map<ReportDto>(newReport);
+            var userEntity =  await userManager.FindByIdAsync(currentUserId);
+            dto.CreateUser =  mapper.Map<UserDto>(userEntity) ;
+            return new ApiResponse<object>(200, "Cập nhập thành công",dto);
         }
         #endregion
 
