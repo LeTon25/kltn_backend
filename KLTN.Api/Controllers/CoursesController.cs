@@ -70,6 +70,13 @@ namespace KLTN.Api.Controllers
         {
             return SetResponse(await _courseService.GetRegenerateInviteCodeAsync(courseId));
         }
+        [HttpGet("{courseId}/studentsWithoutGroup")]
+        [ServiceFilter(typeof(CourseResourceAccessFilter))]
+        public async Task<IActionResult> GetStudentsWithoutGroupsAsync(string courseId)
+        {
+            var response = await _courseService.GetStudentsWithoutGroupsAsync(courseId);
+            return StatusCode(response.StatusCode,response);
+        }
         [HttpGet("suggest-inviteCode")]
         public async Task<IActionResult> GetRenerateInviteCodeAsync()
         {

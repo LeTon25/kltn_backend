@@ -1,6 +1,5 @@
 ﻿using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Assignments;
-using KLTN.Application.DTOs.Semesters;
 using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Users;
 using KLTN.Domain.Entities;
@@ -19,7 +18,7 @@ namespace KLTN.Application.DTOs.Courses
         public string SemesterId { get; set; }
         public string CourseGroup { get; set; }
         public string Name { get; set; }
-
+        public string Semester { get; set; }
         public string? Background { get; set; }
         public string? InviteCode { get; set; }
         public bool EnableInvite { get; set; }
@@ -31,7 +30,6 @@ namespace KLTN.Application.DTOs.Courses
 
         public SubjectDto? Subject { get; set; }   
         public UserDto? Lecturer { get ; set; }    
-        public SemesterDto? Semester { get; set; } 
         public List<UserDto>? Students {get; set; }
         public List<AnnouncementDto>? Announcements { get; set; }
         public List<AssignmentNoCourseDto>? Assignments { get; set; }  

@@ -86,17 +86,25 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpPost("{groupId}/leader")]
-        public async Task<IActionResult> AssignLeaderAsync(string groupId ,[FromBody]string leaderId)
+        public async Task<IActionResult> AssignLeaderAsync(string groupId ,[FromBody]ChangeLeaderRequestDto dto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await groupService.AssignLeaderAsync(userId,groupId,leaderId);
+            var response = await groupService.AssignLeaderAsync(userId,groupId,dto.StudentId);
             return StatusCode(response.StatusCode, response);
         }
         [HttpGet("{groupId}/report")]
         [ServiceFilter(typeof(GroupResourceAccessFilter))]
         public async Task<IActionResult> GetReportInGroupAsync(string groupId)
         {
-            return Ok();
+            var response = await groupService.GetReportsInGroupAsync(groupId);
+            return StatusCode(response.StatusCode,response);
+        }
+        [HttpGet("{groupId}/upcoming-report")]
+        [ServiceFilter(typeof(GroupResourceAccessFilter))]
+        public async Task<IActionResult> GetUpCommingReportsAsync(string groupId)
+        {
+            var response = await groupService.GetUpcomingReportsInGroupAsync(groupId);
+            return StatusCode(response.StatusCode, response);
         }
     }
 }

@@ -13,7 +13,6 @@ namespace KLTN.Domain.Repositories
         public ICourseRepository CourseRepository { get; }
         public IGroupRepository GroupRepository { get; }
         public IProjectRepository ProjectRepository { get; }
-        public ISemesterRepository SemesterRepository { get; }
         public ISubjectRepository SubjectRepository { get; }
         public IGroupMemberRepository  GroupMemberRepository { get; }
         public IEnrolledCourseRepository EnrolledCourseRepository { get; }

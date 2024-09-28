@@ -17,6 +17,7 @@ namespace KLTN.Domain.Entities
         public List<File> Attachments { get; set; }
         public string[] Mentions { get; set; }
         public bool IsPinned { get; set; }
+        public DateTime? DueDate { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }

@@ -25,5 +25,6 @@ namespace KLTN.Application.DTOs.Reports
         public UserDto? CreateUser { get; set; }
         public List<CommentDto> Comments { get; set; }  
         public bool IsPinned { get; set; }
+        public DateTime? DueDate {  get; set; } 
     }
 }

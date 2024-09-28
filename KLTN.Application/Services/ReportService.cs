@@ -78,6 +78,7 @@ namespace KLTN.Application.Services
             report.Attachments = mapper.Map<List<KLTN.Domain.Entities.File>>(requestDto.Attachments);
             report.Mentions = requestDto.Mentions;
             report.IsPinned = requestDto.IsPinned;
+            report.DueDate = requestDto.DueDate;    
             unitOfWork.ReportRepository.Update(report);
             var result = await unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -101,6 +102,7 @@ namespace KLTN.Application.Services
                 CreatedAt = DateTime.Now,
                 UpdatedAt = null,
                 DeletedAt = null,
+                DueDate = requestDto.DueDate,
                 IsPinned = requestDto.IsPinned,
             };
             await unitOfWork.ReportRepository.AddAsync(newReport);

@@ -11,13 +11,13 @@ namespace KLTN.Domain.Entities
     {
         public string CourseId { get; set; }
         public string SubjectId {  get; set; }
-        public string SemesterId { get; set; }
         public string Name { get; set; }
         public string CourseGroup {  get; set; }
         public string? Background { get; set; }
         public string? InviteCode {  get; set; }
         public bool EnableInvite {  get; set; }
         public string LecturerId { get; set; }
+        public string Semester { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
@@ -27,7 +27,6 @@ namespace KLTN.Domain.Entities
         public ICollection<Group>? Groups { get; set; }
         public ICollection<Project>? Projects { get; set; }
         public Subject? Subject { get; set; }   
-        public Semester? Semester { get; set; }
         public User? Lecturer { get; set; }
         public ICollection<EnrolledCourse>? EnrolledCourses { get; set; }
     }

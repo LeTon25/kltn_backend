@@ -23,8 +23,6 @@ namespace KLTN.Infrastructure.Repositories
 
         public IProjectRepository ProjectRepository { get; }
 
-        public ISemesterRepository SemesterRepository { get; }
-
         public ISubjectRepository SubjectRepository { get; }
 
         public IGroupMemberRepository GroupMemberRepository { get; }
@@ -46,7 +44,6 @@ namespace KLTN.Infrastructure.Repositories
             CourseRepository = new CourseRepository(context);
             GroupRepository = new GroupRepository(context);
             ProjectRepository = new ProjectRepository(context);
-            SemesterRepository = new SemesterRepository(context);
             SubjectRepository = new SubjectRepository(context);
             GroupMemberRepository = new GroupMemberRepository(context);
             EnrolledCourseRepository = new EnrolledCourseRepository(context);

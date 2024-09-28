@@ -11,15 +11,13 @@ using KLTN.Application.Helpers.Response;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.DTOs.Subjects;
-using KLTN.Application.DTOs.Semesters;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 using KLTN.Application.DTOs.Projects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Assignments;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -29,17 +27,20 @@ namespace KLTN.Application.Services
         private readonly IMapper mapper;
         private readonly AnnoucementService annoucementService;
         private readonly GroupService groupService;
+        private readonly IHttpContextAccessor httpContextAccessor;
         public CourseService(IUnitOfWork unitOfWork,
             UserManager<User> userManager,
             IMapper mapper,
             AnnoucementService annoucementService,
-            GroupService groupService) 
+            GroupService groupService,
+            IHttpContextAccessor httpContextAccessor) 
         { 
             this._unitOfWork = unitOfWork;
             this._userManager = userManager;
             this.mapper = mapper;  
             this.annoucementService = annoucementService;
             this.groupService = groupService;
+            this.httpContextAccessor = httpContextAccessor;
         }
         #region for controller
         public async Task<ApiResponse<object>> GetAllCoursesAsync()
@@ -50,9 +51,7 @@ namespace KLTN.Application.Services
             {
                 var lecturer = mapper.Map<UserDto>(await _userManager.FindByIdAsync(courseDto.LecturerId)) ;
                 var subject = mapper.Map<SubjectDto>(await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c=>c.SubjectId == courseDto.SubjectId));
-                var semester = mapper.Map<SemesterDto>(await _unitOfWork.SemesterRepository.GetFirstOrDefaultAsync(c => c.SemesterId == courseDto.SemesterId));
                 courseDto.Lecturer = lecturer;
-                courseDto.Semester = semester;
                 courseDto.Subject = subject;
             }
             return new ApiResponse<object>(200, "Thành công", courseDtos);
@@ -83,8 +82,8 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> CreateCourseAsync(CreateCourseRequestDto requestDto)
         {
-
-            if (await _unitOfWork.CourseRepository.AnyAsync(c => c.CourseGroup == requestDto.CourseGroup && c.SemesterId == requestDto.SemesterId && c.SubjectId == requestDto.SubjectId))
+            var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (await _unitOfWork.CourseRepository.AnyAsync(c => c.CourseGroup == requestDto.CourseGroup && c.LecturerId == currentUserId  && c.SubjectId == requestDto.SubjectId))
             {
                 return new ApiBadRequestResponse<object>("Nhóm môn học được mở không được trùng");
             }
@@ -99,10 +98,10 @@ namespace KLTN.Application.Services
                 CourseGroup = requestDto.CourseGroup,
                 EnableInvite = requestDto.EnableInvite,
                 InviteCode = requestDto.InviteCode ?? GenerateRandomNumericString(6),
-                LecturerId = requestDto.LecturerId,
-                SemesterId = requestDto.SemesterId,
+                LecturerId = currentUserId,
                 SubjectId = requestDto.SubjectId,
                 CreatedAt = DateTime.Now,
+                Semester = requestDto.Semester,
                 UpdatedAt = null,
                 DeletedAt = null,
                 Name = requestDto.Name,
@@ -122,7 +121,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Giáo viên mới có quyền chỉnh sửa");
             }
-            if (await _unitOfWork.CourseRepository.AnyAsync(c => c.CourseGroup == requestDto.CourseGroup && c.SemesterId == requestDto.SemesterId && c.SubjectId == requestDto.SemesterId && c.CourseId != course.CourseId))
+            if (await _unitOfWork.CourseRepository.AnyAsync(c => c.CourseGroup == requestDto.CourseGroup && c.LecturerId == userId && c.SubjectId == requestDto.SubjectId && c.CourseId != course.CourseId))
             {
                 return new ApiBadRequestResponse<object>("Nhóm môn học được mở không được trùng");
             }
@@ -134,11 +133,10 @@ namespace KLTN.Application.Services
             course.EnableInvite = requestDto.EnableInvite;
             course.InviteCode = requestDto.InviteCode;
             course.UpdatedAt = DateTime.Now;
-            course.LecturerId = requestDto.LecturerId;
-            course.SemesterId = requestDto.SemesterId;
             course.SubjectId = requestDto.SubjectId;
             course.IsHidden = requestDto.IsHidden;
             course.Name = requestDto.Name;
+            course.Semester = requestDto.Semester;
             _unitOfWork.CourseRepository.Update(course);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -196,14 +194,42 @@ namespace KLTN.Application.Services
             }
              return await GetCourseByIdAsync(course.CourseId);
         }
+        public async Task<ApiResponse<object>> GetStudentsWithoutGroupsAsync(string courseId)
+        {
+            //Get students in course
+            var enrolledData = await _unitOfWork.EnrolledCourseRepository.GetAllAsync();
+            var usersData = await _userManager.Users.ToListAsync();
+            var users = from user in usersData
+                        join enroll in enrolledData on user.Id equals enroll.StudentId
+                        where enroll.CourseId == courseId
+                        select user;
+            var enrolledStudents = mapper.Map<List<UserDto>>(users.ToList());
+            //Get group in course
+            var groups = await _unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(courseId),false,c => c.GroupMembers).ToListAsync();
 
+            var studentWithoutGroups = new List<UserDto>();
+            foreach(var student in enrolledStudents)
+            {
+                if (!groups.Any(gr=>gr.GroupMembers
+                        .Any(g=>g.StudentId.Equals(student.Id))))
+                {
+                    studentWithoutGroups.Add(student);
+                }
+            }    
+            return new ApiResponse<object>(200, "Thành công",studentWithoutGroups);
+        }
         public async Task<ApiResponse<object>> DeleteCourseAsync(string courseId)
         {
+            var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var course = await  _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>($"Không thể tìm thấy lớp học với id {courseId}");
             }
+            if( currentUserId != course.LecturerId)
+            {
+                return new ApiBadRequestResponse<object>("Chỉ có giảng viên của lớp mới có quyền xóa");
+            }    
             _unitOfWork.CourseRepository.Delete(course);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -236,11 +262,16 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetRegenerateInviteCodeAsync(string courseId)
         {
+            var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp");
             }
+            if(currentUserId != course.LecturerId)
+            {
+                return new ApiBadRequestResponse<object>("Chỉ có giáo viên của lớp mới có quyền này");
+            }    
             course.InviteCode = await SuggestInviteCode();
             _unitOfWork.CourseRepository.Update(course);
             await _unitOfWork.SaveChangesAsync();
@@ -304,7 +335,6 @@ namespace KLTN.Application.Services
                 return null;
             }
             var courseDto = mapper.Map<CourseDto>(course);
-            courseDto.Semester = mapper.Map<SemesterDto>(await _unitOfWork.SemesterRepository.GetFirstOrDefaultAsync(c => c.SemesterId == courseDto.SemesterId));
             courseDto.Subject = mapper.Map<SubjectDto>(await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c => c.SubjectId == courseDto.SubjectId));
             courseDto.Lecturer = mapper.Map<UserDto>(await _userManager.FindByIdAsync(courseDto.LecturerId));
             if (isLoadAnnoucements)
