@@ -18,6 +18,8 @@ using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Assignments;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using KLTN.Domain.Util;
+using KLTN.Application.DTOs.ScoreStructures;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -107,8 +109,12 @@ namespace KLTN.Application.Services
                 Name = requestDto.Name,
             };
             await _unitOfWork.CourseRepository.AddAsync(newCourse);
+            var scoreStructure = Generator.GenerateScoreStructureForCourse(newCourseId.ToString());
+            await _unitOfWork.ScoreStructureRepository.AddAsync(scoreStructure);
             await _unitOfWork.SaveChangesAsync();
-            return new ApiResponse<object>(200, "Thành công", mapper.Map<CourseDto>(newCourse));
+            var dto = mapper.Map<CourseDto>(newCourse);
+            dto.ScoreStructure = mapper.Map<ScoreStructureDto>(scoreStructure);
+            return new ApiResponse<object>(200, "Thành công", dto);
         }
         public async Task<ApiResponse<object>> UpdateCourseAsync(string courseId,CreateCourseRequestDto requestDto,string userId)
         {
