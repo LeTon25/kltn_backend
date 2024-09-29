@@ -106,13 +106,19 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Tên nhóm không được trùng");
             }
-
+            if(group.IsApproved != requestDto.IsApproved )
+            {
+                if(currentUserId != coures.LecturerId)
+                {
+                    return new ApiBadRequestResponse<object>("Chỉ giáo viên mới có quyền duyệt nhóm");
+                }
+                group.IsApproved = requestDto.IsApproved;
+            }    
             group.GroupName = requestDto.GroupName;
             group.ProjectId = requestDto.ProjectId;
             group.UpdatedAt = DateTime.Now;
             group.CourseId = requestDto.CourseId;
             group.NumberOfMembers = requestDto.NumberOfMembers;
-
             _unitOfWork.GroupRepository.Update(group);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -124,10 +130,17 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> DeleteGroupAsync(string groupId)
         {
-            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId);
+            string currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId,false,c=>c.GroupMembers,c =>c.Course);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không thể tìm thấy nhóm với id");
+            }
+            var isLeader = group.GroupMembers.Any(c => c.StudentId == currentUserId);
+            var isTeacher = group.Course.LecturerId == currentUserId;
+            if(!isLeader && isTeacher)
+            {
+                return new ApiBadRequestResponse<object>("Bạn không có quyền xóa nhóm");
             }
             var groupMembers = _unitOfWork.GroupMemberRepository.GetAll(c => c.GroupId == groupId);
             _unitOfWork.GroupRepository.Delete(group);
