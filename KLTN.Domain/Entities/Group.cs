@@ -15,6 +15,8 @@ namespace KLTN.Domain.Entities
         public string? ProjectId { get; set; }
         public bool IsApproved { get; set; }
         public int? NumberOfMembers { get; set; }
+        public string? InviteCode { get; set; }
+        public DateTime? InviteCodeExpired { get; set; }
         public DateTime CreatedAt { get ; set ; }
         public DateTime? UpdatedAt { get ; set ; }
         public DateTime? DeletedAt { get; set; }
