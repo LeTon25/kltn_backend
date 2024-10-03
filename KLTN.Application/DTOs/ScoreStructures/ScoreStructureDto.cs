@@ -1,11 +1,4 @@
-﻿using KLTN.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace KLTN.Application.DTOs.ScoreStructures
+﻿namespace KLTN.Application.DTOs.ScoreStructures
 {
     public class ScoreStructureDto
     {

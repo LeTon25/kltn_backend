@@ -29,6 +29,7 @@ namespace KLTN.Domain.Entities
         public ICollection<GroupMember>? GroupMembers { get; set; }
         public ICollection<Report>? Reports { get; set; }
         public ICollection<Assignment>? Assignments { get; set; }
+        public ICollection<Submission>? Submissions { get; set; }
 
 
     }

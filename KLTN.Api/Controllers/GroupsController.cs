@@ -92,6 +92,18 @@ namespace KLTN.Api.Controllers
             var response = await groupService.AssignLeaderAsync(userId,groupId,dto.StudentId);
             return StatusCode(response.StatusCode, response);
         }
+        [HttpGet("{groupId}/generate-invitecode")]
+        public async Task<IActionResult> GenerateInviteCode(string groupId)
+        {
+            var response = await groupService.GetRegenerateInviteCodeAsync(groupId);
+            return StatusCode(response.StatusCode, response);
+        }
+        [HttpPost("{groupId}/join-group")]
+        public async Task<IActionResult> ApplyInviteCodeAsync(JoinGroupDto requestDto,string groupId)
+        {
+            var response = await groupService.ApplyCodeAsync(requestDto,groupId);
+            return StatusCode(response.StatusCode,response);
+        }
         [HttpGet("{groupId}/report")]
         [ServiceFilter(typeof(GroupResourceAccessFilter))]
         public async Task<IActionResult> GetReportInGroupAsync(string groupId)

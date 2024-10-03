@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Group = KLTN.Domain.Entities.Group;
 
@@ -270,7 +271,81 @@ namespace KLTN.Application.Services
                 reportDto.Comments = await commentService.GetCommentDtosFromPostAsync(reportDto.ReportId, CommentableType.Report);
 
             }
-            return new ApiResponse<object>(200, "Lấy dữ liệu thành công", reportDtos);
+            var sortedReportDtos = reportDtos
+                    .OrderByDescending(c => c.CreatedAt)
+                    .ThenByDescending(c => c.UpdatedAt)
+                    .ToList();
+            return new ApiResponse<object>(200, "Lấy dữ liệu thành công", sortedReportDtos);
+        }
+        public async Task<ApiResponse<object>> GetRegenerateInviteCodeAsync(string groupId)
+        {
+            var currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId.Equals(groupId),false,c=>c.Course,c => c.GroupMembers);
+            if (group == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
+            }
+            var groupMemberByCurrentUser = await _unitOfWork.GroupMemberRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId && c.StudentId == currentUserId);
+            if ((groupMemberByCurrentUser != null && groupMemberByCurrentUser.IsLeader == false) || currentUserId != group.Course?.LecturerId)
+            {
+                return new ApiBadRequestResponse<object>("Bạn không có quyền tạo mã mời");
+            }
+            group.InviteCode = GenerateRandomNumericString(6);
+            group.InviteCodeExpired = DateTime.Now.AddMinutes(5);
+            _unitOfWork.GroupRepository.Update(group);
+            await _unitOfWork.SaveChangesAsync();
+            return new ApiResponse<object>(200, "Tạo mã mời thành công", new GroupInviteCodeDto
+            {
+                InviteCode = group.InviteCode,
+                InviteCodeExpired = group.InviteCodeExpired   
+            });
+        }
+        public async Task<ApiResponse<object>> ApplyCodeAsync(JoinGroupDto requestDto,string groupId)
+        {
+            var currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId.Equals(groupId), false, c => c.Course, c => c.GroupMembers);
+            if (group == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
+            }
+            if(currentUserId == group.Course.LecturerId)
+            {
+                return new ApiBadRequestResponse<object>("Giáo viên của lớp không thể tham gia nhóm");
+            }    
+            if (!await _unitOfWork.EnrolledCourseRepository.AnyAsync(c => c.CourseId == group.CourseId && c.StudentId == currentUserId))
+            {
+                return new ApiBadRequestResponse<object>("Bạn chưa tham gia lớp học");
+            }
+            if (!await CheckValidMemberAsync(currentUserId, group))
+            {
+                return new ApiBadRequestResponse<object>("Bạn đã tham gia nhóm khác");
+            }
+            if (group.GroupMembers != null && group.GroupMembers.Any(c => c.StudentId.Equals(currentUserId)))
+            {
+                return new ApiBadRequestResponse<object>("Bạn đã tham gia nhóm rồi");
+            }
+    
+            var currentDate = DateTime.Now;
+            if(requestDto.InviteCode == group.InviteCode && currentDate < group.InviteCodeExpired)
+            {
+                var currentMemberCount = group.GroupMembers.Count();
+                if (currentMemberCount + 1 > group.NumberOfMembers)
+                {
+                    return new ApiNotFoundResponse<object>("Nhóm đã đủ số lượng thành viên");
+                }
+                await _unitOfWork.GroupMemberRepository.AddAsync(new GroupMember()
+                {
+                    GroupId = groupId,
+                    StudentId = currentUserId,
+                    IsLeader = false,
+                });
+                await _unitOfWork.SaveChangesAsync();
+                return await GetByIdAsync(groupId);
+            }
+            else
+            {
+                return new ApiBadRequestResponse<object>("Mã mời không hợp lệ");
+            }
         }
         #endregion
         public async Task<GroupDto?> GetGroupDtoAsync(string groupId )
@@ -304,7 +379,6 @@ namespace KLTN.Application.Services
             }   
             return true;
         }
-
         public async Task<List<GroupMemberDto>?> GetGroupMemberDtoAsync(string groupId)
         {
             var groupMembersData = _unitOfWork.GroupMemberRepository.GetAll(c => c.GroupId == groupId);
@@ -326,6 +400,18 @@ namespace KLTN.Application.Services
                 });
             }
             return groupMemberDto;
+        }
+        private string GenerateRandomNumericString(int length)
+        {
+            Random random = new Random();
+            char[] result = new char[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                result[i] = (char)('0' + random.Next(0, 10));
+            }
+
+            return new string(result);
         }
     }
 }
