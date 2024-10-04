@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Assignments;
+using KLTN.Application.DTOs.Submissions;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
@@ -112,6 +113,18 @@ namespace KLTN.Application.Services
             await unitOfWork.SaveChangesAsync();
             var responseDto = mapper.Map<AssignmentDto>(newAssignment);
             return new ApiResponse<object>(200, "Cập nhập thành công", mapper.Map<AssignmentDto>(newAssignment));
+        }
+        public async Task<ApiResponse<object>> GetSubmissionInAssignmentsAsync(string userId,string assignmentId)
+        {
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignmentId), false, c => c.Course);
+            if(assignment.Course.LecturerId != userId)
+            {
+                return new ApiBadRequestResponse<object>("Bạn không có quyền lấy danh sách bài nộp");
+            }    
+            var submissions = await unitOfWork.SubmissionRepository.FindByCondition(c=>c.AssignmentId.Equals(assignmentId),false,c=>c.CreateUser,c => c.Assignment).ToListAsync();
+            var submissionDtos = mapper.Map<List<SubmissionDto>>(submissions);  
+            
+            return new ApiResponse<object>(200,"Lấy dữ liệu thành công",submissionDtos);
         }
         #endregion
 
