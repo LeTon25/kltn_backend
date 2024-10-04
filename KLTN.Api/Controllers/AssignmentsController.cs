@@ -47,5 +47,12 @@ namespace KLTN.Api.Controllers
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             return SetResponse(await assignmentService.DeleteAssignmentAsync(userId,assignmentId));
         }
+        [HttpGet("{assignmentId}/submissions")]
+        public async Task<IActionResult> GetSubmissionsInAssignment(string assignmentId)
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var response = await assignmentService.GetSubmissionInAssignmentsAsync(userId,assignmentId);
+            return StatusCode(response.StatusCode,response);
+        }
     }
 }

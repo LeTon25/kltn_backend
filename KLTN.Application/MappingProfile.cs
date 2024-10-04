@@ -8,6 +8,7 @@ using KLTN.Application.DTOs.Projects;
 using KLTN.Application.DTOs.Reports;
 using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.DTOs.Subjects;
+using KLTN.Application.DTOs.Submissions;
 using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
 using KLTN.Domain.Entities;
@@ -51,6 +52,8 @@ namespace KLTN.Application
 
             CreateMap<ReportDto,Report>().ReverseMap();
             CreateMap<CreateReportRequestDto, Report>();
+
+            CreateMap<SubmissionDto,Submission>().ReverseMap();
 
         }
     }
