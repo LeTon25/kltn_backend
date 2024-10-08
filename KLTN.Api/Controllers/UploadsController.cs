@@ -66,8 +66,9 @@ namespace KLTN.Api.Controllers
 
             var files = response.S3Objects.Select(o => new FileDto( 
                  $"https://{_bucketName}.s3.amazonaws.com/{o.Key}",
-                 o.Key.Split('.').Last(),
-                 o.Key)
+                 o.Key,
+                 o.Key.Split('.').Last()
+                 )
             ).ToList();
 
             return Ok(new ApiResponse<List<FileDto>>(200, "Thành công", files));

@@ -71,15 +71,19 @@ namespace KLTN.Application.Services
             {
                 return new ApiResponse<object>(403, "Bạn không có quyền chỉnh sửa bài tập này", null);
             }
-            var scoreStructure = await unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(requestDto.ScoreStructureId), false, c => c.Children);
-            if (scoreStructure == null || scoreStructure.Children != null)
+            if(requestDto.ScoreStructureId != null)
             {
-                return new ApiBadRequestResponse<object>("Cột điểm không hợp lệ");
-            }
-            if (await unitOfWork.AssignmentRepository.AnyAsync(c => c.CourseId.Equals(requestDto.CourseId) && c.ScoreStructureId == requestDto.ScoreStructureId && c.AssignmentId != assignmentId))
-            {
-                return new ApiBadRequestResponse<object>("Cột điểm đã được chấm bởi bài tập khác");
-            }
+                var scoreStructure = await unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(requestDto.ScoreStructureId), false, c => c.Children);
+                if (scoreStructure == null || scoreStructure.Children.Count > 0)
+                {
+                    return new ApiBadRequestResponse<object>("Cột điểm không hợp lệ");
+                }
+                if (await unitOfWork.AssignmentRepository.AnyAsync(c => c.CourseId.Equals(requestDto.CourseId) && c.ScoreStructureId == requestDto.ScoreStructureId && c.AssignmentId != assignmentId))
+                {
+                    return new ApiBadRequestResponse<object>("Cột điểm đã được chấm bởi bài tập khác");
+                }
+            }    
+
             assignment.Title = requestDto.Title;
             assignment.Content = requestDto.Content;
             assignment.CourseId = requestDto.CourseId;
@@ -87,7 +91,8 @@ namespace KLTN.Application.Services
             assignment.AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks);
             assignment.UpdatedAt = DateTime.Now;
             assignment.Attachments = mapper.Map<List<KLTN.Domain.Entities.File>>(requestDto.Attachments);
-
+            assignment.IsGroupAssigned =requestDto.IsGroupAssigned;
+            assignment.ScoreStructureId = requestDto.ScoreStructureId;
             unitOfWork.AssignmentRepository.Update(assignment);
             var result = await unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -99,14 +104,19 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> CreateAssignmentAsync(string userId,UpSertAssignmentRequestDto requestDto)
         {
-            var scoreStructure = await unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(requestDto.ScoreStructureId), false, c => c.Children);
-            if(scoreStructure == null || scoreStructure.Children != null)
+            if (requestDto.ScoreStructureId != null)
+            {
+                var scoreStructure = await unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(requestDto.ScoreStructureId), false, c => c.Children);
+
+                if(scoreStructure == null || scoreStructure.Children.Count > 0)
             {
                 return new ApiBadRequestResponse<object>("Cột điểm không hợp lệ");
-            }    
-            if(await unitOfWork.AssignmentRepository.AnyAsync(c=>c.CourseId.Equals(requestDto.CourseId) && c.ScoreStructureId == requestDto.ScoreStructureId))
-            {
-                return new ApiBadRequestResponse<object>("Cột điểm đã được chấm bởi bài tập khác");
+            }
+                if (await unitOfWork.AssignmentRepository.AnyAsync(c => c.CourseId.Equals(requestDto.CourseId) && c.ScoreStructureId == requestDto.ScoreStructureId))
+                {
+                    return new ApiBadRequestResponse<object>("Cột điểm đã được chấm bởi bài tập khác");
+                }
+
             }
             var newAssignmentId = Guid.NewGuid();
             var newAssignment = new Assignment()
@@ -122,6 +132,7 @@ namespace KLTN.Application.Services
                 CreatedAt = DateTime.Now,
                 UpdatedAt = null,
                 DeletedAt = null,
+                IsGroupAssigned = requestDto.IsGroupAssigned,
             };
             if (!await courseService.CheckIsTeacherAsync(userId, newAssignment.CourseId))
             {
@@ -129,8 +140,9 @@ namespace KLTN.Application.Services
             }
             await unitOfWork.AssignmentRepository.AddAsync(newAssignment);
             await unitOfWork.SaveChangesAsync();
-            var responseDto = mapper.Map<AssignmentDto>(newAssignment);
-            return new ApiResponse<object>(200, "Cập nhập thành công", mapper.Map<AssignmentDto>(newAssignment));
+            var responseDto = await GetAssignmentDtoByIdAsync(newAssignment.AssignmentId, userId);
+
+            return new ApiResponse<object>(200, "Tạo thành công", mapper.Map<AssignmentDto>(newAssignment));
         }
         public async Task<ApiResponse<object>> GetSubmissionsInAssignmentsAsync(string userId,string assignmentId)
         {
@@ -161,7 +173,7 @@ namespace KLTN.Application.Services
             assignmentDto.CreateUser = mapper.Map<UserDto>(userEntity);
 
             assignmentDto.Comments = await commentService.GetCommentDtosFromPostAsync(assignmentId, CommentableType.Assignment);
-            if(currentUserId != assignment.Course.LecturerId)
+            if(currentUserId != assignmentDto.Course.LecturerId)
             {
                 var submission = await unitOfWork.SubmissionRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignment.AssignmentId),false,c=>c.CreateUser);
                 assignmentDto.Submission = mapper.Map<SubmissionDto>(submission);

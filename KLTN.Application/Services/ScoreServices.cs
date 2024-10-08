@@ -1,19 +1,11 @@
 ﻿using AutoMapper;
-using KLTN.Application.DTOs.Accounts;
 using KLTN.Application.DTOs.Scores;
-using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace KLTN.Application.Services
 {
@@ -46,15 +38,21 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<List<ScoreDto>>("Bài này không có chấm điểm");
             }
+            if(await unitOfWork.SubmissionRepository.AnyAsync(c=>c.SubmissionId.Equals(requestDto.SubmissionId)))
+            {
+                return new ApiBadRequestResponse<List<ScoreDto>>("Bài này đã chấm điểm");
+            }
             var scoresToAdd = new List<Score>();
             if (!submission.Assignment.IsGroupAssigned)
             {
+                var newId = Guid.NewGuid().ToString();
                 scoresToAdd.Add(new Score
                 {
                     ScoreStructureId = submission.Assignment.ScoreStructureId,
                     SubmissionId = requestDto.SubmissionId,
                     UserId = submission.UserId,
                     Value = requestDto.Value,
+                    Id = newId  
                 });
             }
             else
@@ -68,16 +66,18 @@ namespace KLTN.Application.Services
                 }
                 foreach (var item in groupByUser.GroupMembers)
                 {
+                    var newId = Guid.NewGuid().ToString();
                     scoresToAdd.Add(new Score
                     {
                         ScoreStructureId = submission.Assignment.ScoreStructureId,
                         SubmissionId = requestDto.SubmissionId,
                         UserId = item.StudentId,
                         Value = requestDto.Value,
+                        Id= newId
                     });
                 }
             }
-
+            await unitOfWork.ScoreRepository.AddRangeAsync(scoresToAdd);
             await unitOfWork.SaveChangesAsync();
             var responseData = new List<ScoreDto>();
             var scores = await unitOfWork.ScoreRepository.FindByCondition(c => c.SubmissionId.Equals(requestDto.SubmissionId), false, c => c.User).ToListAsync();
