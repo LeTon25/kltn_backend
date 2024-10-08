@@ -13,6 +13,8 @@ namespace KLTN.Domain.Entities
         public string CourseId {get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
+        public string? ScoreStructureId { get; set; }
+        public bool IsGroupAssigned {  get; set; }
         public DateTime? DueDate { get; set; }
         public List<MetaLinkData> AttachedLinks { get; set; }
         public List<File> Attachments { get; set; }
@@ -21,5 +23,6 @@ namespace KLTN.Domain.Entities
         public DateTime? DeletedAt { get ; set; }
         public Course? Course { get; set; }
         public ICollection<Submission>? Submissions { get; set; }
+        public ScoreStructure? ScoreStructure { get; set; }
     }
 }

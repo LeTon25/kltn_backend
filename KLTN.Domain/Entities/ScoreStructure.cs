@@ -16,6 +16,7 @@ namespace KLTN.Domain.Entities
         public string? ParentId { get; set; }
         public ScoreStructure? Parent { get; set; } 
         public ICollection<ScoreStructure>? Children { get;set; }
-    
+        public ICollection<Score> Scores { get; set; }
+        public Assignment? Assignment { get; set; }
     }
 }

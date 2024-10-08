@@ -1,4 +1,5 @@
 ﻿using KLTN.Domain.Entities.Interfaces;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 
 namespace KLTN.Domain.Entities
 {
@@ -15,5 +16,6 @@ namespace KLTN.Domain.Entities
         public DateTime? DeletedAt { get ; set ; }
         public Assignment? Assignment { get; set; }  
         public User? CreateUser { get; set; }
+        public ICollection<Score> Scores { get; set; }
     }
 }

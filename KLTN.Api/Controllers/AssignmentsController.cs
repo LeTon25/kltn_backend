@@ -23,7 +23,8 @@ namespace KLTN.Api.Controllers
         [HttpGet("{assignmentId}")]
         public async Task<IActionResult> GetByIdAsync(string assignmentId)
         {
-            return SetResponse(await assignmentService.GetAssignmentByIdAsync(assignmentId));
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return SetResponse(await assignmentService.GetAssignmentByIdAsync(assignmentId,userId));
 
         }
         [HttpPost]
@@ -51,7 +52,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> GetSubmissionsInAssignment(string assignmentId)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await assignmentService.GetSubmissionInAssignmentsAsync(userId,assignmentId);
+            var response = await assignmentService.GetSubmissionsInAssignmentsAsync(userId,assignmentId);
             return StatusCode(response.StatusCode,response);
         }
     }

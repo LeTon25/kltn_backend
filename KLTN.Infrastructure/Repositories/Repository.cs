@@ -89,5 +89,10 @@ namespace KLTN.Infrastructure.Repositories
             items = includeProperties.Aggregate(items, (current, includeProperty) => current.Include(includeProperty));
             return items;
         }
+
+        public void UpdateRange(IEnumerable<T> entities)
+        {
+            dbSet.UpdateRange(entities);
+        }
     }
 }

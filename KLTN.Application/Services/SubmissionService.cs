@@ -42,6 +42,8 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Bạn không có quyền xem bài nộp này");
             }
+            var scores = await unitOfWork.ScoreRepository.FindByCondition(c => c.SubmissionId.Equals(submissionId), false, c => c.User).ToListAsync();
+            data.Scores = scores;
             var dto = mapper.Map<SubmissionDto>(data);
             return new ApiResponse<object>(200, "Thành công", dto);
         }
@@ -121,6 +123,18 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Vui lòng đính kèm ít nhất một file");
             }
+            if(assignment.IsGroupAssigned)
+            {
+                var groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId),false,c=>c.GroupMembers).ToListAsync();
+                if (!groupsInCourse.Any(
+                        c=> c.GroupMembers.Any(
+                            e=>e.StudentId.Equals(currentUserId)
+                    ))
+                   )
+                {
+                    return new ApiBadRequestResponse<object>("Đây là bài tập nhóm.Bạn chưa tham gia vào nhóm");
+                }
+            }    
             var newSubmissionId = Guid.NewGuid();
             var newSubmission = new Submission()
             {

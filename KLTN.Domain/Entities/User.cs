@@ -30,7 +30,7 @@ namespace KLTN.Domain.Entities
         public ICollection<Report>? Reports { get; set; }
         public ICollection<Assignment>? Assignments { get; set; }
         public ICollection<Submission>? Submissions { get; set; }
-
+        public ICollection<Score>? Scores { get; set; } 
 
     }
 }
