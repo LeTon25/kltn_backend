@@ -1,4 +1,5 @@
-﻿using KLTN.Application.DTOs.Assignments;
+﻿using KLTN.Api.Filters;
+using KLTN.Application.DTOs.Assignments;
 using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Services;
@@ -33,6 +34,7 @@ namespace KLTN.Api.Controllers
             return StatusCode(response.StatusCode, response);
         }
         [HttpGet("course/{courseId}/score-structure")]
+        [ServiceFilter(typeof(CourseResourceAccessFilter))]
         public async Task<IActionResult> GetScoreStructureByCourseIdAsync(string courseId)
         {
             var response = await _scoreStructureService.GetScoreStructureByCourseIdAsync(courseId);

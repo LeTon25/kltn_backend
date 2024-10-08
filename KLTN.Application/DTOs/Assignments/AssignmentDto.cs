@@ -1,5 +1,7 @@
 ﻿using KLTN.Application.DTOs.Comments;
 using KLTN.Application.DTOs.Courses;
+using KLTN.Application.DTOs.ScoreStructures;
+using KLTN.Application.DTOs.Submissions;
 using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
 using System;
@@ -16,6 +18,8 @@ namespace KLTN.Application.DTOs.Assignments
         public string CourseId { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
+        public bool IsGroupAssigned { get; set; }
+        public string? ScoreStructureId { get; set; }
         public DateTime? DueDate { get; set; }
         public List<MetaLinkDataDto> AttachedLinks { get; set; }
         public List<FileDto> Attachments { get; set; }
@@ -25,5 +29,7 @@ namespace KLTN.Application.DTOs.Assignments
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
+        public ScoreStructureDto? ScoreStructure { get; set; }
+        public SubmissionDto? Submission { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using KLTN.Application.DTOs.Assignments;
+using KLTN.Application.DTOs.Scores;
 using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
 using KLTN.Domain.Entities;
@@ -22,5 +23,6 @@ namespace KLTN.Application.DTOs.Submissions
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public UserDto? CreateUser { get; set; }
+        public List<ScoreDto> Scores { get; set; }
     }
 }

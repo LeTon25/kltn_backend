@@ -24,6 +24,7 @@ namespace KLTN.Infrastructure.Data
         public DbSet<ScoreStructure> ScoreStructures { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<Submission> Submissions { get; set; }  
+        public DbSet<Score> Scores { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -41,6 +42,7 @@ namespace KLTN.Infrastructure.Data
             builder.ApplyConfiguration(new ScoreStructureConfiguration());  
             builder.ApplyConfiguration(new ReportConfiguration());
             builder.ApplyConfiguration(new SubmissionConfiguration());
+            builder.ApplyConfiguration(new ScoreConfiguration());
         }
     }
 }

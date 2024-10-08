@@ -20,6 +20,7 @@ namespace KLTN.Domain.Repositories
         public IScoreStructureRepository ScoreStructureRepository { get; }
         public IReportRepository ReportRepository { get; }
         public ISubmissionRepository SubmissionRepository { get; }  
+        public IScoreRepository ScoreRepository { get; }
         public Task<int> SaveChangesAsync();
     }
 }

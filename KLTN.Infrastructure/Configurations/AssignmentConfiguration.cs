@@ -36,6 +36,12 @@ namespace KLTN.Infrastructure.Configurations
             builder.HasOne(c => c.Course)
                 .WithMany(c => c.Assignments)
                 .HasForeignKey(c => c.CourseId);
+
+            builder.HasOne(c=>c.ScoreStructure)
+                .WithOne(e=>e.Assignment)
+                .HasForeignKey<Assignment>(c => c.ScoreStructureId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);    
             #endregion
         }
     }
