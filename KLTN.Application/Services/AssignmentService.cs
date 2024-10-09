@@ -8,6 +8,7 @@ using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using static System.Formats.Asn1.AsnWriter;
 using File = KLTN.Domain.Entities.File;
 
 namespace KLTN.Application.Services
@@ -146,15 +147,83 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetSubmissionsInAssignmentsAsync(string userId,string assignmentId)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignmentId), false, c => c.Course);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignmentId), false, c => c.Course,c => c.Course.EnrolledCourses);
+            if(assignment == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy bài tập");
+            }
             if(assignment.Course.LecturerId != userId)
             {
                 return new ApiBadRequestResponse<object>("Bạn không có quyền lấy danh sách bài nộp");
-            }    
-            var submissions = await unitOfWork.SubmissionRepository.FindByCondition(c=>c.AssignmentId.Equals(assignmentId),false,c=>c.CreateUser,c => c.Assignment,c => c.Scores).ToListAsync();
-            var submissionDtos = mapper.Map<List<SubmissionDto>>(submissions);  
-            
-            return new ApiResponse<object>(200,"Lấy dữ liệu thành công",submissionDtos);
+            }
+            var userData = await userManager.Users.ToListAsync();
+            var usersInCourse = userData
+                .Where(u => assignment.Course.EnrolledCourses.Any(e => e.StudentId == u.Id))
+                .ToList();
+            var submissions = await unitOfWork.SubmissionRepository.FindByCondition(c=>c.AssignmentId.Equals(assignmentId),false,c=>c.CreateUser,c => c.Scores).ToListAsync();
+
+            var groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId), false, c => c.GroupMembers).ToListAsync(); 
+            var responseData = new List<SubmissionUserDto>();
+            foreach(var student in usersInCourse)
+            {
+                if (!assignment.IsGroupAssigned) 
+                {
+                    var submissionSubmitedByUser = submissions.FirstOrDefault(c => c.UserId.Equals(student.Id));
+                    if (submissionSubmitedByUser != null)
+                    {
+                        var score = submissionSubmitedByUser.Scores.FirstOrDefault(c => c.UserId.Equals(student));
+                        responseData.Add(new SubmissionUserDto()
+                        {
+                            User = mapper.Map<UserDto>(student),
+                            Submission = mapper.Map<SubmissionNoScoreDto>(submissionSubmitedByUser),
+                            Score = score != null ? score.Value : null
+                        });
+                    }
+                    else
+                    {
+                        responseData.Add(new SubmissionUserDto()
+                        {
+                            User = mapper.Map<UserDto>(student),
+                            Submission = null,
+                            Score = null
+                        });
+                    }
+                }
+                else
+                {
+                    var groupByUser = groupsInCourse.FirstOrDefault(c => c.GroupMembers.Any(e => e.StudentId == student.Id));
+                    if (groupByUser == null) 
+                    {
+                        responseData.Add(new SubmissionUserDto()
+                        {
+                            User = mapper.Map<UserDto>(student),
+                            Submission = null,
+                            Score = null,
+                        });
+                        continue;
+                    }
+                    var submissionInGroup = submissions.FirstOrDefault(c => groupByUser.GroupMembers.Any(e => e.StudentId.Equals(c.UserId)));
+                    if(submissionInGroup == null)
+                    {
+                        responseData.Add(new SubmissionUserDto()
+                        {
+                            User = mapper.Map<UserDto>(student),
+                            Submission = null,
+                            Score = null,
+                        });
+                        continue;
+                    }
+                    var score = submissionInGroup.Scores.FirstOrDefault(c => c.UserId.Equals(student));
+                    responseData.Add(new SubmissionUserDto()
+                    {
+                        User = mapper.Map<UserDto>(student),
+                        Submission = mapper.Map<SubmissionNoScoreDto>(submissionInGroup),
+                        Score = score != null ? score.Value : null,
+
+                    });
+                }
+            }
+            return new ApiResponse<object>(200,"Lấy dữ liệu thành công", responseData);
         }
         #endregion
 
