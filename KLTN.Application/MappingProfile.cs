@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Assignments;
+using KLTN.Application.DTOs.Briefs;
 using KLTN.Application.DTOs.Comments;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
@@ -57,6 +58,8 @@ namespace KLTN.Application
             CreateMap<SubmissionDto,Submission>().ReverseMap();
 
             CreateMap<ScoreDto,Score>().ReverseMap();
+            CreateMap<SubmissionNoScoreDto, Submission>().ReverseMap();
+            CreateMap<Brief,BriefDto>().ReverseMap();
         }
     }
 }

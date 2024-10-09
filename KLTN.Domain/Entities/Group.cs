@@ -23,5 +23,6 @@ namespace KLTN.Domain.Entities
         public Course? Course { get; set; } 
         public ICollection<GroupMember>? GroupMembers { get; set; }
         public ICollection<Report>? Reports { get; set; }
+        public ICollection<Brief>? Briefs { get; set; }
     }
 }

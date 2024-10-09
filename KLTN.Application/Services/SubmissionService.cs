@@ -101,7 +101,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> CreateSubmissionAsync(string currentUserId,CreateSubmissionDto requestDto,string assignmentId)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignmentId), false, c => c.Course, c => c.Course.EnrolledCourses);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignmentId), false, c => c.Course, c => c.Course.EnrolledCourses,c => c.Submissions);
             if (assignment == null) 
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy bài tập để nộp");
@@ -111,30 +111,39 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Hết hạn để nộp hay chỉnh sửa");
             }
+
             if (currentUserId == assignment?.Course?.LecturerId)
             {
                 return new ApiBadRequestResponse<object>("Giáo viên của lớp không thể nộp bài");
             }
+
             if ( assignment.Course.EnrolledCourses == null || !assignment.Course.EnrolledCourses.Any(c => c.StudentId.Equals(currentUserId)))
             {
                 return new ApiBadRequestResponse<object>("Bạn không có trong lớp học");
             }
+
             if (!requestDto.Attachments.Any() && !requestDto.AttachedLinks.Any())
             {
                 return new ApiBadRequestResponse<object>("Vui lòng đính kèm ít nhất một file");
             }
+
             if(assignment.IsGroupAssigned)
             {
                 var groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId),false,c=>c.GroupMembers).ToListAsync();
-                if (!groupsInCourse.Any(
-                        c=> c.GroupMembers.Any(
-                            e=>e.StudentId.Equals(currentUserId)
-                    ))
-                   )
+                var groupByUser = groupsInCourse.FirstOrDefault(c=>c.GroupMembers.Any(e=>e.StudentId.Equals(currentUserId)));
+                if (groupByUser == null)
                 {
                     return new ApiBadRequestResponse<object>("Đây là bài tập nhóm.Bạn chưa tham gia vào nhóm");
                 }
+                foreach(var member in groupByUser.GroupMembers)
+                {
+                    if (assignment.Submissions.Any(c=>c.UserId.Equals(member.StudentId)))
+                    {
+                        return new ApiBadRequestResponse<object>("Nhóm bạn đã nộp bài rồi");
+                    }
+                }    
             }    
+
             var newSubmissionId = Guid.NewGuid();
             var newSubmission = new Submission()
             {

@@ -38,7 +38,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<List<ScoreDto>>("Bài này không có chấm điểm");
             }
-            if(await unitOfWork.SubmissionRepository.AnyAsync(c=>c.SubmissionId.Equals(requestDto.SubmissionId)))
+            if(await unitOfWork.ScoreRepository.AnyAsync(c=>c.SubmissionId.Equals(requestDto.SubmissionId)))
             {
                 return new ApiBadRequestResponse<List<ScoreDto>>("Bài này đã chấm điểm");
             }

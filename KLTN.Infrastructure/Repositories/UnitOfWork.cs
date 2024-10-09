@@ -1,5 +1,6 @@
 ﻿using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
+using KLTN.Infrastructure.Configurations;
 using KLTN.Infrastructure.Data;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,7 @@ namespace KLTN.Infrastructure.Repositories
         public IReportRepository ReportRepository { get; }
         public ISubmissionRepository SubmissionRepository { get; }  
         public IScoreRepository ScoreRepository { get; }
+        public IBriefRepository BriefRepository { get; }    
         #endregion
         public readonly ApplicationDbContext _context;
 
@@ -52,6 +54,7 @@ namespace KLTN.Infrastructure.Repositories
             ReportRepository = new ReportRepository(context);
             SubmissionRepository = new SubmissionRepository(context);
             ScoreRepository = new ScoreRepository(context);
+            BriefRepository = new BriefRepository(context);
         }
 
         public async Task<int> SaveChangesAsync()
