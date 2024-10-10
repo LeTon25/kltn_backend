@@ -37,6 +37,7 @@ namespace KLTN.Application.Services
             var newBrief = new Brief()
             {
                 GroupId = groupId,
+                Title = requestDto.Title,
                 Id = newId,
                 CreatedAt = DateTime.Now,
                 Content = requestDto.Content
@@ -65,7 +66,7 @@ namespace KLTN.Application.Services
             }
             brief.Content = requestDto.Content;
             brief.UpdatedAt = DateTime.Now;
-
+            brief.Title = requestDto.Title;
             unitOfWork.BriefRepository.Update(brief);
             await unitOfWork.SaveChangesAsync();  
             
