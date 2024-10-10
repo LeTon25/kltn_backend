@@ -24,7 +24,8 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> GetByIdAsync(string assignmentId)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await assignmentService.GetAssignmentByIdAsync(assignmentId,userId));
+            var response = await assignmentService.GetAssignmentByIdAsync(assignmentId, userId);
+            return StatusCode(response.StatusCode,response);
 
         }
         [HttpPost]

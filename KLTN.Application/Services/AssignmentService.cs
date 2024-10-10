@@ -8,7 +8,6 @@ using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using static System.Formats.Asn1.AsnWriter;
 using File = KLTN.Domain.Entities.File;
 
 namespace KLTN.Application.Services
@@ -110,9 +109,13 @@ namespace KLTN.Application.Services
                 var scoreStructure = await unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(requestDto.ScoreStructureId), false, c => c.Children);
 
                 if(scoreStructure == null || scoreStructure.Children.Count > 0)
-            {
-                return new ApiBadRequestResponse<object>("Cột điểm không hợp lệ");
-            }
+                {
+                    return new ApiBadRequestResponse<object>("Cột điểm không hợp lệ");
+                }
+                if(scoreStructure.ColumnName == "Cuối kì" && scoreStructure.Children.Count == 0)
+                {
+                    return new ApiBadRequestResponse<object>("Không thể gán điểm cho cột cuối kì");
+                }
                 if (await unitOfWork.AssignmentRepository.AnyAsync(c => c.CourseId.Equals(requestDto.CourseId) && c.ScoreStructureId == requestDto.ScoreStructureId))
                 {
                     return new ApiBadRequestResponse<object>("Cột điểm đã được chấm bởi bài tập khác");
