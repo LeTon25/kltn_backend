@@ -165,7 +165,6 @@ namespace KLTN.Api.Controllers
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             return SetResponse( await _accountService.GetCoursesByCurrentUserAsync(userId));
         }
-
         //[HttpPost("forgot-password")]
         //public async Task<IActionResult> ForgotPassword(ForgetPasswordRequestDto forgotPasswordDto)
         //{

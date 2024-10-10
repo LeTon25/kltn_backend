@@ -5,6 +5,7 @@ using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using static System.Formats.Asn1.AsnWriter;
 
 
 namespace KLTN.Application.Services
@@ -25,7 +26,7 @@ namespace KLTN.Application.Services
 
         public async Task<ApiResponse<List<ScoreDto>>> ScoringSubmissionAsync(CreateScoreDto requestDto, string currentUserId)
         {
-            var submission = await unitOfWork.SubmissionRepository.GetFirstOrDefaultAsync(c => c.SubmissionId.Equals(requestDto.SubmissionId), false, c => c.Assignment, c => c.Assignment.Course);
+            var submission = await unitOfWork.SubmissionRepository.GetFirstOrDefaultAsync(c => c.SubmissionId.Equals(requestDto.SubmissionId), false, c => c.Assignment, c => c.Assignment.Course,c => c.Scores);
             if (submission == null)
             {
                 return new ApiBadRequestResponse<List<ScoreDto>>("Không tìm thấy bài nộp");
@@ -38,53 +39,65 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<List<ScoreDto>>("Bài này không có chấm điểm");
             }
-            if(await unitOfWork.ScoreRepository.AnyAsync(c=>c.SubmissionId.Equals(requestDto.SubmissionId)))
+            if(submission.Scores == null)
             {
-                return new ApiBadRequestResponse<List<ScoreDto>>("Bài này đã chấm điểm");
-            }
-            var scoresToAdd = new List<Score>();
-            if (!submission.Assignment.IsGroupAssigned)
-            {
-                var newId = Guid.NewGuid().ToString();
-                scoresToAdd.Add(new Score
-                {
-                    ScoreStructureId = submission.Assignment.ScoreStructureId,
-                    SubmissionId = requestDto.SubmissionId,
-                    UserId = submission.UserId,
-                    Value = requestDto.Value,
-                    Id = newId  
-                });
-            }
-            else
-            {
-                var groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(submission.Assignment.CourseId), false, c => c.GroupMembers).ToListAsync();
-
-                var groupByUser = groupsInCourse.Where(c => c.GroupMembers.Any(e => e.StudentId.Equals(submission.UserId))).FirstOrDefault();
-                if (groupByUser == null)
-                {
-                    return new ApiBadRequestResponse<List<ScoreDto>>("Người nộp chưa tham gia vào nhóm nào");
-                }
-                foreach (var item in groupByUser.GroupMembers)
+                var scoresToAdd = new List<Score>();
+                if (!submission.Assignment.IsGroupAssigned)
                 {
                     var newId = Guid.NewGuid().ToString();
                     scoresToAdd.Add(new Score
                     {
                         ScoreStructureId = submission.Assignment.ScoreStructureId,
                         SubmissionId = requestDto.SubmissionId,
-                        UserId = item.StudentId,
+                        UserId = submission.UserId,
                         Value = requestDto.Value,
-                        Id= newId
+                        Id = newId
                     });
                 }
+                else
+                {
+                    var groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(submission.Assignment.CourseId), false, c => c.GroupMembers).ToListAsync();
+
+                    var groupByUser = groupsInCourse.Where(c => c.GroupMembers.Any(e => e.StudentId.Equals(submission.UserId))).FirstOrDefault();
+                    if (groupByUser == null)
+                    {
+                        return new ApiBadRequestResponse<List<ScoreDto>>("Người nộp chưa tham gia vào nhóm nào");
+                    }
+                    foreach (var item in groupByUser.GroupMembers)
+                    {
+                        var newId = Guid.NewGuid().ToString();
+                        scoresToAdd.Add(new Score
+                        {
+                            ScoreStructureId = submission.Assignment.ScoreStructureId,
+                            SubmissionId = requestDto.SubmissionId,
+                            UserId = item.StudentId,
+                            Value = requestDto.Value,
+                            Id = newId
+                        });
+                    }
+                }
+                await unitOfWork.ScoreRepository.AddRangeAsync(scoresToAdd);
+                await unitOfWork.SaveChangesAsync();
+                var responseData = new List<ScoreDto>();
+                var scores = await unitOfWork.ScoreRepository.FindByCondition(c => c.SubmissionId.Equals(requestDto.SubmissionId), false, c => c.User).ToListAsync();
+
+                responseData = mapper.Map<List<ScoreDto>>(scores.Where(c => scoresToAdd.Any(e => e.UserId.Equals(c.UserId))));
+
+                return new ApiResponse<List<ScoreDto>>(200, "Chấm điểm thành công", responseData);
             }
-            await unitOfWork.ScoreRepository.AddRangeAsync(scoresToAdd);
-            await unitOfWork.SaveChangesAsync();
-            var responseData = new List<ScoreDto>();
-            var scores = await unitOfWork.ScoreRepository.FindByCondition(c => c.SubmissionId.Equals(requestDto.SubmissionId), false, c => c.User).ToListAsync();
+            foreach (var score in submission.Scores)
+            {
+                score.Value = requestDto.Value;
+            }
+            unitOfWork.ScoreRepository.UpdateRange(submission.Scores);
+            var result = await unitOfWork.SaveChangesAsync();
+            if (result > 0)
+            {
+                var dto = mapper.Map<List<ScoreDto>>(submission.Scores);
+                return new ApiResponse<List<ScoreDto>>(200, "Cập nhật điểm thành công", dto);
+            }
+            return new ApiBadRequestResponse<List<ScoreDto>>("Cập nhật điểm thất bại");
 
-            responseData = mapper.Map<List<ScoreDto>>(scores.Where(c => scoresToAdd.Any(e => e.UserId.Equals(c.UserId))));
-
-            return new ApiResponse<List<ScoreDto>>(200, "Chấm điểm thành công", responseData);
         }
         public async Task<ApiResponse<ScoreDto>> UpdateScoreAsync(UpdateScoreDto requestDto,string scoreId,string currentUserId)
         {
@@ -100,36 +113,6 @@ namespace KLTN.Application.Services
             var responseData = mapper.Map<ScoreDto>(score);
             return new ApiResponse<ScoreDto>(200,"Cập nhật thành công",responseData);
             
-        }
-        public async Task<ApiResponse<List<ScoreDto>>> UpdateScoringSubmissionAsync(CreateScoreDto requestDto,string currentUserId)
-        {
-            var submission = await unitOfWork.SubmissionRepository.GetFirstOrDefaultAsync(c => c.SubmissionId.Equals(requestDto.SubmissionId), true, c => c.Assignment, c => c.Assignment.Course);
-            if (submission == null) 
-            {
-                return new ApiNotFoundResponse<List<ScoreDto>>("Không tìm thấy bài nộp");
-            }
-            if (currentUserId != submission.Assignment.Course.LecturerId)
-            {
-                return new ApiBadRequestResponse<List<ScoreDto>>("Chỉ có giáo viên của lớp mới có quyền chấm điểm");
-            }
-
-            var scores = await unitOfWork.ScoreRepository.FindByCondition(c => c.SubmissionId.Equals(submission.SubmissionId), false, c => c.User).ToListAsync();
-            if(scores == null)
-            {
-                return new ApiBadRequestResponse<List<ScoreDto>>("Bài viết chưa được chấm điểm");
-            }
-            foreach(var score in scores)
-            {
-                score.Value = requestDto.Value;
-            }
-            unitOfWork.ScoreRepository.UpdateRange(scores);
-            var result =  await unitOfWork.SaveChangesAsync();
-            if(result > 0)
-            {
-                var dto = mapper.Map<List<ScoreDto>>(scores);
-                return new ApiResponse<List<ScoreDto>>(200, "Cập nhật điểm thành công", dto);
-            }    
-            return new ApiBadRequestResponse<List<ScoreDto>>("Cập nhật điểm thất bại");
         }
     }
 }
