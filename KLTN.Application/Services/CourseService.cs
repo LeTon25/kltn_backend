@@ -1,10 +1,5 @@
 ﻿using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using KLTN.Domain.Entities;
 using AutoMapper;
 using KLTN.Application.Helpers.Response;
@@ -13,7 +8,6 @@ using KLTN.Application.DTOs.Users;
 using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Projects;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Assignments;
 using Microsoft.AspNetCore.Http;

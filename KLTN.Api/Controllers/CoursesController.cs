@@ -1,10 +1,8 @@
-﻿using AutoMapper;
-using KLTN.Api.Filters;
+﻿using KLTN.Api.Filters;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Services;
-using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
