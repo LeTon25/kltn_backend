@@ -362,7 +362,7 @@ namespace KLTN.Application.Services
             }
             if (isLoadAssignment)
             {
-                var assignments = _unitOfWork.AssignmentRepository.GetAll(c => c.CourseId == courseDto.CourseId);
+                var assignments = await _unitOfWork.AssignmentRepository.FindByCondition(c=>c.CourseId.Equals(courseId),false, c=>c.ScoreStructure).ToListAsync();
                 courseDto.Assignments = mapper.Map<List<AssignmentNoCourseDto>>(assignments);
             }
             if(isLoadScore)
