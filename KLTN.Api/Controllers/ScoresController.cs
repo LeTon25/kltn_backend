@@ -26,14 +26,6 @@ namespace KLTN.Api.Controllers
             var response = await scoreServices.ScoringSubmissionAsync(requestDto,userId);
             return StatusCode(response.StatusCode,response);
         }
-        [HttpPatch("{submissionId}/score")]
-        [ApiValidationFilter]
-        public async Task<IActionResult> UpdateScoringSubmissionAsync(CreateScoreDto requestDto)
-        {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await scoreServices.UpdateScoringSubmissionAsync(requestDto, userId);
-            return StatusCode(response.StatusCode,response);
-        }
         [HttpPatch("{scoreId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> UpdateScoreAsync(UpdateScoreDto requestDto,string scoreId)
