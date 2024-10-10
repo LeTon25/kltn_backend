@@ -143,7 +143,7 @@ namespace KLTN.Application.Services
             await unitOfWork.SaveChangesAsync();
             var responseDto = await GetAssignmentDtoByIdAsync(newAssignment.AssignmentId, userId);
 
-            return new ApiResponse<object>(200, "Tạo thành công", mapper.Map<AssignmentDto>(newAssignment));
+            return new ApiResponse<object>(200, "Tạo thành công", mapper.Map<AssignmentDto>(responseDto));
         }
         public async Task<ApiResponse<object>> GetSubmissionsInAssignmentsAsync(string userId,string assignmentId)
         {
