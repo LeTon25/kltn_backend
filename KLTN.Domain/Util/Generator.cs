@@ -29,7 +29,7 @@ namespace KLTN.Domain.Util
                         Id = firstChildId,
                         CourseId = null,
                         Percent = 50,
-                        ColumnName = "Quá trình",
+                        ColumnName = Constants.Score.MidtermColumnName,
                         MaxPercent = 50,
                         ParentId = parentId,
                     },
@@ -38,7 +38,7 @@ namespace KLTN.Domain.Util
                         Id = secondChildId,
                         CourseId = null,
                         Percent = 50,
-                        ColumnName = "Cuối kì",
+                        ColumnName = Constants.Score.EndtermColumnName,
                         MaxPercent = 50,
                         ParentId = parentId,
                     }

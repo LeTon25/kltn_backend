@@ -22,6 +22,7 @@ namespace KLTN.Domain.Repositories
         public ISubmissionRepository SubmissionRepository { get; }  
         public IScoreRepository ScoreRepository { get; }
         public IBriefRepository BriefRepository { get; }
+        public IUserRepository UserRepository { get; }
         public Task<int> SaveChangesAsync();
     }
 }

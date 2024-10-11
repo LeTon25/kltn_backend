@@ -29,6 +29,11 @@ namespace KLTN.Application.Services
             {
                 return new ApiResponse<object>(403, "Chỉ có giảng viên mới có quyền cập nhật cấu trúc cột điểm");
             }
+            var check  = ValidateColumnNameDuplicate(requestDto);
+            if(check == false)
+            {
+                return new ApiResponse<object>(403, "Xuất hiện cột điểm có tên bị trùng");
+            }
             var existingEntity = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c=>c.Id.Equals(requestDto.Id),false);
             //Thêm mới 
             ScoreStructure? newEntity = null;
@@ -82,7 +87,66 @@ namespace KLTN.Application.Services
             return new ApiResponse<object>(200, "Lấy dữ liệu thành công", data);
         }
 
+        public async Task<ApiResponse<object>> GetTransciptAsync(string courseId)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false, c => c.EnrolledCourses);
+            if (course == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy lớp học");
+            }    
+            var scoreStructure = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false,c=>c.Scores);
+            if (scoreStructure == null) 
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy cột điểm");
+            }
+            await LoadChildrenWithScoreAsync(scoreStructure);
+            var studentIds = course.EnrolledCourses.Select(c=>c.StudentId).ToList();
+            var students = await _unitOfWork.UserRepository.FindByCondition(c => studentIds.Contains(c.Id),false,c=>c.Scores).ToListAsync();
+
+            var studentScores = students.Select(student => new StudentScoreDTO
+            {
+                Id = student.Id,    
+                FullName = student.UserName,
+                Scores = CalculateScore(scoreStructure,student.Id)
+            }).ToList();
+            return new ApiResponse<object>(200, "Thành công", studentScores);
+        }
         #endregion
+        private bool ValidateColumnNameDuplicate(UpSertScoreStructureDto dto)
+        {
+            var existedColumnName = new List<string>(); 
+            existedColumnName.Add(dto.ColumnName);
+            foreach (var child in dto.Children)
+            {
+               var isValid =  CheckValidCoulumnName(child, existedColumnName);
+                if (!isValid)
+                {
+                    return false;
+                }
+            }  
+            return true;
+        }
+        private bool CheckValidCoulumnName(ScoreStructureDto dto , List<string> existedColumnName)
+        {
+            if(existedColumnName.Contains(dto.ColumnName))
+            {
+                return false;
+            }    
+            existedColumnName.Add(dto.ColumnName);  
+
+            if(dto.Children != null  || dto.Children.Count > 0 )
+            {
+                foreach (var child in dto.Children)
+                {
+                    var isValid = CheckValidCoulumnName(child, existedColumnName);
+                    if(!isValid)
+                    {
+                        return false;
+                    }    
+                }
+            }    
+            return true;
+        }
         private void SetParentIdForChildren(string parentId, ICollection<ScoreStructure> children)
         {
             foreach (var child in children)
@@ -162,6 +226,38 @@ namespace KLTN.Application.Services
                 }
             }
         }
+        // Hàm đệ quy tính điểm cho mỗi ScoreStructure, bao gồm các ScoreStructure con
+        private ScoreDetailDto? CalculateScore(ScoreStructure scoreStructure, string studentId)
+        {
+            var scoreDetail = new ScoreDetailDto
+            {
+                ScoreStructureId = scoreStructure.Id,
+                ColumnName = scoreStructure.ColumnName,
+                Percent = scoreStructure.Percent,
+            };
+            if (scoreStructure.Children == null || !scoreStructure.Children.Any())
+            {
+                var scoreEntity = scoreStructure.Scores.Where(c => c.UserId.Equals(studentId)).FirstOrDefault();
+                scoreDetail.Value = scoreEntity != null ? scoreEntity.Value : 0;
+                scoreDetail.ScoreId = scoreStructure.Id;    
+                
+            }
+            else
+            {
+                double? totalScore = 0;
+                foreach (var child in scoreStructure.Children)
+                {
+                    var childScoreDetail = CalculateScore(child, studentId);
+                    scoreDetail.Children.Add(childScoreDetail);  
+                    if (childScoreDetail.Value.HasValue)
+                    {
+                        totalScore += (childScoreDetail.Value * child.Percent / 100);
+                    }
+                }
+                scoreDetail.Value = totalScore;
+            }
+            return scoreDetail;
+        }
         public async Task  LoadChildrenAsync(ScoreStructure parent)
         {
             var children = await _unitOfWork.ScoreStructureRepository
@@ -176,6 +272,22 @@ namespace KLTN.Application.Services
                 }    
                 parent.Children.Add(child);
                 await LoadChildrenAsync(child);
+            }
+        }
+        private async Task LoadChildrenWithScoreAsync(ScoreStructure parent)
+        {
+            var children = await _unitOfWork.ScoreStructureRepository
+                    .FindByCondition(s => s.ParentId == parent.Id,false,c=>c.Scores)
+                    .AsNoTracking()
+                    .ToListAsync();
+            foreach (var child in children)
+            {
+                if (parent.Children == null)
+                {
+                    parent.Children = new List<ScoreStructure>();
+                }
+                parent.Children.Add(child);
+                await LoadChildrenWithScoreAsync(child);
             }
         }
     }

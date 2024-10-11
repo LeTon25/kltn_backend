@@ -13,6 +13,12 @@ namespace KLTN.Domain
             public const string Admin = "Admin";
             public const string Lecturer = "Lecturer";
             public const string Student = "Student";
+
+        }
+        public class Score
+        {
+            public const string MidtermColumnName = "Quá trình";
+            public const string EndtermColumnName = "Cuối kì";
         }
     }
 }

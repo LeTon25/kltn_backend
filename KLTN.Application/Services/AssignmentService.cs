@@ -3,6 +3,7 @@ using KLTN.Application.DTOs.Assignments;
 using KLTN.Application.DTOs.Submissions;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
+using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
@@ -112,7 +113,7 @@ namespace KLTN.Application.Services
                 {
                     return new ApiBadRequestResponse<object>("Cột điểm không hợp lệ");
                 }
-                if(scoreStructure.ColumnName == "Cuối kì" && scoreStructure.Children.Count == 0)
+                if(scoreStructure.ColumnName == Constants.Score.EndtermColumnName)
                 {
                     return new ApiBadRequestResponse<object>("Không thể gán điểm cho cột cuối kì");
                 }

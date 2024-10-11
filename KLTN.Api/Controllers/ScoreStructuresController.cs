@@ -1,12 +1,9 @@
 ﻿using KLTN.Api.Filters;
-using KLTN.Application.DTOs.Assignments;
 using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Services;
-using KLTN.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
@@ -25,7 +22,7 @@ namespace KLTN.Api.Controllers
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var response = await _scoreStructureService.SaveScoreStrucutureAsync(userId,requestDto);
-            return StatusCode(200, "ok");
+            return StatusCode(response.StatusCode, response);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetScoreStructureByIdAsync(string id)
@@ -39,6 +36,13 @@ namespace KLTN.Api.Controllers
         {
             var response = await _scoreStructureService.GetScoreStructureByCourseIdAsync(courseId);
             return StatusCode(response.StatusCode, response);   
+        }
+        [HttpGet("{courseId}/transcripts")]
+        [ServiceFilter(typeof(CourseResourceAccessFilter))]
+        public async Task<IActionResult> GetTranscriptAsync(string courseId)
+        {
+            var response = await _scoreStructureService.GetTransciptAsync(courseId);
+            return StatusCode(response.StatusCode,response);
         }
     }
 }
