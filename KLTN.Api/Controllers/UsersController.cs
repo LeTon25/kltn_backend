@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
@@ -90,32 +91,6 @@ namespace KLTN.Api.Controllers
             return Ok(new ApiResponse<List<UserDto>>(200,"Thành công",uservms));
         }
 
-        [HttpGet("filter")]
-        public async Task<IActionResult> GetUsersPagingAsync(string filter, int pageIndex, int pageSize)
-        {
-            var query = _userManager.Users;
-            if (!string.IsNullOrEmpty(filter))
-            {
-                query = query.Where(x => x.Email.Contains(filter)
-                || x.UserName.Contains(filter)
-                || x.PhoneNumber.Contains(filter));
-            }
-            var totalRecords = await query.CountAsync();
-            var items = await query.Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
-                .Select(u =>_mapper.Map<UserDto>(u))
-                .ToListAsync();
-            var pagination = new Pagination<UserDto>
-            {
-                Items = items,
-                TotalRecords = totalRecords,
-                PageSize = pageSize,
-                PageIndex = pageIndex
-            };
-            return Ok(new ApiResponse<Pagination<UserDto>>(200, "Thành công", pagination));
-        }
-
-        //URL: GET: http://localhost:5001/api/users/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetByIdAsync(string id)
         {
@@ -129,34 +104,31 @@ namespace KLTN.Api.Controllers
         [HttpPatch("{id}")]
         [ApiValidationFilter]
 
-        public async Task<IActionResult> PutUserAsync(string id, [FromBody] CreateUserRequestDto request)
+        public async Task<IActionResult> PutUserAsync(string id, [FromForm] UpdateUserRequestDto request)
         {
+            var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if(currentUserId != id)
+            {
+                var response = new ApiBadRequestResponse<string>("Thao tác không hợp lệ");
+                return StatusCode(response.StatusCode,response) ;
+            }    
             var user = await _userManager.FindByIdAsync(id);
+            
             if (user == null)
                 return NotFound(new ApiNotFoundResponse<string>($"Không thể tìm thấy người dùng với id : {id}"));
-
-            // Tùy chỉnh các trường thông tin User sau để sau mới làm
             user.PhoneNumber = request.PhoneNumber;
             user.FullName = request.FullName;
             user.DoB = request.DoB;
             user.Gender = request.Gender;
-            user.CustomId = request.CustomId;
-
-            if (request.File != null && request.File.Length >=1)
-            {
-                if(!string.IsNullOrEmpty(user.Avatar))
-                {
-                    await _storageService.DeleteFileAsync(user.Avatar);
-                }
-                var filePath = $"avatar/{user.UserName}/";
-                var avatar = await SaveFileAsync(filePath, request.File);
-                user.Avatar = avatar;
-            }
+            user.Avatar = request.Avatar;
+            user.UpdatedAt = DateTime.Now;
             var result = await _userManager.UpdateAsync(user);
 
             if (result.Succeeded)
             {
-                return NoContent();
+                var data = _mapper.Map<UserDto>(user);
+                var response = new ApiResponse<UserDto>(200, "Cập nhật thành công",data);
+                return  StatusCode(response.StatusCode,response);
             }
             return BadRequest(new ApiBadRequestResponse<string>(result));
         }
@@ -164,6 +136,12 @@ namespace KLTN.Api.Controllers
         [HttpPatch("{id}/change-password")]
         public async Task<IActionResult> PutUserPasswordAsync(string id, [FromBody] ChangeUserPasswordRequestDto request)
         {
+            var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (currentUserId != id)
+            {
+                var response = new ApiBadRequestResponse<string>("Thao tác không hợp lệ");
+                return StatusCode(response.StatusCode, response);
+            }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
                 return NotFound(new ApiNotFoundResponse<string>($"Không tìm thấy người dùng với id : {id}"));
@@ -172,7 +150,8 @@ namespace KLTN.Api.Controllers
 
             if (result.Succeeded)
             {
-                return NoContent();
+                var data = _mapper.Map<UserDto>(user);
+                var response = new ApiResponse<UserDto>(200, "Cập nhật thành công", data);
             }
             return BadRequest(new ApiBadRequestResponse<string>(result));
         }
