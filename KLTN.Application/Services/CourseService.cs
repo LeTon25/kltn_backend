@@ -298,9 +298,9 @@ namespace KLTN.Application.Services
 
             return new ApiResponse<object>(200, "Thành công");
         }
-        public async Task<ApiResponse<object>> RemoveStudentFromCourseAsync(string courseId, string[] studentIds,string currentUserId)
+        public async Task<ApiResponse<object>> RemoveStudentFromCourseAsync(string courseId, List<string> studentIds,string currentUserId)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId,false,c=>c.EnrolledCourses);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy khóa học");
@@ -309,9 +309,13 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Chỉ giáo viên mới có quyền xóa học viên");
             }
+            if(course.EnrolledCourses == null || course.EnrolledCourses.Count == 0)
+            {
+                return new ApiResponse<object>(200,"Lớp không có học viên",null);
+            }
             foreach (var studentId in studentIds)
             {
-                var enrollData = await _unitOfWork.EnrolledCourseRepository.GetFirstOrDefaultAsync(c => c.StudentId == studentId && c.CourseId == courseId);
+                var enrollData = course.EnrolledCourses.Where(c=>c.CourseId.Equals(courseId) && c.StudentId.Equals(studentId)).FirstOrDefault();
                 if(enrollData != null)
                     _unitOfWork.EnrolledCourseRepository.Delete(enrollData);
             }

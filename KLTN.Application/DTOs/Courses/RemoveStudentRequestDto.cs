@@ -8,6 +8,6 @@ namespace KLTN.Application.DTOs.Courses
 {
     public class RemoveStudentRequestDto
     {
-        public string StudentId { get; set; }
+        public List<string> StudentIds { get; set; }
     }
 }

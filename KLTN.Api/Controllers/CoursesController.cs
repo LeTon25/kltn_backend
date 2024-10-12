@@ -121,9 +121,8 @@ namespace KLTN.Api.Controllers
         [ServiceFilter(typeof(CourseResourceAccessFilter))]
         public async Task<IActionResult> DeleteRemoveStudentFromCourseAsync(string courseId,RemoveStudentRequestDto dto)
         {
-            var data = new string[] { dto.StudentId };
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await _courseService.RemoveStudentFromCourseAsync(courseId,data,currentUserId));
+            return SetResponse(await _courseService.RemoveStudentFromCourseAsync(courseId,dto.StudentIds,currentUserId));
         }
     }
 }
