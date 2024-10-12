@@ -152,6 +152,7 @@ namespace KLTN.Api.Controllers
             {
                 var data = _mapper.Map<UserDto>(user);
                 var response = new ApiResponse<UserDto>(200, "Cập nhật thành công", data);
+                return Ok(new ApiResponse<string>(200,"Đổi mật khẩu thành công",null));
             }
             return BadRequest(new ApiBadRequestResponse<string>(result));
         }
