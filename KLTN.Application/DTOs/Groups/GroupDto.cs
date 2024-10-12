@@ -1,5 +1,6 @@
 ﻿using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Projects;
+using KLTN.Application.DTOs.Requests;
 using KLTN.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -25,5 +26,6 @@ namespace KLTN.Application.DTOs.Groups
         public ProjectDto? Project { get; set; }
         public CourseDto? Course { get; set; }
         public List<GroupMemberDto>? GroupMembers { get; set; }
+        public List<RequestDto>? Requests { get; set; }
     }
 }

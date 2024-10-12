@@ -23,6 +23,7 @@ namespace KLTN.Domain.Repositories
         public IScoreRepository ScoreRepository { get; }
         public IBriefRepository BriefRepository { get; }
         public IUserRepository UserRepository { get; }
+        public IRequestRepository RequestRepository { get; }    
         public Task<int> SaveChangesAsync();
     }
 }

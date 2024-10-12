@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Accounts;
 using KLTN.Application.DTOs.Courses;
+using KLTN.Application.DTOs.Requests;
 using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
@@ -27,7 +28,13 @@ namespace KLTN.Application.Services
             this.userManager = userManager;
             this.mapper = mapper;
         }
+        public async Task<ApiResponse<List<RequestDto>>> GetRequestsByUserAsync(string userId)
+        {
+            var requests = await unitOfWork.RequestRepository.FindByCondition(c => c.UserId.Equals(userId), false, c => c.Group, c => c.User).ToListAsync();
+            var dto = mapper.Map<List<RequestDto>>(requests);
 
+            return new ApiResponse<List<RequestDto>>(200, "Lấy dữ liệu thành công",dto);
+        }
         public async Task<ApiResponse<object>> GetCoursesByCurrentUserAsync(string userId)
         {
             var userData = await userManager.Users.ToListAsync();
