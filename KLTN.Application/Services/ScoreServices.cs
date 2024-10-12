@@ -39,7 +39,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<List<ScoreDto>>("Bài này không có chấm điểm");
             }
-            if(submission.Scores == null)
+            if(submission.Scores == null || submission.Scores.Count == 0 )
             {
                 var scoresToAdd = new List<Score>();
                 if (!submission.Assignment.IsGroupAssigned)
