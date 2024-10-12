@@ -7,6 +7,7 @@ using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.Projects;
 using KLTN.Application.DTOs.Reports;
+using KLTN.Application.DTOs.Requests;
 using KLTN.Application.DTOs.Scores;
 using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.DTOs.Subjects;
@@ -60,6 +61,7 @@ namespace KLTN.Application
             CreateMap<ScoreDto,Score>().ReverseMap();
             CreateMap<SubmissionNoScoreDto, Submission>().ReverseMap();
             CreateMap<Brief,BriefDto>().ReverseMap();
+            CreateMap<Request,RequestDto>().ReverseMap();
         }
     }
 }

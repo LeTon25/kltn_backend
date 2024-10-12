@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using KLTN.Application.DTOs.Scores;
 using KLTN.Application.DTOs.Submissions;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
@@ -43,8 +44,8 @@ namespace KLTN.Application.Services
                 return new ApiBadRequestResponse<object>("Bạn không có quyền xem bài nộp này");
             }
             var scores = await unitOfWork.ScoreRepository.FindByCondition(c => c.SubmissionId.Equals(submissionId), false, c => c.User).ToListAsync();
-            data.Scores = scores;
             var dto = mapper.Map<SubmissionDto>(data);
+            dto.Scores = mapper.Map<List<ScoreDto>>(scores);
             return new ApiResponse<object>(200, "Thành công", dto);
         }
         public async Task<ApiResponse<object>> DeleteSubmissionAsync(string userId,string submissionId)

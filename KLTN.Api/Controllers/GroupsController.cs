@@ -99,5 +99,6 @@ namespace KLTN.Api.Controllers
             var response = await groupService.GetReportsInGroupAsync(groupId);
             return StatusCode(response.StatusCode,response);
         }
+   
     }
 }

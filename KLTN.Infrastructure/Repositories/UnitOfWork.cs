@@ -36,6 +36,7 @@ namespace KLTN.Infrastructure.Repositories
         public IScoreRepository ScoreRepository { get; }
         public IBriefRepository BriefRepository { get; }  
         public IUserRepository UserRepository { get; }
+        public IRequestRepository RequestRepository { get; }
         #endregion
         public readonly ApplicationDbContext _context;
 
@@ -57,6 +58,7 @@ namespace KLTN.Infrastructure.Repositories
             ScoreRepository = new ScoreRepository(context);
             BriefRepository = new BriefRepository(context);
             UserRepository = new UserRepository(context);
+            RequestRepository = new RequestRepository(context); 
         }
 
         public async Task<int> SaveChangesAsync()

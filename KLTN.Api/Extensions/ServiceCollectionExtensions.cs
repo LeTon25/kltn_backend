@@ -35,6 +35,7 @@ namespace KLTN.Api.Extensions
             services.AddTransient<SubmissionService>(); 
             services.AddTransient<ScoreServices>();
             services.AddTransient<BriefService>();
+            services.AddTransient<RequestService>();
             //
             services.AddScoped<CourseResourceAccessFilter>();
             services.AddScoped<GroupResourceAccessFilter>();
