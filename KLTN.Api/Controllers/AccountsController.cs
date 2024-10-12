@@ -65,7 +65,7 @@ namespace KLTN.Api.Controllers
                 UserName = requestDto.UserName,
                 Email = requestDto.Email,
                 LockoutEnabled = false,
-                Gender = true,
+                Gender = "Nam",
                 DoB = null,
                 UserType = Domain.Enums.UserType.Student,
                 FullName = "",
