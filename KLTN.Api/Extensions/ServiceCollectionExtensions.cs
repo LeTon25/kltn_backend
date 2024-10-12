@@ -5,6 +5,7 @@ using KLTN.Api.Services.Interfaces;
 using KLTN.Application;
 using KLTN.Application.Services;
 using KLTN.Domain.Repositories;
+using KLTN.Infrastructure.Mailing;
 using KLTN.Infrastructure.Repositories;
 using KLTN.Infrastructure.Seeders;
 
@@ -37,6 +38,15 @@ namespace KLTN.Api.Extensions
             //
             services.AddScoped<CourseResourceAccessFilter>();
             services.AddScoped<GroupResourceAccessFilter>();
+            return services;
+        }
+
+        public static IServiceCollection ConfigureEmailSettings(this IServiceCollection services,IConfiguration configuration)
+        {
+            var emailSettings = configuration.GetSection(nameof(SMTPEmailSettings))
+                .Get<SMTPEmailSettings>();
+            services.AddSingleton(emailSettings!);
+
             return services;
         }
     }

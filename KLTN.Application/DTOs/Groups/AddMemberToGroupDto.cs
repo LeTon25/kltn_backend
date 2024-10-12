@@ -8,6 +8,6 @@ namespace KLTN.Application.DTOs.Groups
 {
     public class AddMemberToGroupDto
     {
-        public string[] studentIds { get; set; }    
+        public string[] Emails { get; set; }    
     }
 }

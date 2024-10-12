@@ -51,13 +51,17 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> Register(RegisterRequestDto requestDto)
         {
             var users = _userManager.Users;
-            if (await users.AnyAsync(c => c.UserName == requestDto.UserName))
+            if (await users.AnyAsync(c => c.UserName == requestDto.UserName || c.CustomId == requestDto.UserName))
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Tên người dùng không được trùng"));
             }
             if (await users.AnyAsync(c => c.Email == requestDto.Email))
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Email người dùng không được trùng"));
+            }
+            if (await users.AnyAsync(c => c.CustomId == requestDto.CustomId || c.UserName == requestDto.CustomId))
+            {
+                return BadRequest(new ApiBadRequestResponse<string>("Mã cán bộ/sinh viên không được trùng"));
             }
             var result = await _userManager.CreateAsync(new User
             {
@@ -67,8 +71,9 @@ namespace KLTN.Api.Controllers
                 LockoutEnabled = false,
                 Gender = "Nam",
                 DoB = null,
+                CustomId = requestDto.CustomId,
                 UserType = Domain.Enums.UserType.Student,
-                FullName = "",
+                FullName = requestDto.FullName,
                 CreatedAt = DateTime.Now,
             },requestDto.Password);
             if (result.Succeeded)
@@ -103,11 +108,16 @@ namespace KLTN.Api.Controllers
         [ApiValidationFilter]
         public async Task<IActionResult> Login(LoginRequestDto requestDto)
         {
-            var user = await _userManager.Users.FirstOrDefaultAsync(x=>x.UserName == requestDto.UserName);
+            var user = await _userManager.Users.FirstOrDefaultAsync(
+               x => 
+               x.UserName == requestDto.Identifier 
+            || x.Email == requestDto.Identifier
+            || x.CustomId == requestDto.Identifier);
+
 
             if (user == null) 
             { 
-                return Ok(new ApiResponse<string>(401,"Tên người dùng không đúng"));
+                return Ok(new ApiResponse<string>(401,"Thông tin đăng nhập không đúng"));
             }
 
             var result = await _signInManager.CheckPasswordSignInAsync(user,requestDto.Password,false);
