@@ -49,15 +49,20 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> DeleteSubmissionAsync(string userId,string submissionId)
         {
+            var currentDateTime = DateTime.Now;
             var submission = await unitOfWork.SubmissionRepository.GetFirstOrDefaultAsync(c => c.SubmissionId == submissionId,false,c=>c.Assignment,c => c.Assignment.Course);
             if (submission == null)
             {
                 return new ApiNotFoundResponse<object>("Không thể tìm thấy bài nộp với id");
             }
-            if(userId != submission.Assignment.Course.LecturerId)
+            if(userId != submission.Assignment.Course.LecturerId && userId != submission.UserId)
             {
                 return new ApiBadRequestResponse<object>("Không có quyền xóa bài nộp");
-            }    
+            }
+            if (userId == submission.UserId && currentDateTime > submission.Assignment.DueDate )
+            {
+                return new ApiBadRequestResponse<object>("Không thể xóa vì bài tập đã hết hạn");
+            }
             unitOfWork.SubmissionRepository.Delete(submission);
             var result = await unitOfWork.SaveChangesAsync();
             if (result > 0)
