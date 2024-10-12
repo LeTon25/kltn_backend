@@ -15,7 +15,7 @@ namespace KLTN.Application.DTOs.Users
         public string PhoneNumber { get; set; }
         public string FullName { get; set; }
         public DateTime? DoB { get; set; }
-        public bool Gender { get; set; }
+        public string Gender { get; set; }
         public string? CustomId { get; set; }
         public string? Avatar { get; set; }
         public UserType UserType { get; set; }

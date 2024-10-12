@@ -1,11 +1,6 @@
 ﻿using KLTN.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KLTN.Application.DTOs.Users
 {
@@ -22,7 +17,7 @@ namespace KLTN.Application.DTOs.Users
         public string PhoneNumber { get; set; }
         public string FullName { get; set; }
         public DateTime? DoB { get; set; }
-        public bool Gender { get; set; }
+        public string Gender { get; set; }
         public string? CustomId { get; set; }
         public UserType UserType { get; set; }
         public IFormFile? File { get; set; }
