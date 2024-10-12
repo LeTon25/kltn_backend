@@ -12,16 +12,16 @@ namespace KLTN.Application.DTOs.Users
         public UpdateUserRequestDtoValidator() 
         {
             RuleFor(x => x.PhoneNumber)
-                .NotEmpty().WithMessage("SĐT không được để trống");
+                .NotNull().WithMessage("SĐT không được để trống");
 
             RuleFor(x => x.FullName)
-                .NotEmpty().WithMessage("Họ tên không được để trống");
+                .NotNull().WithMessage("Họ tên không được để trống");
 
             RuleFor(x => x.Gender)
-                .NotEmpty().WithMessage("Vui lòng chọn giới tính");
+                .NotNull().WithMessage("Vui lòng chọn giới tính");
 
             RuleFor(x => x.DoB)
-                .NotEmpty().WithMessage("Vui lòng chọn ngày sinh");
+                .NotNull().WithMessage("Vui lòng chọn ngày sinh");
         }  
 
     }

@@ -104,7 +104,7 @@ namespace KLTN.Api.Controllers
         [HttpPatch("{id}")]
         [ApiValidationFilter]
 
-        public async Task<IActionResult> PutUserAsync(string id, [FromForm] UpdateUserRequestDto request)
+        public async Task<IActionResult> PutUserAsync(string id, [FromBody] UpdateUserRequestDto request)
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if(currentUserId != id)
