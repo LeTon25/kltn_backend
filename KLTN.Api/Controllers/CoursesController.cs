@@ -124,10 +124,10 @@ namespace KLTN.Api.Controllers
             return SetResponse(await _courseService.RemoveStudentFromCourseAsync(courseId,dto.StudentIds,currentUserId));
         }
         [HttpPost("{courseId}/students")]
-        public async Task<IActionResult> AddStudentsToCourseAsync(string courseId, RemoveStudentRequestDto dto)
+        public async Task<IActionResult> AddStudentsToCourseAsync(string courseId, AddStudentRequestDto dto)
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await _courseService.RemoveStudentFromCourseAsync(courseId, dto.StudentIds, currentUserId));
+            return SetResponse(await _courseService.AddStudentToCourseAsync(courseId, dto, currentUserId));
         }
     }
 }
