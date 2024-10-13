@@ -17,6 +17,7 @@ namespace KLTN.Api.Extensions
                 PasswordOptions passwordOptions = GetPasswordOptions();
                 options.Password = passwordOptions;
             })
+            .AddDefaultTokenProviders()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddErrorDescriber<CustomIdentityErrorDescriber>();  
             return services;

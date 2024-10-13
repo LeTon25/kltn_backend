@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Amazon.Runtime.Internal.Transform;
+using AutoMapper;
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Accounts;
 using KLTN.Application.DTOs.Users;
@@ -7,6 +8,7 @@ using KLTN.Application.Helpers.Response;
 using KLTN.Application.Services;
 using KLTN.Domain;
 using KLTN.Domain.Entities;
+using KLTN.Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,15 +27,15 @@ namespace KLTN.Api.Controllers
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
         private readonly AccountService _accountService;
-        //private readonly IEmailSender _emailSender;
         private readonly IConfiguration _configuration;
+        private readonly ISMTPEmailService _sMTPEmailService;
         public AccountsController(UserManager<User> userManager,
             SignInManager<User> signInManager,
             RoleManager<IdentityRole> roleManager,
             ITokenService tokenService,
             IMapper mapper,
+            ISMTPEmailService sMTPEmailService,
             AccountService accountService,
-            //IEmailSender emailSender,
             IConfiguration configuration
           ) 
         {
@@ -42,8 +44,8 @@ namespace KLTN.Api.Controllers
             this._roleManager = roleManager;
             this._tokenService = tokenService;  
             this._mapper = mapper;
+            this._sMTPEmailService = sMTPEmailService;  
             this._accountService = accountService;
-            //this._emailSender = emailSender;
             this._configuration  = configuration;
         }
         [HttpPost("register")]
@@ -166,7 +168,6 @@ namespace KLTN.Api.Controllers
             return Ok(new ApiSuccessResponse<RefreshTokenResponseDto>(200,"Refresh token thành công",response));
         }
 
-        //public async Task<IActionResult> GeneratePasswordResetTokenAsync(GeneratePasswordRequestDto requestDto)
 
         [HttpGet("courses")]
         [Authorize]
@@ -183,22 +184,33 @@ namespace KLTN.Api.Controllers
             var response = await _accountService.GetRequestsByUserAsync(userId);
             return StatusCode(response.StatusCode,response);
         }
-        //[HttpPost("forgot-password")]
-        //public async Task<IActionResult> ForgotPassword(ForgetPasswordRequestDto forgotPasswordDto)
-        //{
-        //    var user = await _userManager.FindByEmailAsync(forgotPasswordDto.Email);
-        //    if (user == null)
-        //        return BadRequest(new ApiBadRequestResponse<string>("Email không hợp lệ"));
+        [HttpPost("forgot-password")]
+        [ApiValidationFilter]
+        public async Task<IActionResult> ForgotPassword()
+        {
+            var currentEmail = HttpContext.User.FindFirstValue(ClaimTypes.Email);
+            var user = await _userManager.FindByEmailAsync(currentEmail!);
+            if (user == null)
+                return BadRequest(new ApiBadRequestResponse<string>("Email không hợp lệ"));
 
-        //    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-        //    var callbackUrl = $"{_configuration.GetSection("ClientUrl").Value}/reset-password?token={resetToken}&email={user.Email}";
+            var callbackUrl = $"{_configuration.GetSection("ClientUrl").Value}/reset-password?token={resetToken}&email={user.Email}";
 
-        //    await _emailSender.SendEmailAsync(forgotPasswordDto.Email, "Đặt lại mật khẩu",
-        //        $"Vui lòng click vào link sau đây để đặt lại mật khẩu : <a href='{callbackUrl}'>here</a>.");
+            var placeholders = new Dictionary<string, string>()
+            {
+                { "UserName" ,user.UserName },
+                { "ResetPasswordLink" , callbackUrl }
+            };    
+            await _sMTPEmailService.SendEmailAsync(new MailRequest
+            {
+                Subject = "Quên mật khẩu",
+                ToAddress = user.Email,
+                Body = ""
+            },"ForgetPassword",placeholders);
 
-        //    return Ok(new ApiResponse<string>(200,"Vui lòng kiểm tra email"));
-        //}
+            return Ok(new ApiResponse<string>(200, "Vui lòng kiểm tra email"));
+        }
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto resetPasswordDto)

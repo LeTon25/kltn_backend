@@ -330,7 +330,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp học");
             }
-            if(course.LecturerId == currentUserId)
+            if(course.LecturerId != currentUserId)
             {
                 return new ApiBadRequestResponse<object>("Chỉ có giáo viên mới có quyền này");
             }
@@ -358,7 +358,7 @@ namespace KLTN.Application.Services
                 }    
             }
             await _unitOfWork.SaveChangesAsync();
-            var responseDto = GetCourseDtoByIdAsync(courseId);
+            var responseDto = await GetCourseDtoByIdAsync(courseId);
             return new ApiResponse<object>(200,"Thêm thành công",responseDto);
         }
         public async Task<ApiResponse<object>> GetFindCourseByInviteCodeAsync(string inviteCode)

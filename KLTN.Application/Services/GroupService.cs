@@ -223,15 +223,11 @@ namespace KLTN.Application.Services
             {
                 foreach (var id in requestDto.studentIds)
                 {
-                    var student = await _userManager.FindByIdAsync(id);
-                    if (student != null)
-                    {
                         var groupMember = groupMembers.Where(c => c.GroupId == groupId && c.StudentId == id).FirstOrDefault();
                         if (groupMember != null && !groupMember.IsLeader)
                         {
                             _unitOfWork.GroupMemberRepository.Delete(groupMember);
                         }
-                    }
                 }
             }
             await _unitOfWork.SaveChangesAsync();
