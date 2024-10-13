@@ -2,6 +2,7 @@
 using KLTN.Domain.Settings;
 using MailKit.Net.Smtp;
 using MimeKit;
+using System.Net.WebSockets;
 
 
 namespace KLTN.Infrastructure.Mailing
@@ -10,23 +11,38 @@ namespace KLTN.Infrastructure.Mailing
     {
         private readonly ISMTPEmailSettings _settings;
         private readonly SmtpClient _smtpClient;
-        public SmtpEmailService(ISMTPEmailSettings settings,SmtpClient smtpClient)
+        public SmtpEmailService(ISMTPEmailSettings settings)
         {
             this._settings = settings;
-            this._smtpClient = smtpClient;
+            this._smtpClient = new SmtpClient();
         }
-        public async Task SendEmailAsync(MailRequest request, CancellationToken cancellationToken = default)
+        public async Task SendEmailAsync(MailRequest request,string? templateName = null, Dictionary<string, string>? placeHolders = null, CancellationToken cancellationToken = default)
         {
+ 
+            var emailBody = request.Body;
+            if(templateName != null)
+            {
+                var currentDirectory = Directory.GetCurrentDirectory();
+                var templatePath = Path.Combine(_settings.TemplateFolderPath, $"{templateName}.html");
+                if (!File.Exists(templatePath))
+                {
+                    throw new FileNotFoundException($"Template {templateName} not found.");
+                }
+                emailBody = await File.ReadAllTextAsync(templatePath);
+                foreach (var placeholder in placeHolders)
+                {
+                    emailBody = emailBody.Replace($"{{{{{placeholder.Key}}}}}", placeholder.Value);
+                }
+            }
             var emailMessage = new MimeMessage
             {
-                Sender = new MailboxAddress(_settings.DisplayName,request.From ?? _settings.From),
-                Subject  = request.Subject,
+                Sender = new MailboxAddress(_settings.DisplayName, request.From ?? _settings.From),
+                Subject = request.Subject,
                 Body = new BodyBuilder()
                 {
-                    HtmlBody = request.Body
+                    HtmlBody = emailBody,
                 }.ToMessageBody(),
             };
-
             if (request.ToAddresses.Any())
             {
                 foreach (var address in request.ToAddresses)

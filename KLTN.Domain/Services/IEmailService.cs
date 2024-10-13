@@ -8,7 +8,7 @@ namespace KLTN.Domain.Services
 {
     public interface IEmailService<in T> where T : class
     {
-        Task SendEmailAsync(T request, CancellationToken cancellationToken = new CancellationToken());
+        Task SendEmailAsync(T request, string? templateName = null,Dictionary<string,string>?  placeHolders = null,CancellationToken cancellationToken = new CancellationToken());
     }
   
 }
