@@ -175,7 +175,7 @@ namespace KLTN.Application.Services
                     var submissionSubmitedByUser = submissions.FirstOrDefault(c => c.UserId.Equals(student.Id));
                     if (submissionSubmitedByUser != null)
                     {
-                        var score = submissionSubmitedByUser.Scores.FirstOrDefault(c => c.UserId.Equals(student));
+                        var score = submissionSubmitedByUser.Scores.FirstOrDefault(c => c.UserId.Equals(student.Id));
                         responseData.Add(new SubmissionUserDto()
                         {
                             User = mapper.Map<UserDto>(student),
@@ -217,7 +217,7 @@ namespace KLTN.Application.Services
                         });
                         continue;
                     }
-                    var score = submissionInGroup.Scores.FirstOrDefault(c => c.UserId.Equals(student));
+                    var score = submissionInGroup.Scores.FirstOrDefault(c => c.UserId.Equals(student.Id));
                     responseData.Add(new SubmissionUserDto()
                     {
                         User = mapper.Map<UserDto>(student),
