@@ -186,10 +186,9 @@ namespace KLTN.Api.Controllers
         }
         [HttpPost("forgot-password")]
         [ApiValidationFilter]
-        public async Task<IActionResult> ForgotPassword()
+        public async Task<IActionResult> ForgotPassword(ForgetPasswordRequestDto requestDto)
         {
-            var currentEmail = HttpContext.User.FindFirstValue(ClaimTypes.Email);
-            var user = await _userManager.FindByEmailAsync(currentEmail!);
+            var user = await _userManager.FindByEmailAsync(requestDto.Email);
             if (user == null)
                 return BadRequest(new ApiBadRequestResponse<string>("Email không hợp lệ"));
 
@@ -213,6 +212,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpPost("reset-password")]
+        [ApiValidationFilter]
         public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto resetPasswordDto)
         {
             var user = await _userManager.FindByEmailAsync(resetPasswordDto.Email);
