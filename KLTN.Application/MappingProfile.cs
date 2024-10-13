@@ -61,7 +61,10 @@ namespace KLTN.Application
             CreateMap<ScoreDto,Score>().ReverseMap();
             CreateMap<SubmissionNoScoreDto, Submission>().ReverseMap();
             CreateMap<Brief,BriefDto>().ReverseMap();
+
             CreateMap<Request,RequestDto>().ReverseMap();
+            CreateMap<GroupMember, GroupMemberDto>().ReverseMap();  
+
         }
     }
 }
