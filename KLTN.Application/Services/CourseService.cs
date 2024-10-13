@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using KLTN.Domain.Util;
 using KLTN.Application.DTOs.ScoreStructures;
+using System.Text.RegularExpressions;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -321,6 +322,44 @@ namespace KLTN.Application.Services
             }
             await _unitOfWork.SaveChangesAsync();
             return new ApiResponse<object>(200, "Xóa thành viên thành công");
+        }
+        public async Task<ApiResponse<object>> AddStudentToCourseAsync(string courseId, AddStudentRequestDto dto, string currentUserId)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId),false, c=>c.EnrolledCourses);
+            if (course == null) 
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy lớp học");
+            }
+            if(course.LecturerId == currentUserId)
+            {
+                return new ApiBadRequestResponse<object>("Chỉ có giáo viên mới có quyền này");
+            }
+            var enrollDatas = course.EnrolledCourses != null ? course.EnrolledCourses : new List<EnrolledCourse>();
+            if(dto.Emails != null && dto.Emails.Count > 0)
+            {
+                foreach(var email in dto.Emails)
+                {
+                    var user = await _userManager.FindByEmailAsync(email);
+                    if (user != null)
+                    { 
+                        if(enrollDatas.Any(c=>c.StudentId.Equals(user.Id)))
+                        {
+                            return new ApiBadRequestResponse<object>("Có người dùng đã tham gia lớp học");
+                        }
+                        var newEnrollData = new EnrolledCourse()
+                        {
+                            StudentId = user.Id,
+                            CourseId = courseId,
+                            CreatedAt = DateTime.UtcNow,
+                        };
+                        await _unitOfWork.EnrolledCourseRepository.AddAsync(newEnrollData);
+                        enrollDatas.Add(newEnrollData);
+                    }
+                }    
+            }
+            await _unitOfWork.SaveChangesAsync();
+            var responseDto = GetCourseDtoByIdAsync(courseId);
+            return new ApiResponse<object>(200,"Thêm thành công",responseDto);
         }
         public async Task<ApiResponse<object>> GetFindCourseByInviteCodeAsync(string inviteCode)
         {

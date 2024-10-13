@@ -118,11 +118,16 @@ namespace KLTN.Api.Controllers
             return SetResponse(await _courseService.GetProjectsInCourseAsync(courseId));
         }
         [HttpDelete("{courseId}/students")]
-        [ServiceFilter(typeof(CourseResourceAccessFilter))]
         public async Task<IActionResult> DeleteRemoveStudentFromCourseAsync(string courseId,RemoveStudentRequestDto dto)
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             return SetResponse(await _courseService.RemoveStudentFromCourseAsync(courseId,dto.StudentIds,currentUserId));
+        }
+        [HttpPost("{courseId}/students")]
+        public async Task<IActionResult> AddStudentsToCourseAsync(string courseId, RemoveStudentRequestDto dto)
+        {
+            var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return SetResponse(await _courseService.RemoveStudentFromCourseAsync(courseId, dto.StudentIds, currentUserId));
         }
     }
 }

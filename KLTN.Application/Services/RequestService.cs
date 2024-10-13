@@ -53,8 +53,6 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<RequestDto>("Bạn đã  tham gia nhóm khác");
             }
-
-
             var newRequestId = Guid.NewGuid().ToString();
             var newRequest = new Request()
             {
@@ -66,24 +64,65 @@ namespace KLTN.Application.Services
             await _unitOfWork.RequestRepository.AddAsync(newRequest);
             await _unitOfWork.SaveChangesAsync();
 
-            var data = _unitOfWork.RequestRepository.GetFirstOrDefaultAsync(c => c.RequestId.Equals(newRequestId), false, c => c.User);
+            var data = await _unitOfWork.RequestRepository.GetFirstOrDefaultAsync(c => c.RequestId.Equals(newRequestId), false, c => c.User);
             return new ApiResponse<RequestDto>(200, "Tạo yêu cầu thành công", mapper.Map<RequestDto>(data));
         }
 
-        //public async Task<ApiResponse<RequestDto>> DeleteRequestToJoinAsync(string requestId,string currentUserId)
-        //{
-        //    var request = await _unitOfWork.ReportRepository.GetFirstOrDefaultAsync(c => c.ReportId.Equals(requestId),false,c=>c.Group,c => c.Group.GroupMembers,c => c.Group.Course);
-        //    if (request == null) 
-        //    {
-        //        return new ApiNotFoundResponse<RequestDto>("Không tìm thấy request");
-        //    }
-        //    var isLead = false;
-        //    var groupByCurrentUser = request.Group.GroupMembers.Where(c => c.StudentId.Equals(currentUserId)).FirstOrDefault();
-        //    if(groupByCurrentUser != null && groupByCurrentUser.IsLeader)
-        //    {
-        //        isLead = true;   
-        //    }    
-        //    if(currentUserId == request.UserId || isLead == true || request.Group.Course)
-        //}
+        public async Task<ApiResponse<RequestDto>> DeleteRequestToJoinAsync(string requestId, string currentUserId)
+        {
+            var request = await _unitOfWork.RequestRepository.GetFirstOrDefaultAsync(c => c.RequestId.Equals(requestId), false, c=>c.User ,c => c.Group, c => c.Group.GroupMembers, c => c.Group.Course);
+            if (request == null)
+            {
+                return new ApiNotFoundResponse<RequestDto>("Không tìm thấy request");
+            }
+            var isLead = false;
+            var groupByCurrentUser = request.Group.GroupMembers.Where(c => c.StudentId.Equals(currentUserId)).FirstOrDefault();
+            if (groupByCurrentUser != null && groupByCurrentUser.IsLeader)
+            {
+                isLead = true;
+            }
+            if (currentUserId != request.UserId && isLead != true && request.Group.Course.LecturerId != currentUserId)
+            {
+                return new ApiBadRequestResponse<RequestDto>("Không có quyền để bỏ yêu cầu");
+            }
+            _unitOfWork.RequestRepository.Delete(request);
+            await _unitOfWork.SaveChangesAsync();
+            var dto = mapper.Map<RequestDto>(request);
+            return new ApiResponse<RequestDto>(200,"Bỏ yêu cầu thành công",dto);
+        }
+        public async Task<ApiResponse<RequestDto>> AcceptRequestToJoinAsync(string requestId, string currentUserId)
+        {
+            
+            var request = await _unitOfWork.RequestRepository.GetFirstOrDefaultAsync(c => c.RequestId.Equals(requestId), false, c => c.Group, c => c.Group.GroupMembers, c => c.Group.Course);
+            if (request == null)
+            {
+                return new ApiNotFoundResponse<RequestDto>("Không tìm thấy request");
+            }
+            var isLead = false;
+            var groupByCurrentUser = request.Group.GroupMembers.Where(c => c.StudentId.Equals(currentUserId)).FirstOrDefault();
+            if (groupByCurrentUser != null && groupByCurrentUser.IsLeader)
+            {
+                isLead = true;
+            }
+            if (isLead != true && request.Group.Course.LecturerId != currentUserId)
+            {
+                return new ApiBadRequestResponse<RequestDto>("Không có quyền để duyệt yêu cầu");
+            }
+            var memberCount = request.Group.GroupMembers != null ? request.Group.GroupMembers.Count() : 0;
+            if (memberCount + 1 > request.Group.NumberOfMembers)
+            {
+                return new ApiBadRequestResponse<RequestDto>("Nhóm đã đủ thành viên");
+            }
+            await _unitOfWork.GroupMemberRepository.AddAsync(new GroupMember()
+            {
+                StudentId = request.UserId,
+                GroupId = request.GroupId,
+                IsLeader = false,
+                CreatedAt = DateTime.Now,
+            }); 
+            _unitOfWork.RequestRepository.Delete(request);
+            await _unitOfWork.SaveChangesAsync();
+            return new ApiResponse<RequestDto>(200, "Chấp thuận yêu cầu thành công", null);
+        }
     }
 }
