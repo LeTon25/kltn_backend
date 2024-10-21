@@ -2,6 +2,7 @@
 using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
+using KLTN.Domain.Exceptions;
 using KLTN.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -191,7 +192,8 @@ namespace KLTN.Application.Services
                         parentEntity.Children.Remove(child);
                     }
                 }
-            }    
+            }
+            var assignmentByScore = await _unitOfWork.AssignmentRepository.FindByCondition(c=> c.ScoreStructureId.Equals(parentEntity),false).FirstOrDefaultAsync();
 
             foreach (var child in children)
             {
@@ -199,6 +201,10 @@ namespace KLTN.Application.Services
                 var existingChild = parentEntity.Children?.FirstOrDefault(c=>c.Id.Equals(child.Id));
                 if (existingChild == null)
                 {
+                    if(assignmentByScore != null)
+                    {
+                        throw new SplitScoreStructureException($"Không thể tách cột '{parentEntity.ColumnName}' do đã giao bài tập");
+                    }    
                     if (string.IsNullOrEmpty(child.Id))
                     {
                         child.Id = Guid.NewGuid().ToString();
