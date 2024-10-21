@@ -140,6 +140,7 @@ using (var scope = app.Services.CreateScope())
         Log.Information("Tạo dữ liệu mẫu");
         var dbInitializer = services.GetService<DbInitializer>();
         dbInitializer.Seed().Wait();
+        //dbInitializer.SeedSetting().Wait(); 
         Log.Information("Tạo dữ liệu mẫu thành công");
 
     }

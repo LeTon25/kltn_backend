@@ -1,6 +1,7 @@
 ﻿using KLTN.Domain.Entities;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -114,6 +115,31 @@ namespace KLTN.Infrastructure.Seeders
 
             #endregion Người dùng
             await _context.SaveChangesAsync();
+        }
+        public async Task SeedSetting()
+        {
+            if(! await _context.Settings.AnyAsync())
+            {
+                var allCourses= await _context.Courses.ToListAsync();
+                var courseIds = allCourses.Select(c=>c.CourseId).ToList();
+                foreach (var courseId in courseIds) 
+                {
+                    var newSetting = new Setting()
+                    {
+                        SettingId = Guid.NewGuid().ToString(),
+                        CourseId = courseId,
+                        StartGroupCreation = null,
+                        EndGroupCreation = null,
+                        AllowStudentCreateProject = false,
+                        AllowGroupRegistration = false,
+                        HasFinalScore = false,
+                        MaxGroupSize = null,
+                        MinGroupSize = null
+                    };
+                    _context.Settings.Add(newSetting);
+                }
+                await _context.SaveChangesAsync();
+            }    
         }
     }
 }

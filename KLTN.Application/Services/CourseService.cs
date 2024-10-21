@@ -45,7 +45,7 @@ namespace KLTN.Application.Services
         #region for controller
         public async Task<ApiResponse<object>> GetAllCoursesAsync()
         {
-            var courses = await _unitOfWork.CourseRepository.GetAllAsync();
+            var courses = await _unitOfWork.CourseRepository.GetAllAsync(null,c=>c.Setting);
             var courseDtos = mapper.Map<List<CourseDto>>(courses.ToList());
             foreach(var courseDto in courseDtos)
             {
@@ -375,7 +375,7 @@ namespace KLTN.Application.Services
         #region for_service
         public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId, bool isLoadAnnoucements = true, bool isLoadStudent = true,bool isLoadAssignment = true,bool isLoadScore=true)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId,false,c=>c.Setting);
             if (course == null)
             {
                 return null;

@@ -10,6 +10,7 @@ using KLTN.Application.DTOs.Reports;
 using KLTN.Application.DTOs.Requests;
 using KLTN.Application.DTOs.Scores;
 using KLTN.Application.DTOs.ScoreStructures;
+using KLTN.Application.DTOs.Settings;
 using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Submissions;
 using KLTN.Application.DTOs.Uploads;
@@ -65,6 +66,7 @@ namespace KLTN.Application
             CreateMap<Request,RequestDto>().ReverseMap();
             CreateMap<GroupMember, GroupMemberDto>().ReverseMap();  
 
+            CreateMap<Setting,SettingDto>().ReverseMap();
         }
     }
 }

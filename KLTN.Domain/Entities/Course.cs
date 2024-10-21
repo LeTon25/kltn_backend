@@ -29,5 +29,6 @@ namespace KLTN.Domain.Entities
         public Subject? Subject { get; set; }   
         public User? Lecturer { get; set; }
         public ICollection<EnrolledCourse>? EnrolledCourses { get; set; }
+        public Setting? Setting { get; set; }   
     }
 }
