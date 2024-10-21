@@ -8,6 +8,7 @@ using KLTN.Application.Helpers.Response;
 using KLTN.Application.Services;
 using KLTN.Domain;
 using KLTN.Domain.Entities;
+using KLTN.Domain.Exceptions;
 using KLTN.Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -167,8 +168,6 @@ namespace KLTN.Api.Controllers
             };
             return Ok(new ApiSuccessResponse<RefreshTokenResponseDto>(200,"Refresh token thành công",response));
         }
-
-
         [HttpGet("courses")]
         [Authorize]
         public async Task<IActionResult> GetAllCoursesByCurrentUserAsync()

@@ -37,5 +37,12 @@ namespace KLTN.Api.Controllers
             var response = await requestService.AcceptRequestToJoinAsync(groupId, currentUserId);
             return StatusCode(response.StatusCode, response);
         }
+        [HttpGet("user/requests")]
+        public async Task<IActionResult> GetRequestsByUserAsync()
+        {
+            var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var response = await requestService.GetRequestsByUserAsync(currentUserId);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Briefs;
+using KLTN.Application.DTOs.Groups;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
@@ -45,6 +46,9 @@ namespace KLTN.Application.Services
             await unitOfWork.BriefRepository.AddAsync(newBrief);
             await unitOfWork.SaveChangesAsync();
 
+            var dto = mapper.Map<BriefDto>(newBrief);
+            dto.Group = mapper.Map<GroupDto>(group);
+
             return new ApiResponse<BriefDto>(200, "Tạo thành công", mapper.Map<BriefDto>(newBrief));
         }
         public async Task<ApiResponse<BriefDto>> UpdateBriefAsync(CreateBriefDto requestDto,string briefId ,string groupId, string currentUserId)
@@ -58,7 +62,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<BriefDto>("Chỉ giáo viên mới có quyền được tạo bản tóm tắt");
             }
-            var brief = await unitOfWork.BriefRepository.GetFirstOrDefaultAsync(c=>c.Id.Equals(briefId));
+            var brief = await unitOfWork.BriefRepository.GetFirstOrDefaultAsync(c=>c.Id.Equals(briefId),false,c=>c.Group,c => c.Group.Course);
 
             if (brief == null) 
             { 
@@ -94,16 +98,6 @@ namespace KLTN.Application.Services
 
             return new ApiResponse<BriefDto>(200, "Xóa thành công", null);
         }
-        public async Task<ApiResponse<BriefDto>> GetBriefByIdAsync(string briefId,string currentUserId)
-        {
-            var brief = await unitOfWork.BriefRepository.GetFirstOrDefaultAsync(c=>c.Id.Equals(briefId),false,c=>c.Group,c => c.Group.Course);
-            if (!brief.Group.Course.LecturerId.Equals(currentUserId))
-            {
-                return new ApiBadRequestResponse<BriefDto>("Chỉ giáo viên mới có quyền");
-            }
-            var dto = mapper.Map<BriefDto>(brief);
-            return new ApiResponse<BriefDto>(200, "Lấy dữ liệu thành công", dto);
-        }
         public async Task<ApiResponse<List<BriefDto>>> GetBriefsInGroupAsync(string groupId,string currentUserId)
         {
             var group = await unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId.Equals(groupId), false, c => c.Course);
@@ -115,7 +109,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<List<BriefDto>>("Chỉ giáo viên mới có quyền được tạo bản tóm tắt");
             }
-            var briefs = await unitOfWork.BriefRepository.FindByCondition(c => c.GroupId.Equals(groupId)).ToListAsync();
+            var briefs = await unitOfWork.BriefRepository.FindByCondition(c => c.GroupId.Equals(groupId),false,c=>c.Group,c =>c.Group.Course).ToListAsync();
             var dto = mapper.Map<List<BriefDto>>(briefs);
 
             return new ApiResponse<List<BriefDto>>(200, "Thành công", dto);

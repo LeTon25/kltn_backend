@@ -13,6 +13,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using KLTN.Api.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -120,8 +121,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseMiddleware<ErrorWrappingMiddleware>();
 app.UseCors("AllowAll");
-
 app.UseStaticFiles();
 app.UseDefaultFiles();
 
@@ -139,6 +140,7 @@ using (var scope = app.Services.CreateScope())
         Log.Information("Tạo dữ liệu mẫu");
         var dbInitializer = services.GetService<DbInitializer>();
         dbInitializer.Seed().Wait();
+        //dbInitializer.SeedSetting().Wait(); 
         Log.Information("Tạo dữ liệu mẫu thành công");
 
     }

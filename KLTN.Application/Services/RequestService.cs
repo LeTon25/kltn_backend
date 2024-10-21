@@ -67,7 +67,6 @@ namespace KLTN.Application.Services
             var data = await _unitOfWork.RequestRepository.GetFirstOrDefaultAsync(c => c.RequestId.Equals(newRequestId), false, c => c.User);
             return new ApiResponse<RequestDto>(200, "Tạo yêu cầu thành công", mapper.Map<RequestDto>(data));
         }
-
         public async Task<ApiResponse<RequestDto>> DeleteRequestToJoinAsync(string requestId, string currentUserId)
         {
             var request = await _unitOfWork.RequestRepository.GetFirstOrDefaultAsync(c => c.RequestId.Equals(requestId), false, c=>c.User ,c => c.Group, c => c.Group.GroupMembers, c => c.Group.Course);
@@ -123,6 +122,12 @@ namespace KLTN.Application.Services
             _unitOfWork.RequestRepository.Delete(request);
             await _unitOfWork.SaveChangesAsync();
             return new ApiResponse<RequestDto>(200, "Chấp thuận yêu cầu thành công", null);
+        }
+        public async Task<ApiResponse<List<RequestDto>>> GetRequestsByUserAsync(string currentUserId)
+        {
+            var requests = _unitOfWork.RequestRepository.FindByCondition(c => c.UserId == currentUserId,false,c=>c.Group);
+            var dto = mapper.Map<List<RequestDto>>(requests);
+            return new ApiResponse<List<RequestDto>>(200, "Thành công", dto);
         }
     }
 }

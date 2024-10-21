@@ -1,6 +1,7 @@
 ﻿using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Assignments;
 using KLTN.Application.DTOs.ScoreStructures;
+using KLTN.Application.DTOs.Settings;
 using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Users;
 using KLTN.Domain.Entities;
@@ -35,6 +36,7 @@ namespace KLTN.Application.DTOs.Courses
         public ScoreStructureDto? ScoreStructure { get; set; }
         public List<AnnouncementDto>? Announcements { get; set; }
         public List<AssignmentNoCourseDto>? Assignments { get; set; }  
+        public SettingDto? Setting { get; set; }    
 
     }
 }
