@@ -42,7 +42,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PutProjectId(string projectId, [FromBody] CreateProjectRequestDto requestDto)
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await projectService.UpdateProjectAsync(currentUserId, projectId, requestDto);
+            var response = await projectService.UpdateProjectAsync(currentUserId!, projectId, requestDto);
             return StatusCode(response.StatusCode, response);
 
         }

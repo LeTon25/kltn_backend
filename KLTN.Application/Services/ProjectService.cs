@@ -116,7 +116,7 @@ namespace KLTN.Application.Services
             }
             if (project.IsApproved != dto.IsApproved && currentUserId != project.Course!.LecturerId)
             {
-                new ApiBadRequestResponse<string>("Chỉ có giáo viên mới có thể xét duyệt đề tài"));
+                new ApiBadRequestResponse<string>("Chỉ có giáo viên mới có thể xét duyệt đề tài");
             }
             project.Title = dto.Title;
             project.Description = dto.Description;
