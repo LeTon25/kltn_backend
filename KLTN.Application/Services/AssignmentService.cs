@@ -63,7 +63,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> UpdateAssignmentAsync(string userId,string assignmentId, UpSertAssignmentRequestDto requestDto)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.Course);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.Course!);
             if (assignment == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy bài tập");
@@ -82,6 +82,10 @@ namespace KLTN.Application.Services
                 if (await unitOfWork.AssignmentRepository.AnyAsync(c => c.CourseId.Equals(requestDto.CourseId) && c.ScoreStructureId == requestDto.ScoreStructureId && c.AssignmentId != assignmentId))
                 {
                     return new ApiBadRequestResponse<object>("Cột điểm đã được chấm bởi bài tập khác");
+                }
+                if (scoreStructure.ColumnName == Constants.Score.EndtermColumnName && !assignment.Course.Setting!.HasFinalScore)
+                {
+                    return new ApiBadRequestResponse<object>("Chưa bật điểm cuối kì cho lớp học");
                 }
             }    
 
@@ -108,14 +112,15 @@ namespace KLTN.Application.Services
             if (requestDto.ScoreStructureId != null)
             {
                 var scoreStructure = await unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(requestDto.ScoreStructureId), false, c => c.Children);
+                var course = await unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c=>c.CourseId.Equals(scoreStructure.CourseId),false ,c=>c.Setting!);
 
                 if(scoreStructure == null || scoreStructure.Children.Count > 0)
                 {
                     return new ApiBadRequestResponse<object>("Cột điểm không hợp lệ");
                 }
-                if(scoreStructure.ColumnName == Constants.Score.EndtermColumnName)
+                if(scoreStructure.ColumnName == Constants.Score.EndtermColumnName && !course.Setting!.HasFinalScore)
                 {
-                    return new ApiBadRequestResponse<object>("Không thể gán điểm cho cột cuối kì");
+                    return new ApiBadRequestResponse<object>("Chưa bật điểm cuối kì cho lớp học");
                 }
                 if (await unitOfWork.AssignmentRepository.AnyAsync(c => c.CourseId.Equals(requestDto.CourseId) && c.ScoreStructureId == requestDto.ScoreStructureId))
                 {
@@ -151,12 +156,12 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetSubmissionsInAssignmentsAsync(string userId,string assignmentId)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignmentId), false, c => c.Course,c => c.Course.EnrolledCourses);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignmentId), false, c => c.Course!,c => c.Course.EnrolledCourses);
             if(assignment == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy bài tập");
             }
-            if(assignment.Course.LecturerId != userId)
+            if(assignment.Course!.LecturerId != userId)
             {
                 return new ApiBadRequestResponse<object>("Bạn không có quyền lấy danh sách bài nộp");
             }

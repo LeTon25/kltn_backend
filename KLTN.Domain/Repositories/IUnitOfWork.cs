@@ -24,6 +24,7 @@ namespace KLTN.Domain.Repositories
         public IBriefRepository BriefRepository { get; }
         public IUserRepository UserRepository { get; }
         public IRequestRepository RequestRepository { get; }    
+        public ISettingRepository SettingRepository { get; }
         public Task<int> SaveChangesAsync();
     }
 }

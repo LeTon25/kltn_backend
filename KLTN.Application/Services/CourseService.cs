@@ -15,6 +15,7 @@ using System.Security.Claims;
 using KLTN.Domain.Util;
 using KLTN.Application.DTOs.ScoreStructures;
 using System.Text.RegularExpressions;
+using KLTN.Application.DTOs.Settings;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -107,11 +108,29 @@ namespace KLTN.Application.Services
                 Name = requestDto.Name,
             };
             await _unitOfWork.CourseRepository.AddAsync(newCourse);
+            // Tự động tạo điểm khi tạo lớp học
             var scoreStructure = Generator.GenerateScoreStructureForCourse(newCourseId.ToString());
             await _unitOfWork.ScoreStructureRepository.AddAsync(scoreStructure);
+            // Tự động tạo setting khi tạo lớp học
+            var newSetting = new Setting()
+            {
+                SettingId = Guid.NewGuid().ToString(),
+                CourseId = newCourseId.ToString(),
+                StartGroupCreation = null,
+                EndGroupCreation = null,
+                AllowStudentCreateProject = false,
+                AllowGroupRegistration = false,
+                HasFinalScore = false,
+                MaxGroupSize = null,
+                MinGroupSize = null
+            };
+            await _unitOfWork.SettingRepository.AddAsync(newSetting);
+
             await _unitOfWork.SaveChangesAsync();
+
             var dto = mapper.Map<CourseDto>(newCourse);
             dto.ScoreStructure = mapper.Map<ScoreStructureDto>(scoreStructure);
+            dto.Setting = mapper.Map<SettingDto>(newSetting);
             return new ApiResponse<object>(200, "Thành công", dto);
         }
         public async Task<ApiResponse<object>> UpdateCourseAsync(string courseId,CreateCourseRequestDto requestDto,string userId)

@@ -51,11 +51,6 @@ namespace KLTN.Api.Controllers
         {
             return SetResponse(await reportService.DeleteReportAsync(reportId));
         }
-        [HttpGet("{groupId}/report/{reportId}/brief")]
-        [ServiceFilter(typeof(GroupResourceAccessFilter))]
-        public async Task<IActionResult> BriefReportAsync(string reportId)
-        {
-            return Ok("Implement here");
-        }
+
     }
 }

@@ -29,6 +29,10 @@ namespace KLTN.Infrastructure.Configurations
             builder.HasOne(c => c.Course)
                 .WithMany(e => e.Projects)
                 .HasForeignKey(e => e.CourseId);
+
+            builder.HasOne(c => c.User)
+                .WithMany(e => e.Projects)
+                .HasForeignKey(c => c.CreateUserId);
             #endregion
         }
     }

@@ -31,6 +31,9 @@ namespace KLTN.Domain.Entities
         public ICollection<Assignment>? Assignments { get; set; }
         public ICollection<Submission>? Submissions { get; set; }
         public ICollection<Score>? Scores { get; set; } 
-        public ICollection<Request> Requests { get; set; }
+        public ICollection<Request>? Requests { get; set; }
+        public ICollection<Project>? Projects { get; set; }
+
+
     }
 }
