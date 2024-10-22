@@ -19,5 +19,6 @@ namespace KLTN.Domain.Entities
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public Course? Course { get; set; } 
+        public User? User { get; set; }
     }
 }

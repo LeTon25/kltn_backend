@@ -37,6 +37,7 @@ namespace KLTN.Infrastructure.Repositories
         public IBriefRepository BriefRepository { get; }  
         public IUserRepository UserRepository { get; }
         public IRequestRepository RequestRepository { get; }
+        public ISettingRepository SettingRepository { get; }
         #endregion
         public readonly ApplicationDbContext _context;
 
@@ -59,6 +60,7 @@ namespace KLTN.Infrastructure.Repositories
             BriefRepository = new BriefRepository(context);
             UserRepository = new UserRepository(context);
             RequestRepository = new RequestRepository(context); 
+            SettingRepository =  new SettingRepository(context);    
         }
 
         public async Task<int> SaveChangesAsync()

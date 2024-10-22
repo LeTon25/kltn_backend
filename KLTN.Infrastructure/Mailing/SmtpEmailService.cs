@@ -64,12 +64,9 @@ namespace KLTN.Infrastructure.Mailing
             }
             catch (Exception ex) 
             { 
-                
+                Console.WriteLine(ex.ToString());   
             }
-            finally
-            {
-
-            }
+         
         }
     }
 }

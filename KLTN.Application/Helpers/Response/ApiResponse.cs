@@ -32,7 +32,7 @@ namespace KLTN.Application.Helpers.Response
                     return "Có lỗi xảy ra";
 
                 default:
-                    return null;
+                    return "";
             }
         }
     }

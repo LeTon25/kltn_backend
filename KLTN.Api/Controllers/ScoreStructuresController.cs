@@ -21,7 +21,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> SaveScoreStructureAsync(UpSertScoreStructureDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await _scoreStructureService.SaveScoreStrucutureAsync(userId,requestDto);
+            var response = await _scoreStructureService.SaveScoreStrucutureAsync(userId!,requestDto);
             return StatusCode(response.StatusCode, response);
         }
         [HttpGet("{id}")]

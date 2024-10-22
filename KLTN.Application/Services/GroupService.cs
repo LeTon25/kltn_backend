@@ -54,16 +54,32 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Tên nhóm đã tồn tại");
             }
-            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == requestDto.CourseId);
-            if (userId == null)
-            {
-                return new ApiBadRequestResponse<object>("Người dùng hiện không đăng nhập");
-            }
+            var userId = _httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == requestDto.CourseId,false,c=>c.Setting!);
             if (course == null)
             {
                 return new ApiBadRequestResponse<object>("Không tìm thấy lớp học");
 
+            }
+            if (course.LecturerId != userId) 
+            {
+                if (!course.Setting!.AllowGroupRegistration)
+                {
+                    return new ApiBadRequestResponse<object>("Giảng viên chưa cho phép SV đăng ký nhóm");
+                }
+                var now = DateTime.Now;
+                if(course.Setting.StartGroupCreation != null && course.Setting.EndGroupCreation != null)
+                {
+                    if (now < course.Setting.StartGroupCreation || now > course.Setting.EndGroupCreation)
+                    { 
+                        return new ApiBadRequestResponse<object>("Qua thòi gian đăng ký nhóm.Vui lòng liên hệ giảng viên");
+                    }
+                }
+                var groups = await _unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(course.CourseId),false,c=>c.GroupMembers).ToListAsync();
+                if (groups.Any(c=>c.GroupMembers.Any(e=>e.StudentId.Equals(userId))))
+                {
+                    return new ApiBadRequestResponse<object>("Bạn đã ở trong nhóm khác");
+                }
             }
             var newGroupId = Guid.NewGuid();
             var newGroup = new KLTN.Domain.Entities.Group()
@@ -84,7 +100,7 @@ namespace KLTN.Application.Services
             {
                 await _unitOfWork.GroupMemberRepository.AddAsync(new GroupMember
                 {
-                    StudentId = userId,
+                    StudentId = userId!,
                     IsLeader = true,
                     GroupId = newGroupId.ToString(),
                     CreatedAt = DateTime.Now
@@ -131,14 +147,14 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> DeleteGroupAsync(string groupId)
         {
-            string currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId, false, c => c.GroupMembers, c => c.Course);
+            string currentUserId = _httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId, false, c => c.GroupMembers, c => c.Course!);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không thể tìm thấy nhóm với id");
             }
             var isLeader = group.GroupMembers.Any(c => c.StudentId == currentUserId);
-            var isTeacher = group.Course.LecturerId == currentUserId;
+            var isTeacher = group.Course!.LecturerId == currentUserId;
             if (!isLeader && isTeacher)
             {
                 return new ApiBadRequestResponse<object>("Bạn không có quyền xóa nhóm");
@@ -151,12 +167,12 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> PostAddMembersToGroupAsync(string groupId, AddMemberToGroupDto requestDto, string userId)
         {
-            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId, false, c => c.Course);
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId, false, c => c.Course!);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
             }
-            var groupMembers = await _unitOfWork.GroupMemberRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.Member).ToListAsync();
+            var groupMembers = await _unitOfWork.GroupMemberRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.Member!).ToListAsync();
 
             var groupMemberByCurrentUser = groupMembers.Where(c => c.GroupId == groupId && c.StudentId == userId).FirstOrDefault();
             if ((groupMemberByCurrentUser != null && groupMemberByCurrentUser.IsLeader == false) && userId != group.Course?.LecturerId)
@@ -207,12 +223,12 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> DeleteRemoveMemberAsync(string groupId, RemoveMemberFromGroupDto requestDto, string userId)
         {
-            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId, false, c => c.Course, c => c.GroupMembers);
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId, false, c => c.Course!, c => c.GroupMembers);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
             }
-            var groupMembers = await _unitOfWork.GroupMemberRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.Member).ToListAsync();
+            var groupMembers = await _unitOfWork.GroupMemberRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.Member!).ToListAsync();
 
             var groupMemberByCurrentUser = groupMembers.Where(c => c.GroupId == groupId && c.StudentId == userId).FirstOrDefault();
             if ((groupMemberByCurrentUser != null && groupMemberByCurrentUser.IsLeader == false) && userId != group.Course?.LecturerId)
@@ -235,7 +251,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> AssignLeaderAsync(string currentUserId, string groupId, string leaderId)
         {
-            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId, false, c => c.Course);
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId, false, c => c.Course!);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
@@ -263,7 +279,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetReportsInGroupAsync(string groupId)
         {
-            var reports = await _unitOfWork.ReportRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.CreateUser).ToListAsync();
+            var reports = await _unitOfWork.ReportRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.CreateUser!).ToListAsync();
             var reportDtos = mapper.Map<List<ReportDto>>(reports);
             foreach (var reportDto in reportDtos)
             {
@@ -278,8 +294,8 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetRegenerateInviteCodeAsync(string groupId)
         {
-            var currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId.Equals(groupId), false, c => c.Course, c => c.GroupMembers);
+            var currentUserId = _httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId.Equals(groupId), false, c => c.Course!, c => c.GroupMembers);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
@@ -301,13 +317,13 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> ApplyCodeAsync(JoinGroupDto requestDto, string groupId)
         {
-            var currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId.Equals(groupId), false, c => c.Course, c => c.GroupMembers);
+            var currentUserId = _httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId.Equals(groupId), false, c => c.Course!, c => c.GroupMembers);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
             }
-            if (currentUserId == group.Course.LecturerId)
+            if (currentUserId == group.Course!.LecturerId)
             {
                 return new ApiBadRequestResponse<object>("Giáo viên của lớp không thể tham gia nhóm");
             }
@@ -315,7 +331,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Bạn chưa tham gia lớp học");
             }
-            if (!await CheckValidMemberAsync(currentUserId, group))
+            if (!await CheckValidMemberAsync(currentUserId!, group))
             {
                 return new ApiBadRequestResponse<object>("Bạn đã tham gia nhóm khác");
             }
@@ -335,7 +351,7 @@ namespace KLTN.Application.Services
                 await _unitOfWork.GroupMemberRepository.AddAsync(new GroupMember()
                 {
                     GroupId = groupId,
-                    StudentId = currentUserId,
+                    StudentId = currentUserId!,
                     IsLeader = false,
                 });
                 await _unitOfWork.SaveChangesAsync();
@@ -361,7 +377,7 @@ namespace KLTN.Application.Services
                 groupDto.Project = await projectService.GetProjectDtoAsync(groupDto.ProjectId);
             }    
             groupDto.GroupMembers = await GetGroupMemberDtoAsync(groupId);
-            var requests = await _unitOfWork.RequestRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.User).ToListAsync();
+            var requests = await _unitOfWork.RequestRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.User!).ToListAsync();
             groupDto.Requests = mapper.Map<List<RequestDto>>(requests);
             return groupDto;
         }
