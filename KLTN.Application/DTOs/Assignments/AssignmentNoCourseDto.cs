@@ -15,6 +15,8 @@ namespace KLTN.Application.DTOs.Assignments
         public string CourseId { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
+        public string Type { get; set; }
+
         public bool IsGroupAssigned { get; set; }
         public string? ScoreStructureId { get; set; }
         public DateTime? DueDate { get; set; }

@@ -98,6 +98,7 @@ namespace KLTN.Application.Services
             assignment.Attachments = mapper.Map<List<KLTN.Domain.Entities.File>>(requestDto.Attachments);
             assignment.IsGroupAssigned =requestDto.IsGroupAssigned;
             assignment.ScoreStructureId = requestDto.ScoreStructureId;
+            assignment.Type = requestDto.Type;
             unitOfWork.AssignmentRepository.Update(assignment);
             var result = await unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -142,6 +143,7 @@ namespace KLTN.Application.Services
                 CreatedAt = DateTime.Now,
                 UpdatedAt = null,
                 DeletedAt = null,
+                Type = requestDto.Type,
                 IsGroupAssigned = requestDto.IsGroupAssigned,
             };
             if (!await courseService.CheckIsTeacherAsync(userId, newAssignment.CourseId))

@@ -20,6 +20,8 @@ namespace KLTN.Application.DTOs.Assignments
         public string Content { get; set; }
         public bool IsGroupAssigned { get; set; }
         public string? ScoreStructureId { get; set; }
+        public string Type { get; set; }
+
         public ScoreStructureDto? ScoreStructure { get; set; }
         public DateTime? DueDate { get; set; }
         public List<MetaLinkDataDto> AttachedLinks { get; set; }
