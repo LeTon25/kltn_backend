@@ -129,5 +129,12 @@ namespace KLTN.Api.Controllers
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             return SetResponse(await _courseService.AddStudentToCourseAsync(courseId, dto, currentUserId));
         }
+        [HttpGet("{courseId}/statistic")]
+        [ServiceFilter(typeof(CourseResourceAccessFilter))]
+        public async Task<IActionResult> GetStatisticAsync(string courseId)
+        {
+            var response = await _courseService.GetStatisticAsync(courseId);
+            return StatusCode(response.StatusCode,response);
+        }
     }
 }

@@ -16,6 +16,7 @@ using KLTN.Domain.Util;
 using KLTN.Application.DTOs.ScoreStructures;
 using System.Text.RegularExpressions;
 using KLTN.Application.DTOs.Settings;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -388,6 +389,33 @@ namespace KLTN.Application.Services
                 return new ApiNotFoundResponse<object>("Không tìm thấy khóa học");
             }
             return new ApiResponse<object>(200, "Tìm thấy khóa học", course);
+        }
+        public async Task<ApiResponse<StatisticDto>> GetStatisticAsync(string courseId)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false, c => c.EnrolledCourses,c => c.Projects);
+            var groups = await _unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(course.CourseId), false, c => c.GroupMembers).ToListAsync();
+
+            var allStudentIdsInCourseCount = 0;
+            var allStudentIdsHasGroupCount = 0;
+
+            if(course.EnrolledCourses != null)
+                allStudentIdsInCourseCount = course.EnrolledCourses.Select(c=>c.StudentId).ToList().Count;
+            if(groups != null)
+            {
+                foreach(var group in groups)
+                {
+                    if (group.GroupMembers != null)
+                        allStudentIdsHasGroupCount += group.GroupMembers.Count; 
+                }    
+            }
+            var response = new ApiResponse<StatisticDto>(200,"", new StatisticDto
+            {
+                NumberOfGroups = groups != null ? groups.Count : 0,
+                NumberOfProjects = course.Projects != null ? course.Projects.Count : 0,
+                NumberOfUngroupStudents = allStudentIdsInCourseCount - allStudentIdsHasGroupCount
+            });
+            return response ;
+           
         }
         #endregion
 
