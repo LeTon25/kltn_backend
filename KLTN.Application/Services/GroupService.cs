@@ -155,7 +155,7 @@ namespace KLTN.Application.Services
             }
             var isLeader = group.GroupMembers.Any(c => c.StudentId == currentUserId);
             var isTeacher = group.Course!.LecturerId == currentUserId;
-            if (!isLeader && isTeacher)
+            if (!isLeader && !isTeacher)
             {
                 return new ApiBadRequestResponse<object>("Bạn không có quyền xóa nhóm");
             }
