@@ -220,6 +220,14 @@ namespace KLTN.Application.Services
                         parentEntity.Children = new List<ScoreStructure>();
                     }    
                     parentEntity.Children?.Add(newChild);
+                    
+                    // Kiểm tra xem phần trăm của các cột con có vượt quá cột cha không
+                    if(parentEntity.Children != null)
+                    {
+                        var childrenPercent = parentEntity.Children.Sum(e => e.Percent);
+                        if (childrenPercent > parentEntity.Percent)
+                            throw new InvalidScorePercentException("Phần trăm của các cột con không được lớn hơn cột cha");
+                    }    
                     await _unitOfWork.ScoreStructureRepository.AddAsync(newChild);
                 }
                 else
@@ -257,7 +265,8 @@ namespace KLTN.Application.Services
                     scoreDetail.Children.Add(childScoreDetail);  
                     if (childScoreDetail.Value.HasValue)
                     {
-                        totalScore += (childScoreDetail.Value * child.Percent / 100);
+                        var percent  = (child.Percent / scoreDetail.Percent);
+                        totalScore += (childScoreDetail.Value * percent);
                     }
                 }
                 scoreDetail.Value = totalScore;
