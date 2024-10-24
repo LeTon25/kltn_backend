@@ -35,6 +35,10 @@ namespace KLTN.Api.Middleware
             {
                 context.Response.StatusCode = 400; 
             }
+            else if (ex is InvalidScorePercentException customex)
+            {
+                context.Response.StatusCode = 400;
+            }
             else
             {
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
