@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.Helpers.Response;
+using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Exceptions;
 using KLTN.Domain.Repositories;
@@ -36,34 +37,19 @@ namespace KLTN.Application.Services
                 return new ApiResponse<object>(403, "Xuất hiện cột điểm có tên bị trùng");
             }
             var existingEntity = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c=>c.Id.Equals(requestDto.Id),false);
-            //Thêm mới 
-            ScoreStructure? newEntity = null;
-            if (existingEntity == null)
-            {
-                newEntity = _mapper.Map<ScoreStructure>(requestDto);
-                newEntity.Id = Guid.NewGuid().ToString();
-                if (newEntity.Children != null && newEntity.Children.Any())
-                {
-                    SetParentIdForChildren(newEntity.Id, newEntity.Children);
-                }
-                await _unitOfWork.ScoreStructureRepository.AddAsync(newEntity);
-            }
-            else
-            {
-                // Cập nhật thực thể đã tồn tại
-                existingEntity.ColumnName = requestDto.ColumnName;
-                existingEntity.Percent = requestDto.Percent;
-                existingEntity.MaxPercent = requestDto.MaxPercent;
-                existingEntity.ParentId = requestDto.ParentId;
+            // Cập nhật thực thể đã tồn tại
+            existingEntity.ColumnName = requestDto.ColumnName;
+            existingEntity.Percent = requestDto.Percent;
+            existingEntity.MaxPercent = requestDto.MaxPercent;
+            existingEntity.ParentId = requestDto.ParentId;
 
-                await LoadChildrenAsync(existingEntity);
-                // Cập nhật các children (nếu có)
-                await UpdateChildren(existingEntity, requestDto.Children);
+            await LoadChildrenAsync(existingEntity);
+            // Cập nhật các children (nếu có)
+            await UpdateChildren(existingEntity, requestDto.Children);
 
-                _unitOfWork.ScoreStructureRepository.Update(existingEntity);
-            }
+            _unitOfWork.ScoreStructureRepository.Update(existingEntity);
             await _unitOfWork.SaveChangesAsync();
-            return new ApiResponse<object>(200, "Thành công", _mapper.Map<ScoreStructureDto>(existingEntity ?? newEntity));
+            return new ApiResponse<object>(200, "Thành công", _mapper.Map<ScoreStructureDto>(existingEntity));
         }
 
         public async Task<ApiResponse<object>> GetScoreStructureByIdAsync(string id)
@@ -90,7 +76,7 @@ namespace KLTN.Application.Services
 
         public async Task<ApiResponse<object>> GetTransciptAsync(string courseId)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false, c => c.EnrolledCourses);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false, c => c.EnrolledCourses,c => c.Setting);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp học");
@@ -101,13 +87,18 @@ namespace KLTN.Application.Services
                 return new ApiNotFoundResponse<object>("Không tìm thấy cột điểm");
             }
             await LoadChildrenWithScoreAsync(scoreStructure);
+            if (! course.Setting!.HasFinalScore)
+            {
+                var endtermScore = scoreStructure.Children!.FirstOrDefault(c=>c.ColumnName.Equals(Constants.Score.EndtermColumnName));
+                scoreStructure.Children!.Remove(endtermScore!);
+            }
             var studentIds = course.EnrolledCourses.Select(c=>c.StudentId).ToList();
             var students = await _unitOfWork.UserRepository.FindByCondition(c => studentIds.Contains(c.Id),false,c=>c.Scores).ToListAsync();
 
             var studentScores = students.Select(student => new StudentScoreDTO
             {
                 Id = student.Id,    
-                FullName = student.UserName,
+                FullName = student.UserName!,
                 Scores = CalculateScore(scoreStructure,student.Id)
             }).ToList();
             return new ApiResponse<object>(200, "Thành công", studentScores);
@@ -158,7 +149,7 @@ namespace KLTN.Application.Services
                 }
 
                 child.ParentId = parentId;
-
+                
                 // Nếu cột con có cột con của nó, thì tiếp tục thiết lập ParentId cho chúng
                 if (child.Children != null && child.Children.Any())
                 {
@@ -193,7 +184,7 @@ namespace KLTN.Application.Services
                     }
                 }
             }
-            var assignmentByScore = await _unitOfWork.AssignmentRepository.FindByCondition(c=> c.ScoreStructureId.Equals(parentEntity),false).FirstOrDefaultAsync();
+            var assignmentByScore = await _unitOfWork.AssignmentRepository.FindByCondition(c=> c.ScoreStructureId.Equals(parentEntity.Id),false).FirstOrDefaultAsync();
 
             foreach (var child in children)
             {
@@ -210,7 +201,8 @@ namespace KLTN.Application.Services
                         child.Id = Guid.NewGuid().ToString();
                     }
                     var newChild = _mapper.Map<ScoreStructure>(child);
-                    newChild.ParentId = parentEntity.Id; 
+                    newChild.ParentId = parentEntity.Id;
+                    newChild.CourseId = parentEntity.CourseId;
                     if(newChild.Children != null && newChild.Children.Any())
                     {
                         SetParentIdForChildren(newChild.Id, newChild.Children);
@@ -235,8 +227,15 @@ namespace KLTN.Application.Services
                     existingChild.ColumnName = child.ColumnName;
                     existingChild.Percent = child.Percent;
                     existingChild.MaxPercent = child.MaxPercent;
-
-                     await UpdateChildren(existingChild, child.Children);
+                    existingChild.CourseId = child.CourseId;
+                    // Kiểm tra xem phần trăm của các cột con có vượt quá cột cha không
+                    if (parentEntity.Children != null)
+                    {
+                        var childrenPercent = parentEntity.Children.Sum(e => e.Percent);
+                        if (childrenPercent > parentEntity.Percent)
+                            throw new InvalidScorePercentException("Phần trăm của các cột con không được lớn hơn cột cha");
+                    }
+                    await UpdateChildren(existingChild, child.Children);
                 }
             }
         }

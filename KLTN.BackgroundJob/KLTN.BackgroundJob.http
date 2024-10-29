@@ -1,0 +1,6 @@
+@KLTN.BackgroundJob_HostAddress = http://localhost:5008
+
+GET {{KLTN.BackgroundJob_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

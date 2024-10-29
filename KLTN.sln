@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KLTN.Infrastructure", "KLTN
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KLTN.Api", "KLTN.Api\KLTN.Api.csproj", "{0DDB47AC-C9B4-4146-BB17-A1071B146172}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KLTN.BackgroundJob", "KLTN.BackgroundJob\KLTN.BackgroundJob.csproj", "{DA25156F-74AF-4E96-885C-A8B54A641F00}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{0DDB47AC-C9B4-4146-BB17-A1071B146172}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DDB47AC-C9B4-4146-BB17-A1071B146172}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DDB47AC-C9B4-4146-BB17-A1071B146172}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA25156F-74AF-4E96-885C-A8B54A641F00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA25156F-74AF-4E96-885C-A8B54A641F00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA25156F-74AF-4E96-885C-A8B54A641F00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA25156F-74AF-4E96-885C-A8B54A641F00}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
