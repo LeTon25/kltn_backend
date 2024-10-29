@@ -52,6 +52,8 @@ namespace KLTN.Application.Services
             setting.AllowGroupRegistration = dto.AllowGroupRegistration;
             setting.AllowStudentCreateProject= dto.AllowStudentCreateProject;
             unitOfWork.SettingRepository.Update(setting);
+            
+            
             await unitOfWork.SaveChangesAsync();
 
             return new ApiResponse<SettingDto>(200,"Cập nhật cài đặt thành công",mapper.Map<SettingDto>(setting));

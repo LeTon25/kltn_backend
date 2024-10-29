@@ -125,7 +125,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<List<RequestDto>>> GetRequestsByUserAsync(string currentUserId)
         {
-            var requests = _unitOfWork.RequestRepository.FindByCondition(c => c.UserId == currentUserId,false,c=>c.Group);
+            var requests = await  _unitOfWork.RequestRepository.FindByCondition(c => c.UserId == currentUserId,false,c=>c.Group).ToListAsync();
             var dto = mapper.Map<List<RequestDto>>(requests);
             return new ApiResponse<List<RequestDto>>(200, "Thành công", dto);
         }

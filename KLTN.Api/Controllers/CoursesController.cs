@@ -18,12 +18,6 @@ namespace KLTN.Api.Controllers
         { 
             this._courseService = courseService;
         }
-
-        [HttpGet]
-        public async Task<IActionResult> GetCoursesAsync()
-        {
-            return SetResponse(await _courseService.GetAllCoursesAsync());
-        }
         [HttpGet("{courseId}")]
         [ServiceFilter(typeof(CourseResourceAccessFilter))]
         public async Task<IActionResult> GetByIdAsync(string courseId)

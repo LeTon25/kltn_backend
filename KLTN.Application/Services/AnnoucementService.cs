@@ -1,12 +1,11 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Announcements;
-using KLTN.Application.DTOs.Users;
+using KLTN.Application.DTOs.Comments;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
-using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.EntityFrameworkCore;
 using File = KLTN.Domain.Entities.File;
 
 namespace KLTN.Application.Services
@@ -110,26 +109,21 @@ namespace KLTN.Application.Services
         #endregion
         public async Task<List<AnnouncementDto>> GetAnnouncementDtosInCourseAsync(string courseId)
         {
-            var announcements = unitOfWork.AnnnouncementRepository.GetAll(c=>c.CourseId == courseId);
+            var announcements = unitOfWork.AnnnouncementRepository.FindByCondition(c => c.CourseId.Equals(courseId), false, c => c.CreateUser!);
             var announcementDtos = mapper.Map<List<AnnouncementDto>>(announcements);
-            for (int i = 0; i < announcementDtos.Count; i++) 
+            for (int i = 0; i < announcementDtos.Count; i++)
             {
-                announcementDtos[i] = await GetAnnoucementDtoByIdAsync(announcementDtos[i].AnnouncementId);
+                var comments = await unitOfWork.CommentRepository.FindByCondition(c => c.CommentableId.Equals(announcementDtos[i].AnnouncementId), false, c => c.User).ToListAsync();
+                announcementDtos[i].Comments = mapper.Map<List<CommentDto>>(comments);
             }
             return announcementDtos;
         }
         public async Task<AnnouncementDto> GetAnnoucementDtoByIdAsync(string annoucementId)
         {
-            var announcementFromDb = await unitOfWork.AnnnouncementRepository.GetFirstOrDefaultAsync(c=>c.AnnouncementId == annoucementId);
-            if (announcementFromDb == null)
-            {
-                return null;
-            }
-            var announcementDto = mapper.Map<AnnouncementDto>(announcementFromDb);
-            var createUser = await userManager.FindByIdAsync(announcementDto.UserId);
-            var commentDtos = await commentService.GetCommentDtosFromPostAsync(annoucementId,CommentableType.Announcement);
-            announcementDto.CreateUser = mapper.Map<UserDto>(createUser);
-            announcementDto.Comments = commentDtos; 
+            var announcement = await unitOfWork.AnnnouncementRepository.GetFirstOrDefaultAsync(c => c.AnnouncementId.Equals(annoucementId), false, c => c.CreateUser!);
+            var announcementDto = mapper.Map<AnnouncementDto>(announcement);
+            var comments = await unitOfWork.CommentRepository.FindByCondition(c => c.CommentableId.Equals(announcementDto.AnnouncementId), false, c => c.User!).ToListAsync();
+            announcementDto.Comments = mapper.Map<List<CommentDto>>(comments);
             return announcementDto;
         }
     }

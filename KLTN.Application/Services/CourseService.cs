@@ -17,6 +17,8 @@ using KLTN.Application.DTOs.ScoreStructures;
 using System.Text.RegularExpressions;
 using KLTN.Application.DTOs.Settings;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Reflection.Metadata;
+using KLTN.Domain;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -422,43 +424,41 @@ namespace KLTN.Application.Services
         #region for_service
         public async Task<CourseDto> GetCourseDtoByIdAsync(string courseId, bool isLoadAnnoucements = true, bool isLoadStudent = true,bool isLoadAssignment = true,bool isLoadScore=true)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId,false,c=>c.Setting);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId,false,c=>c.Setting!, c => c.Lecturer!,c =>c.Subject!,c => c.EnrolledCourses);
             if (course == null)
             {
                 return null;
             }
             var courseDto = mapper.Map<CourseDto>(course);
-            courseDto.Subject = mapper.Map<SubjectDto>(await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c => c.SubjectId == courseDto.SubjectId));
-            courseDto.Lecturer = mapper.Map<UserDto>(await _userManager.FindByIdAsync(courseDto.LecturerId));
             if (isLoadAnnoucements)
             {
                 courseDto.Announcements = await annoucementService.GetAnnouncementDtosInCourseAsync(courseId);
             }
             if (isLoadStudent)
             {
-                var enrolledData = await _unitOfWork.EnrolledCourseRepository.GetAllAsync();
-                var usersData = await _userManager.Users.ToListAsync();
-                var users = from user in usersData
-                            join enroll in enrolledData on user.Id equals enroll.StudentId
-                            where enroll.CourseId == courseId
-                            select user;
-                courseDto.Students = mapper.Map<List<UserDto>>(users.ToList());
+                var studentIds = course.EnrolledCourses.Select(c=>c.StudentId).ToList();
+                var students = new List<User>();
+                if(studentIds != null && studentIds.Count > 0)
+                {
+                    students = await _unitOfWork.UserRepository.FindByCondition(c => studentIds.Contains(c.Id)).ToListAsync();
+                }    
+                courseDto.Students = mapper.Map<List<UserDto>>(students);
+            }
+            if (isLoadScore)
+            {
+                var score = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false);
+                if (score != null)
+                {
+                    await scoreStructureService.LoadChildrenAsync(score);
+                    courseDto.ScoreStructure = mapper.Map<ScoreStructureDto>(score);
+                }
             }
             if (isLoadAssignment)
             {
-                var assignments = await _unitOfWork.AssignmentRepository.FindByCondition(c=>c.CourseId.Equals(courseId),false, c=>c.ScoreStructure).ToListAsync();
+                var assignments = await _unitOfWork.AssignmentRepository.FindByCondition(c=>c.CourseId.Equals(courseId) && !c.Type.Equals(Constants.AssignmentType.Final),false, c=>c.ScoreStructure!).ToListAsync();
                 courseDto.Assignments = mapper.Map<List<AssignmentNoCourseDto>>(assignments);
             }
-            if(isLoadScore)
-            {
-                var score = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false);
-                if(score != null)
-                {
-                    await scoreStructureService.LoadChildrenAsync(score);
-                    courseDto.ScoreStructure=  mapper.Map<ScoreStructureDto>(score);
-                }    
-
-            }
+      
             return courseDto;
 
         }
@@ -496,7 +496,6 @@ namespace KLTN.Application.Services
 
             return new string(result);
         }
-        
         #endregion
 
 

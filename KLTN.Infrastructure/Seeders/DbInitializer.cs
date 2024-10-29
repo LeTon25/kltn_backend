@@ -2,11 +2,6 @@
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KLTN.Infrastructure.Seeders
 {
@@ -140,6 +135,10 @@ namespace KLTN.Infrastructure.Seeders
                 }
                 await _context.SaveChangesAsync();
             }    
+        }
+        public void SeedFinalAssignment()
+        {
+            throw new Exception();
         }
     }
 }

@@ -27,7 +27,7 @@ namespace KLTN.Domain.Util
                     new ScoreStructure()
                     {
                         Id = firstChildId,
-                        CourseId = null,
+                        CourseId = courseId,
                         Percent = 50,
                         ColumnName = Constants.Score.MidtermColumnName,
                         MaxPercent = 50,
@@ -36,7 +36,7 @@ namespace KLTN.Domain.Util
                     new ScoreStructure()
                     {
                         Id = secondChildId,
-                        CourseId = null,
+                        CourseId = courseId,
                         Percent = 50,
                         ColumnName = Constants.Score.EndtermColumnName,
                         MaxPercent = 50,
