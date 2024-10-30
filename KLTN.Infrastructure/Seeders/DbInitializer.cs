@@ -1,8 +1,11 @@
-﻿using KLTN.Domain.Entities;
+﻿using KLTN.Domain;
+using KLTN.Domain.Entities;
+using KLTN.Domain.Repositories;
+using KLTN.Domain.Util;
 using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-
+using File = KLTN.Domain.Entities.File;
 namespace KLTN.Infrastructure.Seeders
 {
     public class DbInitializer
@@ -13,13 +16,16 @@ namespace KLTN.Infrastructure.Seeders
         private readonly string AdminRoleName = "Admin";
         private readonly string LecturerRoleName = "Lecturer";
         private readonly string StudentRoleName = "Student";
+        private readonly IUnitOfWork _unitOfWork;    
         public DbInitializer(ApplicationDbContext context,
                 UserManager<User> userManager,
-                RoleManager<IdentityRole> roleManager)
+                RoleManager<IdentityRole> roleManager,
+                IUnitOfWork unitOfWork)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task Seed() 
@@ -136,9 +142,38 @@ namespace KLTN.Infrastructure.Seeders
                 await _context.SaveChangesAsync();
             }    
         }
-        public void SeedFinalAssignment()
+        public async Task SeedFinalAssignmentS()
         {
-            throw new Exception();
+            var courses = await _unitOfWork.CourseRepository.FindByCondition(c => true).ToListAsync();
+
+            foreach (var course in courses) 
+            {
+                var endtermScore = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId!.Equals(course.CourseId) && c.ColumnName.Equals(Constants.Score.EndtermColumnName), false);
+                if(endtermScore == null)
+                {
+                    var scoreStructure = Generator.GenerateScoreStructureForCourse(course.CourseId);
+                    await _unitOfWork.ScoreStructureRepository.AddAsync(scoreStructure);
+                    await _unitOfWork.SaveChangesAsync();
+                    
+                    endtermScore = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId!.Equals(course.CourseId) && c.ColumnName.Equals(Constants.Score.EndtermColumnName), false);
+                }
+
+                var endtermAssignment = new Assignment()
+                {
+                    AssignmentId = Guid.NewGuid().ToString(),
+                    CourseId = course.CourseId,
+                    ScoreStructureId = endtermScore.Id,
+                    Title = "Bài nộp cuối kỳ",
+                    Type = Constants.AssignmentType.Final,
+                    Content = "Nơi để học sinh nộp bài cuối kỳ",
+                    Attachments = new List<File>(),
+                    AttachedLinks = new List<MetaLinkData>(),
+                    IsGroupAssigned = false,
+                    CreatedAt = DateTime.Now,
+                };
+                _context.Assignments.Add(endtermAssignment);
+            }
+            await _context.SaveChangesAsync();
         }
     }
 }

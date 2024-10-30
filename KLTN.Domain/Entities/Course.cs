@@ -1,10 +1,4 @@
 ﻿using KLTN.Domain.Entities.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace KLTN.Domain.Entities
 {
     public class Course : IDateTracking

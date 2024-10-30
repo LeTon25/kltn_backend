@@ -47,19 +47,6 @@ namespace KLTN.Application.Services
             this.httpContextAccessor = httpContextAccessor;
         }
         #region for controller
-        public async Task<ApiResponse<object>> GetAllCoursesAsync()
-        {
-            var courses = await _unitOfWork.CourseRepository.GetAllAsync(null,c=>c.Setting);
-            var courseDtos = mapper.Map<List<CourseDto>>(courses.ToList());
-            foreach(var courseDto in courseDtos)
-            {
-                var lecturer = mapper.Map<UserDto>(await _userManager.FindByIdAsync(courseDto.LecturerId)) ;
-                var subject = mapper.Map<SubjectDto>(await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c=>c.SubjectId == courseDto.SubjectId));
-                courseDto.Lecturer = lecturer;
-                courseDto.Subject = subject;
-            }
-            return new ApiResponse<object>(200, "Thành công", courseDtos);
-        }
         public async Task<ApiResponse<object>> UpdateInviteCodeAsync(string courseId, string inviteCode)
         {
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
@@ -455,7 +442,7 @@ namespace KLTN.Application.Services
             }
             if (isLoadAssignment)
             {
-                var assignments = await _unitOfWork.AssignmentRepository.FindByCondition(c=>c.CourseId.Equals(courseId) && !c.Type.Equals(Constants.AssignmentType.Final),false, c=>c.ScoreStructure!).ToListAsync();
+                var assignments = await _unitOfWork.AssignmentRepository.FindByCondition(c=>c.CourseId.Equals(courseId),false, c=>c.ScoreStructure!).ToListAsync();
                 courseDto.Assignments = mapper.Map<List<AssignmentNoCourseDto>>(assignments);
             }
       

@@ -13,7 +13,8 @@ namespace KLTN.Api.Controllers
     {
         private readonly CourseService _courseService;
         public CoursesController(
-            CourseService courseService
+            CourseService courseService,
+            AssignmentService assignmentService
           ) 
         { 
             this._courseService = courseService;
