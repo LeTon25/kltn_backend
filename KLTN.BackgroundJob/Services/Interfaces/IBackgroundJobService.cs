@@ -1,4 +1,6 @@
 ﻿
+using KLTN.Domain.ScheduleJobs;
+
 namespace KLTN.BackgroundJobs.Services.Interfaces
 {
     public interface IBackgroundJobService
