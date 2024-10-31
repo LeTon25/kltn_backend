@@ -1,3 +1,5 @@
+using KLTN.BackgroundJobs.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -17,6 +19,9 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod();
         });
 });
+builder.Services.ConfigureEmailSettings(builder.Configuration);
+builder.Services.AddHangfireService(builder.Configuration);
+builder.Services.AddCustomService();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -25,11 +30,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseRouting();
 app.UseCors("AllowKLTNApi");
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
-app.MapControllers();
+app.UseCustomHangfireDashboard(builder.Configuration);
+app.MapDefaultControllerRoute();
 
 app.Run();

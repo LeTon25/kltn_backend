@@ -80,6 +80,7 @@ builder.Services.AddFluentValidationAutoValidation()
     .AddValidatorsFromAssemblyContaining<CreateUserRequestDtoValidator>();
 //Add Mailing
 builder.Services.ConfigureEmailSettings(builder.Configuration);
+//Add HttpService
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(

@@ -4,6 +4,7 @@ using KLTN.Api.Services.Implements;
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application;
 using KLTN.Application.Services;
+using KLTN.Application.Services.HttpServices;
 using KLTN.Domain.Repositories;
 using KLTN.Domain.Services;
 using KLTN.Domain.Settings;
@@ -45,6 +46,11 @@ namespace KLTN.Api.Extensions
             return services;
         }
 
+        public static IServiceCollection AddCustomHttpServices(this ServiceCollection services)
+        {
+            services.AddHttpClient<BackgroundJobHttpService>();
+            return services;
+        }
         public static IServiceCollection ConfigureEmailSettings(this IServiceCollection services,IConfiguration configuration)
         {
             var emailSettings = configuration.GetSection(nameof(SMTPEmailSettings))

@@ -131,5 +131,12 @@ namespace KLTN.Api.Controllers
             var response = await _courseService.GetStatisticAsync(courseId);
             return StatusCode(response.StatusCode,response);
         }
+        [HttpGet("{courseId}/end-term")]
+        [ServiceFilter(typeof(CourseResourceAccessFilter))]
+        public async Task<IActionResult> GetEndtermAsync(string courseId)
+        {
+            var response = await _courseService.GetEndTermAsync(courseId);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }
