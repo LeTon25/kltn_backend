@@ -16,14 +16,24 @@ namespace KLTN.BackgroundJobs.Services
             _mailService = mailService;
         }
 
-        public void SendReminderAssignmentDueDate(List<string> Emails, string CourseName, string AssignmentName, DateTime DueDate)
+        public string SendReminderAssignmentDueDate(List<string> Emails, string CourseName, string AssignmentName, DateTime DueDate)
         {
+            var emailRequest = new MailRequest()
+            {
+                Subject = "Thông báo",
+                Body = "",
+                ToAddresses = Emails,
+            };
             var placeHolders = new Dictionary<string, string>()
             {
-                { "" , "" },
-                { "" , "" },
-                { "" , "" }
+                { "ClassName" , CourseName },
+                { "AssignmentTitle" , AssignmentName },
+                { "DueDate" , DueDate.ToString("dd-MM-yyyy HH:mm:ss") }
             };
+
+            var jobId = _scheduleJobService.Schedule(() => _mailService.SendEmail(emailRequest, "AssignmentDeadline", placeHolders,new CancellationToken()), enqueueAt: DueDate.AddHours(-8));
+
+            return jobId;
         }
     }
 }

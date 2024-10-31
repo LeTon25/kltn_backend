@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace KLTN.BackgroundJobs.Controllers
 {
@@ -7,10 +6,10 @@ namespace KLTN.BackgroundJobs.Controllers
     [ApiController]
     public class ScheduleJobsController : ControllerBase
     {
-        [HttpPost("assignment-due-date")]
-        public async Task<IActionResult> SendReminerAssignmentDueDate()
-        {
+        //[HttpPost("assignment-due-date")]
+        //public async Task<IActionResult> SendReminerAssignmentDueDate()
+        //{
 
-        }
+        //}
     }
 }
