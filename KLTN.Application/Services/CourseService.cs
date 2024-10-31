@@ -411,7 +411,7 @@ namespace KLTN.Application.Services
         public async Task<ApiResponse<AssignmentDto>> GetEndTermAsync(string courseId)
         {
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false, c => c.Lecturer!,c => c.Setting!);
-            if(course.Setting!.HasFinalScore)
+            if(!course.Setting!.HasFinalScore)
             {
                 return new ApiResponse<AssignmentDto>(400, "Lớp học không có đồ án cuối kì");
             }
@@ -461,7 +461,7 @@ namespace KLTN.Application.Services
             }
             if (isLoadAssignment)
             {
-                var assignments = await _unitOfWork.AssignmentRepository.FindByCondition(c=>c.CourseId.Equals(courseId),false, c=>c.ScoreStructure!).ToListAsync();
+                var assignments = await _unitOfWork.AssignmentRepository.FindByCondition(c=>c.CourseId.Equals(courseId) && c.Type != Constants.AssignmentType.Final,false, c=>c.ScoreStructure!).ToListAsync();
                 courseDto.Assignments = mapper.Map<List<AssignmentNoCourseDto>>(assignments);
             }
       
