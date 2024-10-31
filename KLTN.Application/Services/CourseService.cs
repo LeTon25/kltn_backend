@@ -117,7 +117,22 @@ namespace KLTN.Application.Services
                 MinGroupSize = null
             };
             await _unitOfWork.SettingRepository.AddAsync(newSetting);
-
+            //Tạo assign cho end term
+            var endtermScore = scoreStructure.Children!.FirstOrDefault(c=>c.ColumnName.Equals(Constants.Score.EndtermColumnName));
+            var endtermAssignment = new Assignment()
+            {
+                AssignmentId = Guid.NewGuid().ToString(),
+                CourseId = newCourseId.ToString(),
+                ScoreStructureId = endtermScore!.Id,
+                Title = "Bài nộp cuối kỳ",
+                Type = Constants.AssignmentType.Final,
+                Content = "Nơi để học sinh nộp bài cuối kỳ",
+                Attachments = new List<Domain.Entities.File>(),
+                AttachedLinks = new List<MetaLinkData>(),
+                IsGroupAssigned = true,
+                CreatedAt = DateTime.Now,
+            };
+            await _unitOfWork.AssignmentRepository.AddAsync(endtermAssignment);
             await _unitOfWork.SaveChangesAsync();
 
             var dto = mapper.Map<CourseDto>(newCourse);

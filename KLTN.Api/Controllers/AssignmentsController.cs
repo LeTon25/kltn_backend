@@ -21,7 +21,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> GetByIdAsync(string assignmentId)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await assignmentService.GetAssignmentByIdAsync(assignmentId, userId);
+            var response = await assignmentService.GetAssignmentByIdAsync(assignmentId, userId!);
             return StatusCode(response.StatusCode,response);
 
         }
@@ -37,20 +37,20 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PutAssignmentId(string assignmentId, [FromBody] UpSertAssignmentRequestDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await assignmentService.UpdateAssignmentAsync(userId,assignmentId, requestDto));
+            return SetResponse(await assignmentService.UpdateAssignmentAsync(userId!,assignmentId, requestDto));
         }
 
         [HttpDelete("{assignmentId}")]
         public async Task<IActionResult> DeleteAssignmentAsync(string assignmentId)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await assignmentService.DeleteAssignmentAsync(userId,assignmentId));
+            return SetResponse(await assignmentService.DeleteAssignmentAsync(userId!,assignmentId));
         }
         [HttpGet("{assignmentId}/submissions")]
         public async Task<IActionResult> GetSubmissionsInAssignment(string assignmentId)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await assignmentService.GetSubmissionsInAssignmentsAsync(userId,assignmentId);
+            var response = await assignmentService.GetSubmissionsInAssignmentsAsync(userId!,assignmentId);
             return StatusCode(response.StatusCode,response);
         }
     }

@@ -187,7 +187,7 @@ namespace KLTN.Application.Services
                         {
                             User = mapper.Map<UserDto>(student),
                             Submission = mapper.Map<SubmissionNoScoreDto>(submissionSubmitedByUser),
-                            Score = score != null ? score.Value : null
+                            Score = score != null ? score.Value : null,
                         });
                     }
                     else
@@ -230,6 +230,8 @@ namespace KLTN.Application.Services
                         User = mapper.Map<UserDto>(student),
                         Submission = mapper.Map<SubmissionNoScoreDto>(submissionInGroup),
                         Score = score != null ? score.Value : null,
+                        GroupId = groupByUser.GroupId,
+                        GroupName = groupByUser.GroupName,  
 
                     });
                 }
