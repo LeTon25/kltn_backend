@@ -197,13 +197,13 @@ namespace KLTN.Api.Controllers
 
             var placeholders = new Dictionary<string, string>()
             {
-                { "UserName" ,user.UserName },
+                { "UserName" ,user.UserName! },
                 { "ResetPasswordLink" , callbackUrl }
             };    
             await _sMTPEmailService.SendEmailAsync(new MailRequest
             {
                 Subject = "Quên mật khẩu",
-                ToAddress = user.Email,
+                ToAddress = user.Email!,
                 Body = ""
             },"ForgetPassword",placeholders);
 

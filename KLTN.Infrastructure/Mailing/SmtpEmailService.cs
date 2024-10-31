@@ -2,8 +2,6 @@
 using KLTN.Domain.Settings;
 using MailKit.Net.Smtp;
 using MimeKit;
-using System.Net.WebSockets;
-
 
 namespace KLTN.Infrastructure.Mailing
 {
@@ -16,6 +14,64 @@ namespace KLTN.Infrastructure.Mailing
             this._settings = settings;
             this._smtpClient = new SmtpClient();
         }
+
+        public void SendEmail(MailRequest request, string? templateName = null, Dictionary<string, string>? placeHolders = null, CancellationToken cancellationToken = default)
+        {
+            var emailBody = request.Body;
+            if (templateName != null)
+            {
+                var currentDirectory = Directory.GetCurrentDirectory();
+                var templatePath = Path.Combine(_settings.TemplateFolderPath, $"{templateName}.html");
+                if (!File.Exists(templatePath))
+                {
+                    throw new FileNotFoundException($"Template {templateName} not found.");
+                }
+                emailBody = File.ReadAllText(templatePath);
+                foreach (var placeholder in placeHolders)
+                {
+                    emailBody = emailBody.Replace($"{{{{{placeholder.Key}}}}}", placeholder.Value);
+                }
+            }
+            var emailMessage = new MimeMessage
+            {
+                Sender = new MailboxAddress(_settings.DisplayName, request.From ?? _settings.From),
+                Subject = request.Subject,
+                Body = new BodyBuilder()
+                {
+                    HtmlBody = emailBody,
+                }.ToMessageBody(),
+            };
+            if (request.ToAddresses.Any())
+            {
+                foreach (var address in request.ToAddresses)
+                {
+                    emailMessage.To.Add(MailboxAddress.Parse(address));
+                }
+            }
+            else
+            {
+                var toAddress = request.ToAddress;
+                emailMessage.To.Add(MailboxAddress.Parse(toAddress));
+            }
+
+            try
+            {
+                _smtpClient.Connect(_settings.Host, _settings.Port, _settings.UseSsl, cancellationToken);
+                _smtpClient.Authenticate(_settings.UserName, _settings.Password, cancellationToken);
+                _smtpClient.Send(emailMessage, cancellationToken);
+                _smtpClient.Disconnect(true, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            finally
+            {
+                _smtpClient.Disconnect(true);
+                _smtpClient.Dispose();
+            }
+        }
+
         public async Task SendEmailAsync(MailRequest request,string? templateName = null, Dictionary<string, string>? placeHolders = null, CancellationToken cancellationToken = default)
         {
  
@@ -55,6 +111,8 @@ namespace KLTN.Infrastructure.Mailing
                 var toAddress = request.ToAddress;
                 emailMessage.To.Add(MailboxAddress.Parse(toAddress));
             }
+
+
             try
             {
                 await _smtpClient.ConnectAsync(_settings.Host, _settings.Port, _settings.UseSsl, cancellationToken);
@@ -65,6 +123,11 @@ namespace KLTN.Infrastructure.Mailing
             catch (Exception ex) 
             { 
                 Console.WriteLine(ex.ToString());   
+            }
+            finally
+            {
+                await _smtpClient.DisconnectAsync(true);
+                _smtpClient.Dispose();
             }
          
         }

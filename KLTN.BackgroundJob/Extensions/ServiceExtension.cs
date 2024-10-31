@@ -1,10 +1,19 @@
 ﻿using Hangfire;
+using KLTN.BackgroundJobs.ScheduleJobs;
+using KLTN.Domain.ScheduleJobs;
+using KLTN.Domain.Services;
 using KLTN.Domain.Settings;
+using KLTN.Infrastructure.Mailing;
 
 namespace KLTN.BackgroundJobs.Extensions
 {
     public static class ServiceExtension
     {
+        public static IServiceCollection AddCustomService(this IServiceCollection services)
+        {
+            services.AddTransient<IScheduleJobService,HangfireService>();
+            return services;
+        }
         public static IServiceCollection AddHangfireService(this IServiceCollection services,IConfiguration configuration)
         {
             var settingsSection  = configuration.GetSection("HangFireSettings");
@@ -21,7 +30,14 @@ namespace KLTN.BackgroundJobs.Extensions
                => { serverOptions.ServerName = settings.ServerName; });
             return services;
         }
-
+        public static IServiceCollection ConfigureEmailSettings(this IServiceCollection services, IConfiguration configuration)
+        {
+            var emailSettings = configuration.GetSection(nameof(SMTPEmailSettings))
+                .Get<SMTPEmailSettings>();
+            services.AddSingleton<ISMTPEmailSettings>(emailSettings!);
+            services.AddTransient<ISMTPEmailService, SmtpEmailService>();
+            return services;
+        }
         private static IServiceCollection ConfigureHangfireServices(this IServiceCollection services,
             HangFireSettings settings)
         {

@@ -19,6 +19,8 @@ using KLTN.Application.DTOs.Settings;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Reflection.Metadata;
 using KLTN.Domain;
+using KLTN.Application.DTOs.Comments;
+using KLTN.Domain.Enums;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -47,19 +49,6 @@ namespace KLTN.Application.Services
             this.httpContextAccessor = httpContextAccessor;
         }
         #region for controller
-        public async Task<ApiResponse<object>> GetAllCoursesAsync()
-        {
-            var courses = await _unitOfWork.CourseRepository.GetAllAsync(null,c=>c.Setting);
-            var courseDtos = mapper.Map<List<CourseDto>>(courses.ToList());
-            foreach(var courseDto in courseDtos)
-            {
-                var lecturer = mapper.Map<UserDto>(await _userManager.FindByIdAsync(courseDto.LecturerId)) ;
-                var subject = mapper.Map<SubjectDto>(await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c=>c.SubjectId == courseDto.SubjectId));
-                courseDto.Lecturer = lecturer;
-                courseDto.Subject = subject;
-            }
-            return new ApiResponse<object>(200, "Thành công", courseDtos);
-        }
         public async Task<ApiResponse<object>> UpdateInviteCodeAsync(string courseId, string inviteCode)
         {
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
@@ -419,6 +408,23 @@ namespace KLTN.Application.Services
             return response ;
            
         }
+        public async Task<ApiResponse<AssignmentDto>> GetEndTermAsync(string courseId)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false, c => c.Lecturer!,c => c.Setting!);
+            if(course.Setting!.HasFinalScore)
+            {
+                return new ApiResponse<AssignmentDto>(400, "Lớp học không có đồ án cuối kì");
+            }
+            var assignment = await _unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c=>c.CourseId.Equals(courseId) && c.Type==Constants.AssignmentType.Final);
+            
+            var assignmentDto = mapper.Map<AssignmentDto>(assignment);
+            assignmentDto.CreateUser = mapper.Map<UserDto>(course.Lecturer);
+
+            var comments = await _unitOfWork.CommentRepository.FindByCondition(c => c.CommentableId.Equals(assignment.AssignmentId) && c.CommentableType.Equals(CommentableType.Assignment), false, c => c.User!).ToListAsync();
+            assignmentDto.Comments = mapper.Map<List<CommentDto>>(comments);
+            return new ApiResponse<AssignmentDto>(200, "Thành công", assignmentDto);
+
+        }
         #endregion
 
         #region for_service
@@ -446,7 +452,7 @@ namespace KLTN.Application.Services
             }
             if (isLoadScore)
             {
-                var score = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false);
+                var score = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId) && c.ParentId == null, false);
                 if (score != null)
                 {
                     await scoreStructureService.LoadChildrenAsync(score);
@@ -455,7 +461,7 @@ namespace KLTN.Application.Services
             }
             if (isLoadAssignment)
             {
-                var assignments = await _unitOfWork.AssignmentRepository.FindByCondition(c=>c.CourseId.Equals(courseId) && !c.Type.Equals(Constants.AssignmentType.Final),false, c=>c.ScoreStructure!).ToListAsync();
+                var assignments = await _unitOfWork.AssignmentRepository.FindByCondition(c=>c.CourseId.Equals(courseId),false, c=>c.ScoreStructure!).ToListAsync();
                 courseDto.Assignments = mapper.Map<List<AssignmentNoCourseDto>>(assignments);
             }
       
