@@ -12,4 +12,9 @@ namespace KLTN.Application.DTOs.Accounts
         public List<CourseDto> CreatedCourses { get; set; }
         public List<CourseDto> EnrolledCourses { get; set; }
     }
+
+    public class ArchivedCourseByUserDto
+    {
+        public List<CourseDto> ArchivedCourses { get; set; }
+    }
 }

@@ -40,7 +40,7 @@ namespace KLTN.Application.Services
             var userData = await userManager.Users.ToListAsync();
             var subjectData = await unitOfWork.SubjectRepository.GetAllAsync();
 
-            var teachingCourses = unitOfWork.CourseRepository.GetAll(c => c.LecturerId == userId).ToList();
+            var teachingCourses = unitOfWork.CourseRepository.GetAll(c => c.LecturerId == userId && c.SaveAt == null).ToList();
             var teachingCourseDtos = mapper.Map<List<CourseDto>>(teachingCourses);
 
             foreach(var teachingCourseDto in teachingCourseDtos)
@@ -53,7 +53,7 @@ namespace KLTN.Application.Services
             var enrollData = unitOfWork.EnrolledCourseRepository.GetAll(c => c.StudentId == userId);
 
             var enrollCourseIds = enrollData.Select(e => e.CourseId).ToList();
-            var enrollCourses = unitOfWork.CourseRepository.GetAll(c => enrollCourseIds.Contains(c.CourseId)).ToList();
+            var enrollCourses = unitOfWork.CourseRepository.GetAll(c => enrollCourseIds.Contains(c.CourseId) && c.SaveAt == null).ToList();
 
             var enrollCourseDto = mapper.Map<List<CourseDto>>(enrollCourses);
             foreach(var courseDto in enrollCourseDto)
@@ -67,7 +67,42 @@ namespace KLTN.Application.Services
                 EnrolledCourses = enrollCourseDto,
             });
         }
+        public async Task<ApiResponse<object>> GetArchivedCoursesByCurrentUserAsync(string userId)
+        {
+            var userData = await userManager.Users.ToListAsync();
+            var subjectData = await unitOfWork.SubjectRepository.GetAllAsync();
 
-        
+            var data = new List<CourseDto>();
+
+            var teachingCourses = await unitOfWork.CourseRepository.FindByCondition(c => c.LecturerId == userId && c.SaveAt != null).ToListAsync();
+            var teachingCourseDtos = mapper.Map<List<CourseDto>>(teachingCourses);
+
+            foreach (var teachingCourseDto in teachingCourseDtos)
+            {
+                teachingCourseDto.Subject = mapper.Map<SubjectDto>(subjectData.FirstOrDefault(c => c.SubjectId == teachingCourseDto.SubjectId));
+                teachingCourseDto.Lecturer = mapper.Map<UserDto>(userData.FirstOrDefault(c => c.Id == teachingCourseDto.SubjectId));
+            }
+
+            data.AddRange(teachingCourseDtos);
+
+            var enrollData = await unitOfWork.EnrolledCourseRepository.FindByCondition(c => c.StudentId == userId).ToListAsync();
+
+            var enrollCourseIds = enrollData.Select(e => e.CourseId).ToList();
+            var enrollCourses = await unitOfWork.CourseRepository.FindByCondition(c => enrollCourseIds.Contains(c.CourseId) && c.SaveAt != null).ToListAsync();
+
+            var enrollCourseDto = mapper.Map<List<CourseDto>>(enrollCourses);
+            foreach (var courseDto in enrollCourseDto)
+            {
+                courseDto.Subject = mapper.Map<SubjectDto>(subjectData.FirstOrDefault(c => c.SubjectId == courseDto.SubjectId));
+                courseDto.Lecturer = mapper.Map<UserDto>(userData.FirstOrDefault(c => c.Id == courseDto.SubjectId));
+            }
+
+            data.AddRange(enrollCourseDto);
+            return new ApiResponse<object>(200, "Thành công", new ArchivedCourseByUserDto()
+            {
+               ArchivedCourses = data 
+            });
+        }
+
     }
 }
