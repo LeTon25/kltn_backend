@@ -12,11 +12,6 @@ namespace KLTN.Application.DTOs.ScoreStructures
                 .GreaterThan(0)
                 .LessThanOrEqualTo(100)
                 .WithMessage("Phần trăm phải từ 1 - 100");
-
-            RuleFor(c => c.MaxPercent)
-                .GreaterThan(0)
-                .LessThanOrEqualTo(100)
-                .WithMessage("Phần trăm phải từ 1 - 100");
         }   
     }
 }

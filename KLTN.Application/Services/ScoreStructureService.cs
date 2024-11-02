@@ -40,7 +40,6 @@ namespace KLTN.Application.Services
             // Cập nhật thực thể đã tồn tại
             existingEntity.ColumnName = requestDto.ColumnName;
             existingEntity.Percent = requestDto.Percent;
-            existingEntity.MaxPercent = requestDto.MaxPercent;
             existingEntity.ParentId = requestDto.ParentId;
 
             await LoadChildrenAsync(existingEntity);
@@ -226,7 +225,6 @@ namespace KLTN.Application.Services
                 {
                     existingChild.ColumnName = child.ColumnName;
                     existingChild.Percent = child.Percent;
-                    existingChild.MaxPercent = child.MaxPercent;
                     existingChild.CourseId = child.CourseId;
                     // Kiểm tra xem phần trăm của các cột con có vượt quá cột cha không
                     if (parentEntity.Children != null)

@@ -19,7 +19,6 @@ namespace KLTN.Domain.Util
                 Id = parentId,
                 CourseId = courseId,
                 Percent = 100,
-                MaxPercent = 100,
                 ParentId = null,
                 ColumnName = "Điểm sinh viên",
                 Children = new List<ScoreStructure>()
@@ -30,7 +29,6 @@ namespace KLTN.Domain.Util
                         CourseId = courseId,
                         Percent = 50,
                         ColumnName = Constants.Score.MidtermColumnName,
-                        MaxPercent = 50,
                         ParentId = parentId,
                     },
                     new ScoreStructure()
@@ -39,7 +37,6 @@ namespace KLTN.Domain.Util
                         CourseId = courseId,
                         Percent = 50,
                         ColumnName = Constants.Score.EndtermColumnName,
-                        MaxPercent = 50,
                         ParentId = parentId,
                     }
                 }
