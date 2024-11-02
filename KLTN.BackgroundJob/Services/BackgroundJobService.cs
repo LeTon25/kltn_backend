@@ -35,6 +35,5 @@ namespace KLTN.BackgroundJobs.Services
 
             return jobId;
         }
-        public 
     }
 }
