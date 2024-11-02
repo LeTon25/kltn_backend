@@ -215,7 +215,7 @@ namespace KLTN.Application.Services
                     // Kiểm tra xem phần trăm của các cột con có vượt quá cột cha không
                     if(parentEntity.Children != null)
                     {
-                        var childrenPercent = parentEntity.Children.Sum(e => e.Percent);
+                        var childrenPercent = children.Sum(e => e.Percent);
                         if (childrenPercent > parentEntity.Percent)
                             throw new InvalidScorePercentException("Phần trăm của các cột con không được lớn hơn cột cha");
                     }    
@@ -229,7 +229,7 @@ namespace KLTN.Application.Services
                     // Kiểm tra xem phần trăm của các cột con có vượt quá cột cha không
                     if (parentEntity.Children != null)
                     {
-                        var childrenPercent = parentEntity.Children.Sum(e => e.Percent);
+                        var childrenPercent = children.Sum(e=>e.Percent);
                         if (childrenPercent > parentEntity.Percent)
                             throw new InvalidScorePercentException("Phần trăm của các cột con không được lớn hơn cột cha");
                     }
