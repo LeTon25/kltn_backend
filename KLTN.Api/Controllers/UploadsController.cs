@@ -36,8 +36,7 @@ namespace KLTN.Api.Controllers
                 var s3Url = await UploadFileAsync(filePath, file.FileName);
                 var fileType = file.ContentType;
 
-                uploadResults.Add(new FileDto(s3Url,fileType,file.FileName)
-                );
+                uploadResults.Add(new FileDto(s3Url, file.FileName,fileType));
             }
             return Ok(new ApiResponse<List<FileDto>>(200,"Thêm thành công",uploadResults));
         }

@@ -1,9 +1,6 @@
-﻿using AutoMapper;
-using KLTN.Api.Services.Interfaces;
-using KLTN.Application.DTOs.Submissions;
+﻿using KLTN.Application.DTOs.Submissions;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Services;
-using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
