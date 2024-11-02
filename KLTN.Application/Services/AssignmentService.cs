@@ -257,7 +257,7 @@ namespace KLTN.Application.Services
             assignmentDto.Comments = await commentService.GetCommentDtosFromPostAsync(assignmentId, CommentableType.Assignment);
             if(currentUserId != assignmentDto.Course.LecturerId)
             {
-                var submission = await unitOfWork.SubmissionRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignment.AssignmentId),false,c=>c.CreateUser);
+                var submission = await unitOfWork.SubmissionRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignment.AssignmentId) && c.UserId.Equals(currentUserId), false,c=>c.CreateUser);
                 assignmentDto.Submission = mapper.Map<SubmissionDto>(submission);
             }
     

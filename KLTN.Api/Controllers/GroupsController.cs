@@ -56,7 +56,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PutGroupIdAsync(string groupId, [FromBody] CreateGroupRequestDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var data = await groupService.PutGroupAsync(groupId, requestDto, userId);
+            var data = await groupService.PutGroupAsync(groupId, requestDto, userId!);
             if (data.StatusCode == 200)
             {
                 var courseDto = await courseService.GetCourseDtoByIdAsync((data.Data as GroupDto).CourseId);

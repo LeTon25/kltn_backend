@@ -21,6 +21,7 @@ using System.Reflection.Metadata;
 using KLTN.Domain;
 using KLTN.Application.DTOs.Comments;
 using KLTN.Domain.Enums;
+using KLTN.Application.DTOs.Submissions;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -423,20 +424,26 @@ namespace KLTN.Application.Services
             return response ;
            
         }
-        public async Task<ApiResponse<AssignmentDto>> GetEndTermAsync(string courseId)
+        public async Task<ApiResponse<AssignmentDto>> GetEndTermAsync(string courseId,string currentUserId)
         {
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false, c => c.Lecturer!,c => c.Setting!);
             if(!course.Setting!.HasFinalScore)
             {
                 return new ApiResponse<AssignmentDto>(400, "Lớp học không có đồ án cuối kì");
             }
-            var assignment = await _unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c=>c.CourseId.Equals(courseId) && c.Type==Constants.AssignmentType.Final);
+            var assignment = await _unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c=>c.CourseId.Equals(courseId) && c.Type==Constants.AssignmentType.Final,false,c=>c.ScoreStructure!);
             
             var assignmentDto = mapper.Map<AssignmentDto>(assignment);
             assignmentDto.CreateUser = mapper.Map<UserDto>(course.Lecturer);
 
             var comments = await _unitOfWork.CommentRepository.FindByCondition(c => c.CommentableId.Equals(assignment.AssignmentId) && c.CommentableType.Equals(CommentableType.Assignment), false, c => c.User!).ToListAsync();
             assignmentDto.Comments = mapper.Map<List<CommentDto>>(comments);
+            
+            if (currentUserId != course.LecturerId)
+            {
+                var submission = await _unitOfWork.SubmissionRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignment.AssignmentId) && c.UserId.Equals(currentUserId), false, c => c.CreateUser!);
+                assignmentDto.Submission = mapper.Map<SubmissionDto>(submission);
+            }
             return new ApiResponse<AssignmentDto>(200, "Thành công", assignmentDto);
 
         }

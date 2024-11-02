@@ -135,7 +135,8 @@ namespace KLTN.Api.Controllers
         [ServiceFilter(typeof(CourseResourceAccessFilter))]
         public async Task<IActionResult> GetEndtermAsync(string courseId)
         {
-            var response = await _courseService.GetEndTermAsync(courseId);
+            string currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var response = await _courseService.GetEndTermAsync(courseId,currentUserId);
             return StatusCode(response.StatusCode, response);
         }
     }
