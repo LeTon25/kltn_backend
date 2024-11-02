@@ -26,12 +26,12 @@ namespace KLTN.Application.Services
 
         public async Task<ApiResponse<List<ScoreDto>>> ScoringSubmissionAsync(CreateScoreDto requestDto, string currentUserId)
         {
-            var submission = await unitOfWork.SubmissionRepository.GetFirstOrDefaultAsync(c => c.SubmissionId.Equals(requestDto.SubmissionId), false, c => c.Assignment, c => c.Assignment.Course,c => c.Scores);
+            var submission = await unitOfWork.SubmissionRepository.GetFirstOrDefaultAsync(c => c.SubmissionId.Equals(requestDto.SubmissionId), false, c => c.Assignment!, c => c.Assignment.Course!,c => c.Scores);
             if (submission == null)
             {
                 return new ApiBadRequestResponse<List<ScoreDto>>("Không tìm thấy bài nộp");
             }
-            if (currentUserId != submission.Assignment.Course.LecturerId)
+            if (currentUserId != submission.Assignment.Course!.LecturerId)
             {
                 return new ApiBadRequestResponse<List<ScoreDto>>("Chỉ có giáo viên của lớp mới có quyền chấm điểm");
             }

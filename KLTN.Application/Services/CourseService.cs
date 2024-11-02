@@ -447,6 +447,32 @@ namespace KLTN.Application.Services
             return new ApiResponse<AssignmentDto>(200, "Thành công", assignmentDto);
 
         }
+        public async Task<ApiResponse<ArchiveCourseResult>> ArchiveCourseAsync(string courseId, string currentUserId)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
+            if(course == null)
+            {
+                return new ApiNotFoundResponse<ArchiveCourseResult>("Không tìm thấy lớp học",new ArchiveCourseResult
+                {
+                    Result = false
+                });
+            }
+            if(course.LecturerId != currentUserId)
+            {
+                return new ApiResponse<ArchiveCourseResult>(403,"Chỉ có giáo viên mới có thể lữu trữ lớp học", new ArchiveCourseResult
+                {
+                    Result = false
+                });
+            }
+            course.SaveAt = DateTime.Now;
+            _unitOfWork.CourseRepository.Update(course);
+            await _unitOfWork.SaveChangesAsync();
+            return new ApiResponse<ArchiveCourseResult>(200, "Thành công", new ArchiveCourseResult
+            {
+                Result = true
+            });
+
+        }
         #endregion
 
         #region for_service

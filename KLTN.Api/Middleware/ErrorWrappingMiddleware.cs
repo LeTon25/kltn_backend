@@ -44,7 +44,6 @@ namespace KLTN.Api.Middleware
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
 
-            // Trả về phản hồi chi tiết hơn tùy vào môi trường
             if (!context.Response.HasStarted && context.Response.StatusCode != 204)
             {
                 context.Response.ContentType = "application/json";

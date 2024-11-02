@@ -139,5 +139,13 @@ namespace KLTN.Api.Controllers
             var response = await _courseService.GetEndTermAsync(courseId,currentUserId);
             return StatusCode(response.StatusCode, response);
         }
+
+        [HttpPost("{courseId}/saved")]
+        public async Task<IActionResult> PostArchiveAsync(string courseId)
+        {
+            string currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var response = await _courseService.ArchiveCourseAsync(courseId, currentUserId);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

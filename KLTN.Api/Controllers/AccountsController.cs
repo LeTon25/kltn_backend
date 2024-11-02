@@ -173,14 +173,21 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> GetAllCoursesByCurrentUserAsync()
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse( await _accountService.GetCoursesByCurrentUserAsync(userId));
+            return SetResponse( await _accountService.GetCoursesByCurrentUserAsync(userId!));
+        }
+        [HttpGet("courses/saved")]
+        [Authorize]
+        public async Task<IActionResult> GetArchiveCoursesByCurrentUserAsync()
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return SetResponse(await _accountService.GetArchivedCoursesByCurrentUserAsync(userId!));
         }
         [HttpGet("requests")]
         [Authorize]
         public async Task<IActionResult> GetRequestByUserAsync()
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await _accountService.GetRequestsByUserAsync(userId);
+            var response = await _accountService.GetRequestsByUserAsync(userId!);
             return StatusCode(response.StatusCode,response);
         }
         [HttpPost("forgot-password")]

@@ -23,7 +23,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> ScoringSubmissionAsync(CreateScoreDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await scoreServices.ScoringSubmissionAsync(requestDto,userId);
+            var response = await scoreServices.ScoringSubmissionAsync(requestDto,userId!);
             return StatusCode(response.StatusCode,response);
         }
         [HttpPatch("{scoreId}")]
@@ -31,7 +31,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> UpdateScoreAsync(UpdateScoreDto requestDto,string scoreId)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await scoreServices.UpdateScoreAsync(requestDto,scoreId ,userId);
+            var response = await scoreServices.UpdateScoreAsync(requestDto,scoreId ,userId!);
             return StatusCode(response.StatusCode,response);    
         }
     }
