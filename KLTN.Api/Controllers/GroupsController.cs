@@ -34,7 +34,7 @@ namespace KLTN.Api.Controllers
             var data = await groupService.GetByIdAsync(groupId);
             if(data.StatusCode == 200)
             {
-                var courseDto = await courseService.GetCourseDtoByIdAsync((data.Data as GroupDto).CourseId);
+                var courseDto = await courseService.GetCourseDtoByIdAsync((data.Data as GroupDto).CourseId,false,false,false,false);
                 (data.Data as GroupDto).Course = courseDto;
             }
             return SetResponse(data);
@@ -89,7 +89,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> AssignLeaderAsync(string groupId ,[FromBody]ChangeLeaderRequestDto dto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await groupService.AssignLeaderAsync(userId,groupId,dto.StudentId);
+            var response = await groupService.AssignLeaderAsync(userId!,groupId,dto.StudentId);
             return StatusCode(response.StatusCode, response);
         }
         [HttpGet("{groupId}/report")]

@@ -180,7 +180,7 @@ namespace KLTN.Application.Services
                 return new ApiBadRequestResponse<object>("Bạn không có quyền thêm thành viên vào");
             }
 
-            var currentMembersCount = groupMembers.Count;
+            var currentMembersCount = groupMembers != null ?  groupMembers.Count : 0;
 
             if (requestDto.Emails.Length > 0)
             {
@@ -211,7 +211,7 @@ namespace KLTN.Application.Services
                         {
                             GroupId = groupId,
                             StudentId = student.Id,
-                            IsLeader = false,
+                            IsLeader = currentMembersCount == 0 ? true : false,
                         });
                         currentMembersCount += 1;
                     }
@@ -251,24 +251,24 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> AssignLeaderAsync(string currentUserId, string groupId, string leaderId)
         {
-            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId, false, c => c.Course!);
+            var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId, false, c => c.Course!,c => c.GroupMembers);
             if (group == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy nhóm");
             }
-            var groupMemberByCurrentUser = await _unitOfWork.GroupMemberRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId && c.StudentId == currentUserId);
+            var groupMemberByCurrentUser = group.GroupMembers != null ? group.GroupMembers.FirstOrDefault(c => c.GroupId == groupId && c.StudentId == currentUserId) : null;
             if ((groupMemberByCurrentUser != null && groupMemberByCurrentUser.IsLeader == false) || currentUserId != group.Course?.LecturerId)
             {
                 return new ApiBadRequestResponse<object>("Bạn không có quyền xóa thành viên");
             }
-            var oldLeader = await _unitOfWork.GroupMemberRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId && c.IsLeader == true);
+            var oldLeader = group.GroupMembers != null ? group.GroupMembers.FirstOrDefault(c => c.GroupId == groupId && c.IsLeader == true) : null;
             if (oldLeader != null)
             {
                 oldLeader.IsLeader = false;
                 _unitOfWork.GroupMemberRepository.Update(oldLeader);
             }
 
-            var newLeader = await _unitOfWork.GroupMemberRepository.GetFirstOrDefaultAsync(c => c.GroupId == groupId && c.StudentId == leaderId);
+            var newLeader = group.GroupMembers != null ? group.GroupMembers.FirstOrDefault(c => c.GroupId == groupId && c.StudentId == leaderId) : null;
             if (newLeader == null) {
                 return new ApiBadRequestResponse<object>("Người bạn chọn làm nhóm trưởng vẫn chưa tham gia nhóm");
             }
