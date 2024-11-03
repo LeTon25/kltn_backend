@@ -1,5 +1,4 @@
-﻿using Amazon.Runtime.Internal.Transform;
-using AutoMapper;
+﻿using AutoMapper;
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Accounts;
 using KLTN.Application.DTOs.Users;
@@ -8,7 +7,6 @@ using KLTN.Application.Helpers.Response;
 using KLTN.Application.Services;
 using KLTN.Domain;
 using KLTN.Domain.Entities;
-using KLTN.Domain.Exceptions;
 using KLTN.Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

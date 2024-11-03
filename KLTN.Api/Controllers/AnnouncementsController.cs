@@ -1,10 +1,6 @@
-﻿using AutoMapper;
-using KLTN.Api.Services.Interfaces;
-using KLTN.Application.DTOs.Announcements;
+﻿using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Services;
-using KLTN.Domain.Entities;
-using KLTN.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
