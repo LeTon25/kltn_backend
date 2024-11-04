@@ -30,7 +30,7 @@ namespace KLTN.Api.Filters
                 return;
             }
 
-            var course = await _db.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
+            var course = await _db.Courses.AsNoTracking().FirstOrDefaultAsync(c => c.CourseId == courseId);
 
             if (course == null)
             {

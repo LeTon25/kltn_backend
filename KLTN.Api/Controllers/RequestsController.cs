@@ -20,28 +20,28 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> MakeRequestToJoinAsync(string groupId)
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await requestService.MakeRequestToJoinAsync(groupId, currentUserId);
+            var response = await requestService.MakeRequestToJoinAsync(groupId, currentUserId!);
             return StatusCode(response.StatusCode, response);
         }
         [HttpDelete("{groupId}/remove-request")]
         public async Task<IActionResult> RemoveRequestToJoinAsync(string groupId)
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await requestService.DeleteRequestToJoinAsync(groupId, currentUserId);
+            var response = await requestService.DeleteRequestToJoinAsync(groupId, currentUserId!);
             return StatusCode(response.StatusCode, response);
         }
         [HttpPost("{groupId}/accept-request")]
         public async Task<IActionResult> AcceptRequestToJoinAsync(string groupId)
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await requestService.AcceptRequestToJoinAsync(groupId, currentUserId);
+            var response = await requestService.AcceptRequestToJoinAsync(groupId, currentUserId!);
             return StatusCode(response.StatusCode, response);
         }
         [HttpGet("user/requests")]
         public async Task<IActionResult> GetRequestsByUserAsync()
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await requestService.GetRequestsByUserAsync(currentUserId);
+            var response = await requestService.GetRequestsByUserAsync(currentUserId!);
             return StatusCode(response.StatusCode, response);
         }
     }
