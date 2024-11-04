@@ -2,12 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 using KLTN.Application.Helpers.Response;
 
 namespace KLTN.Api.Filters
@@ -31,6 +26,7 @@ namespace KLTN.Api.Filters
             }
 
             var group =await _db.Groups
+                .AsNoTracking()
                 .Include(g => g.Course) 
                 .FirstOrDefaultAsync(c => c.GroupId.Equals(groupId));
 

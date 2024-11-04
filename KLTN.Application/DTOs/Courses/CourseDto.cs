@@ -4,12 +4,7 @@ using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.DTOs.Settings;
 using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Users;
-using KLTN.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace KLTN.Application.DTOs.Courses
 {

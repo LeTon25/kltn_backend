@@ -26,7 +26,13 @@ namespace KLTN.Infrastructure.Configurations
             #region relationship
             builder.HasOne(c => c.Course)
                 .WithMany(e => e.Groups)
-                .HasForeignKey(c => c.CourseId); 
+                .HasForeignKey(c => c.CourseId);
+
+            builder.HasOne(c => c.Assignment)
+                .WithMany(e => e.Groups)
+                .HasForeignKey(c=>c.AssignmentId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Cascade);
             #endregion
 
         }

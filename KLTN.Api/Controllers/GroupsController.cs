@@ -1,6 +1,4 @@
-﻿using Amazon.S3.Model.Internal.MarshallTransformations;
-using AutoMapper;
-using KLTN.Api.Filters;
+﻿using KLTN.Api.Filters;
 using KLTN.Application.DTOs.Groups;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Services;
@@ -37,7 +35,7 @@ namespace KLTN.Api.Controllers
                 var courseDto = await courseService.GetCourseDtoByIdAsync((data.Data as GroupDto).CourseId,false,false,false,false);
                 (data.Data as GroupDto).Course = courseDto;
             }
-            return SetResponse(data);
+            return StatusCode(data.StatusCode,data);
         }
         [HttpPost]
         [ApiValidationFilter]
@@ -46,10 +44,10 @@ namespace KLTN.Api.Controllers
             var data = await groupService.PostGroupAsync(requestDto);
             if (data.StatusCode == 200)
             {
-                var courseDto = await courseService.GetCourseDtoByIdAsync((data.Data as GroupDto).CourseId);
+                var courseDto = await courseService.GetCourseDtoByIdAsync((data.Data as GroupDto).CourseId,false,false,false,false);
                 (data.Data as GroupDto).Course = courseDto;
             }
-            return SetResponse(data);
+            return StatusCode(data.StatusCode,data);
         }
         [HttpPatch("{groupId}")]
         [ApiValidationFilter]
@@ -59,30 +57,33 @@ namespace KLTN.Api.Controllers
             var data = await groupService.PutGroupAsync(groupId, requestDto, userId!);
             if (data.StatusCode == 200)
             {
-                var courseDto = await courseService.GetCourseDtoByIdAsync((data.Data as GroupDto).CourseId);
+                var courseDto = await courseService.GetCourseDtoByIdAsync((data.Data as GroupDto).CourseId,false,false,false,false);
                 (data.Data as GroupDto).Course = courseDto;
             }
-            return SetResponse(data);
+            return StatusCode(data.StatusCode,data);
         }
 
         [HttpDelete("{groupId}")]
         public async Task<IActionResult> DeleteGroupAsync(string groupId)
         {
-            return SetResponse(await groupService.DeleteGroupAsync(groupId));
+            var response = await groupService.DeleteGroupAsync(groupId);
+            return StatusCode(response.StatusCode,response);
         }
 
         [HttpPost("{groupId}/members")]
         public async Task<IActionResult> PostAddMembersToGroupAsync(string groupId, AddMemberToGroupDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await groupService.PostAddMembersToGroupAsync(groupId, requestDto,userId));
+            var response = await groupService.PostAddMembersToGroupAsync(groupId, requestDto, userId!);
+            return StatusCode(response.StatusCode,response);
 
         }
         [HttpDelete("{groupId}/members")]
         public async Task<IActionResult> DeleteRemoveMemberAsync(string groupId,RemoveMemberFromGroupDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await groupService.DeleteRemoveMemberAsync(groupId, requestDto,userId));
+            var response = await groupService.DeleteRemoveMemberAsync(groupId, requestDto, userId!);
+            return StatusCode(response.StatusCode, response);
         }
 
         [HttpPost("{groupId}/leader")]
@@ -99,6 +100,13 @@ namespace KLTN.Api.Controllers
             var response = await groupService.GetReportsInGroupAsync(groupId);
             return StatusCode(response.StatusCode,response);
         }
-   
+        [HttpPost("{courseId}/auto-generate")]
+        public async Task<IActionResult> PostAutoGenerateGroupAsync(string courseId,AutoGenerateGroupDto requestDto)
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var response = await groupService.AutoGenerateGroupAsync(courseId,requestDto,userId!);
+            return StatusCode(response.StatusCode,response);
+        }
+
     }
 }

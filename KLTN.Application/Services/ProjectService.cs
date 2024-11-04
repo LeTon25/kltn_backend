@@ -137,13 +137,13 @@ namespace KLTN.Application.Services
             {
                 return null;
             }
-            var project = await _unitOfWork.ProjectRepository.GetFirstOrDefaultAsync(c => c.ProjectId == id);
+            var project = await _unitOfWork.ProjectRepository.GetFirstOrDefaultAsync(c => c.ProjectId == id,false,c=>c.User!);
             if (project == null)
             {
                 return null;
             }
             var projectDto = mapper.Map<ProjectDto>(project);
-            projectDto.CreateUser = mapper.Map<UserDto>(await userManager.FindByIdAsync(id));
+            projectDto.CreateUser = mapper.Map<UserDto>(project.User);
 
             return projectDto;
         }

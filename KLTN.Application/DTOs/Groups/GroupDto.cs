@@ -1,21 +1,15 @@
 ﻿using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Projects;
 using KLTN.Application.DTOs.Requests;
-using KLTN.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KLTN.Application.DTOs.Groups
 {
     public class GroupDto
     {
-        public string GroupId { get; set; }
-        public string GroupName { get; set; }
+        public string GroupId { get; set; } = string.Empty;
+        public string GroupName { get; set; } = string.Empty;
         public string? ProjectId { get; set; }
-        public string CourseId { get; set; }
+        public string CourseId { get; set; } = string.Empty;
         public int? NumberOfMembers { get; set; }
         public bool IsApproved { get; set; }
         public string? InviteCode { get; set; }
