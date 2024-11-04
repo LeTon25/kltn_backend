@@ -30,7 +30,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PostAssignmentAsync(UpSertAssignmentRequestDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await assignmentService.CreateAssignmentAsync(userId,requestDto));
+            return SetResponse(await assignmentService.CreateAssignmentAsync(userId!,requestDto));
         }
         [HttpPatch("{assignmentId}")]
         [ApiValidationFilter]

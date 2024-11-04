@@ -79,6 +79,7 @@ namespace KLTN.Application.Services
                 DeletedAt = null,
                 IsApproved = true,
                 GroupType = requestDto.GroupType,
+                AssignmentId = requestDto.AssessmentId
             };
             await _unitOfWork.GroupRepository.AddAsync(newGroup);
 
@@ -107,6 +108,7 @@ namespace KLTN.Application.Services
             group.UpdatedAt = DateTime.Now;
             group.NumberOfMembers = requestDto.NumberOfMembers;
             group.GroupType = requestDto.GroupType;
+            group.AssignmentId = requestDto.AssessmentId;
             _unitOfWork.GroupRepository.Update(group);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -333,7 +335,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiResponse<List<GroupDto>>(403,"Chỉ có giáo viên mới có quyền tạo nhóm tự động");
             }    
-            var allGroupsInCourse = await _unitOfWork.GroupRepository.FindByCondition(c=>c.CourseId.Equals(courseId),false).ToListAsync();
+            var allGroupsInCourse = await _unitOfWork.GroupRepository.FindByCondition(c=>c.CourseId.Equals(courseId) && c.AssignmentId == null,false).ToListAsync();
             var totalGroup = allGroupsInCourse.Count;
             var newGroupsAdded = new List<GroupDto>();
             for (int i = 0 ; i < requestDto.Count;i++)
@@ -357,6 +359,8 @@ namespace KLTN.Application.Services
                     UpdatedAt = null,
                     DeletedAt = null,
                     IsApproved = true,
+                    GroupType = Constants.GroupType.Final
+                   
                 };
                 await _unitOfWork.GroupRepository.AddAsync(newGroup);
                 allGroupsInCourse.Add(newGroup);
