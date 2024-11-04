@@ -25,5 +25,6 @@ namespace KLTN.Domain.Entities
         public Course? Course { get; set; }
         public ICollection<Submission>? Submissions { get; set; }
         public ScoreStructure? ScoreStructure { get; set; }
+        public ICollection<Group>? Groups { get; set; }
     }
 }

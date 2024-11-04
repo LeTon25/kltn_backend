@@ -27,5 +27,10 @@ namespace KLTN.Domain
             public const string InClass = "InClass";
             public const string Final = "Final";
         }
+        public class GroupType
+        {
+            public const string Normal = "Normal";
+            public const string Final = "Final";
+        }
     }
 }

@@ -5,6 +5,7 @@ using KLTN.Application.DTOs.Reports;
 using KLTN.Application.DTOs.Requests;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
+using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
@@ -77,6 +78,7 @@ namespace KLTN.Application.Services
                 UpdatedAt = null,
                 DeletedAt = null,
                 IsApproved = true,
+                GroupType = requestDto.GroupType,
             };
             await _unitOfWork.GroupRepository.AddAsync(newGroup);
 
@@ -104,6 +106,7 @@ namespace KLTN.Application.Services
             group.ProjectId = requestDto.ProjectId;
             group.UpdatedAt = DateTime.Now;
             group.NumberOfMembers = requestDto.NumberOfMembers;
+            group.GroupType = requestDto.GroupType;
             _unitOfWork.GroupRepository.Update(group);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -322,6 +325,10 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<List<GroupDto>>("Không tìm thấy lớp học");
             }
+            if(course.Setting!.MinGroupSize == null || course.Setting!.MaxGroupSize == null)
+            {
+                return new ApiBadRequestResponse<List<GroupDto>>("Vui lòng thiết lập số thành viên tối thiểu và tối đa cho nhóm trong phần cài đặt của lớp");
+            }    
             if(currentUserId != course.LecturerId)
             {
                 return new ApiResponse<List<GroupDto>>(403,"Chỉ có giáo viên mới có quyền tạo nhóm tự động");
