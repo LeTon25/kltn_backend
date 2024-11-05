@@ -206,8 +206,15 @@ namespace KLTN.Application.Services
                 .Where(u => assignment.Course.EnrolledCourses.Any(e => e.StudentId == u.Id))
                 .ToList();
             var submissions = await unitOfWork.SubmissionRepository.FindByCondition(c=>c.AssignmentId.Equals(assignmentId),false,c=>c.CreateUser,c => c.Scores).ToListAsync();
-
-            var groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId), false, c => c.GroupMembers).ToListAsync(); 
+            var groupsInCourse = new List<Group>();  
+            if (assignment.Type.Equals(Constants.AssignmentType.Final))
+            { 
+                groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId) && c.GroupType.Equals(Constants.GroupType.Final), false, c => c.GroupMembers).ToListAsync();
+            }
+            else
+            {
+                groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId) && c.GroupType.Equals(Constants.GroupType.Normal) && c.AssignmentId != null && c.AssignmentId.Equals(assignment.AssignmentId), false, c => c.GroupMembers).ToListAsync();
+            }
             var responseData = new List<SubmissionUserDto>();
             foreach(var student in usersInCourse)
             {
@@ -255,6 +262,8 @@ namespace KLTN.Application.Services
                             User = mapper.Map<UserDto>(student),
                             Submission = null,
                             Score = null,
+                            GroupId = groupByUser.GroupId,
+                            GroupName = groupByUser.GroupName
                         });
                         continue;
                     }
