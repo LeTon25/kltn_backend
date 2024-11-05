@@ -13,7 +13,7 @@ using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using File = KLTN.Domain.Entities.File;
-
+using Group = KLTN.Domain.Entities.Group;
 namespace KLTN.Application.Services
 {
     public class AssignmentService
@@ -99,7 +99,6 @@ namespace KLTN.Application.Services
             assignment.AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks);
             assignment.UpdatedAt = DateTime.Now;
             assignment.Attachments = mapper.Map<List<KLTN.Domain.Entities.File>>(requestDto.Attachments);
-            assignment.IsGroupAssigned =requestDto.IsGroupAssigned;
             assignment.ScoreStructureId = requestDto.ScoreStructureId;
             assignment.Type = requestDto.Type;
             unitOfWork.AssignmentRepository.Update(assignment);
@@ -133,6 +132,7 @@ namespace KLTN.Application.Services
                     return new ApiBadRequestResponse<object>("Cột điểm đã được chấm bởi bài tập khác");
                 }
             }
+            
             var newAssignmentId = Guid.NewGuid();
             var newAssignment = new Assignment()
             {
@@ -151,14 +151,32 @@ namespace KLTN.Application.Services
                 IsGroupAssigned = requestDto.IsGroupAssigned,
             };
             await unitOfWork.AssignmentRepository.AddAsync(newAssignment);
+            
             if (requestDto.IsGroupAssigned)
             {
-                if(requestDto.AutoGenerateGroupDto?.Count > 0)
+
+                if(requestDto.AssignmentOptions == null)
                 {
-                    groups = await GenerateGroupsInAssignment(course, newAssignmentId.ToString(), requestDto.AutoGenerateGroupDto.Count);
-                }    
+                    return new ApiBadRequestResponse<object>("Vui lòng chọn các lựa chọn cho nhóm");
+                }
+
+                if (requestDto.AssignmentOptions.AutoGenerateCount != null)
+                {
+                    groups = await GenerateAutoGroupsAsync(course,newAssignmentId.ToString(),requestDto.AssignmentOptions.AutoGenerateCount.Value);
+                }
+                else if (requestDto.AssignmentOptions.OtherAssignmentId != null) 
+                {
+                    var otherGroups = await GetGroupFromOtherAssignmentAsync(requestDto.AssignmentOptions.OtherAssignmentId);
+                    await AddGroupsToAssignmentsAsync(otherGroups,newAssignmentId.ToString());
+                    groups = mapper.Map<List<GroupDto>>(otherGroups);
+                }else if (requestDto.AssignmentOptions.UseFinalGroup.HasValue && requestDto.AssignmentOptions.UseFinalGroup == true)
+                {
+                    var finalGroups = await GetFinalGroupsInCourseAsync(course);
+                    await AddGroupsToAssignmentsAsync(finalGroups,newAssignmentId.ToString());
+                    groups = mapper.Map<List<GroupDto>>(finalGroups);
+                }
             }
-            
+
             if (!await courseService.CheckIsTeacherAsync(userId, newAssignment.CourseId))
             {
                 return new ApiResponse<object>(403, "Bạn không có quyền tạo bài tập", null);
@@ -178,7 +196,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetSubmissionsInAssignmentsAsync(string userId,string assignmentId)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignmentId), false, c => c.Course!,c => c.Course.EnrolledCourses);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignmentId), false, c => c.Course!,c => c.Course.EnrolledCourses,c => c.Groups);
             if(assignment == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy bài tập");
@@ -293,10 +311,9 @@ namespace KLTN.Application.Services
             }
             return assignmentDto;
         }
-
-        public async Task<List<GroupDto>> GenerateGroupsInAssignment(Course course,string assignmentId,int count)
+        private async Task<List<GroupDto>> GenerateAutoGroupsAsync(Course course, string assignmentId, int count)
         {
-            var allGroupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(course.CourseId), false).ToListAsync();
+            var allGroupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(course.CourseId) && c.AssignmentId.Equals(assignmentId) && c.GroupType.Equals(Constants.GroupType.Normal), false).ToListAsync();
             var totalGroup = allGroupsInCourse.Count;
             var newGroupsAdded = new List<GroupDto>();
             for (int i = 0; i < count; i++)
@@ -320,6 +337,7 @@ namespace KLTN.Application.Services
                     UpdatedAt = null,
                     DeletedAt = null,
                     IsApproved = true,
+                    GroupType = Constants.GroupType.Normal,
                     AssignmentId = assignmentId,
                 };
                 await unitOfWork.GroupRepository.AddAsync(newGroup);
@@ -333,6 +351,56 @@ namespace KLTN.Application.Services
                 group.GroupMembers = new List<GroupMemberDto>();
             }
             return newGroupsAdded;
+        }
+        private async Task<List<Group>> GetGroupFromOtherAssignmentAsync(string assignmentId)
+        {
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId, false,c => c.Groups);
+            if (assignment == null)
+            {
+                return null;
+            }
+            if(assignment.Groups == null)
+            {
+                throw new Exception("Bài tập trên không có nhóm");
+            }
+            var groups = assignment.Groups;
+            var groupIds = assignment.Groups.Select(c => c.GroupId);
+            var groupmembers = await unitOfWork.GroupMemberRepository.FindByCondition(c => groupIds.Contains(c.GroupId), false, c => c.Member!).ToListAsync();
+
+            foreach (var item in groups)
+            {
+                var memberByGroup = groupmembers.Where(c => c.GroupId.Equals(item.GroupId)).ToList();
+                item.GroupMembers = memberByGroup;
+            }
+            return groups.ToList();
+        }
+        private async Task AddGroupsToAssignmentsAsync(List<Group> groups,string assignmentId)
+        {
+            foreach(var item in groups)
+            {
+                item.GroupId = Guid.NewGuid().ToString();
+                item.AssignmentId = assignmentId;
+                item.GroupType = Constants.GroupType.Normal;
+                foreach(var groupMember in item.GroupMembers!)
+                {
+                    groupMember.GroupId = item.GroupId;
+                }
+                await unitOfWork.GroupRepository.AddAsync(item);
+                await unitOfWork.GroupMemberRepository.AddRangeAsync(item.GroupMembers.ToList());
+            }    
+        }
+        private async Task<List<Group>> GetFinalGroupsInCourseAsync(Course course)
+        {
+            var finalGroups = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(course.CourseId) && c.GroupType.Equals(Constants.GroupType.Final)).ToListAsync();
+            var finalGroupsId = finalGroups.Select(c=>c.GroupId).ToList();
+            var groupmembers = await unitOfWork.GroupMemberRepository.FindByCondition(c => finalGroupsId.Contains(c.GroupId), false, c => c.Member!).ToListAsync();
+
+            foreach (var item in finalGroups)
+            {
+                var memberByGroup = groupmembers.Where(c => c.GroupId.Equals(item.GroupId)).ToList();
+                item.GroupMembers = memberByGroup;
+            }
+            return finalGroups;
         }
         #endregion
 

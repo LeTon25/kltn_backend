@@ -1,5 +1,4 @@
-﻿using KLTN.Application.DTOs.Groups;
-using KLTN.Application.DTOs.Uploads;
+﻿using KLTN.Application.DTOs.Uploads;
 
 namespace KLTN.Application.DTOs.Assignments
 {
@@ -14,6 +13,6 @@ namespace KLTN.Application.DTOs.Assignments
         public DateTime? DueDate { get; set; }
         public List<MetaLinkDataDto> AttachedLinks { get; set; } = new List<MetaLinkDataDto>();
         public List<FileDto> Attachments { get; set; } = new List<FileDto>();
-        public AutoGenerateGroupDto? AutoGenerateGroupDto { get; set; } 
+        public AssignmentOptionsDto? AssignmentOptions { get; set; }
     }
 }

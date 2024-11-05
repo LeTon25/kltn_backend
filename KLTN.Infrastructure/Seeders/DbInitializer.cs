@@ -129,10 +129,7 @@ namespace KLTN.Infrastructure.Seeders
                     {
                         SettingId = Guid.NewGuid().ToString(),
                         CourseId = courseId,
-                        StartGroupCreation = null,
-                        EndGroupCreation = null,
                         AllowStudentCreateProject = false,
-                        AllowGroupRegistration = false,
                         HasFinalScore = false,
                         MaxGroupSize = null,
                         MinGroupSize = null

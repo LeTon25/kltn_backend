@@ -92,7 +92,7 @@ namespace KLTN.Application.Services
                 CourseGroup = requestDto.CourseGroup,
                 EnableInvite = requestDto.EnableInvite,
                 InviteCode = requestDto.InviteCode ?? GenerateRandomNumericString(6),
-                LecturerId = currentUserId,
+                LecturerId = currentUserId!,
                 SubjectId = requestDto.SubjectId,
                 CreatedAt = DateTime.Now,
                 Semester = requestDto.Semester,
@@ -109,10 +109,7 @@ namespace KLTN.Application.Services
             {
                 SettingId = Guid.NewGuid().ToString(),
                 CourseId = newCourseId.ToString(),
-                StartGroupCreation = null,
-                EndGroupCreation = null,
                 AllowStudentCreateProject = false,
-                AllowGroupRegistration = false,
                 HasFinalScore = false,
                 MaxGroupSize = null,
                 MinGroupSize = null
@@ -282,7 +279,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetGroupsInCourseAsync(string courseId)
         {
-            var groups = await _unitOfWork.GroupRepository.GetAllAsync();
+            var groups = await _unitOfWork.GroupRepository.FindByCondition(c=>c.CourseId.Equals(courseId) && c.GroupType.Equals(Constants.GroupType.Final),false).ToListAsync();
             var groupIds = groups.Where(c=>c.CourseId == courseId).Select(c=>c.GroupId).ToList();
             var groupsDto = new List<GroupDto>();
             foreach(var groupId in groupIds)

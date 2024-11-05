@@ -2,7 +2,6 @@
 using KLTN.Application.Services;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -25,7 +24,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> UpdateSettingsForCourseAsync(string courseId,SettingDto dto)
         { 
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var respone = await this._settingService.UpdateSettingForCourseAsync(courseId, dto, userId);
+            var respone = await this._settingService.UpdateSettingForCourseAsync(courseId, dto, userId!);
             return StatusCode(respone.StatusCode, respone);
         }
     }

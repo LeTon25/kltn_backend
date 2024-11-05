@@ -2,7 +2,6 @@
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
