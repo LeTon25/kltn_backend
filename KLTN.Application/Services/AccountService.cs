@@ -30,7 +30,11 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<List<RequestDto>>> GetRequestsByUserAsync(string userId)
         {
-            var requests = await unitOfWork.RequestRepository.FindByCondition(c => c.UserId.Equals(userId), false, c => c.Group, c => c.User).ToListAsync();
+            var requests = await unitOfWork.RequestRepository.FindByCondition(c => c.UserId.Equals(userId), false, c => c.Group!, c => c.User!).ToListAsync();
+            foreach(var item in requests)
+            {
+                item.Group!.Requests = null;
+            }
             var dto = mapper.Map<List<RequestDto>>(requests);
 
             return new ApiResponse<List<RequestDto>>(200, "Lấy dữ liệu thành công",dto);

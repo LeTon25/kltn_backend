@@ -13,12 +13,14 @@ namespace KLTN.Application.DTOs.Groups
         public int? NumberOfMembers { get; set; }
         public bool IsApproved { get; set; }
         public string? InviteCode { get; set; }
+        public string? AssignmentId { get; set; }   
         public DateTime? InviteCodeExpired { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public ProjectDto? Project { get; set; }
         public CourseDto? Course { get; set; }
+        public string GroupType { get; set; } = string.Empty;
         public List<GroupMemberDto>? GroupMembers { get; set; }
         public List<RequestDto>? Requests { get; set; }
     }

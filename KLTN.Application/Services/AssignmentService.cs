@@ -118,7 +118,11 @@ namespace KLTN.Application.Services
             if(course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp học");
-            }    
+            }
+            if (!await courseService.CheckIsTeacherAsync(userId, course.CourseId))
+            {
+                return new ApiResponse<object>(403, "Bạn không có quyền tạo bài tập", null);
+            }
             if (requestDto.ScoreStructureId != null)
             {
                 scoreStructure = await unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(requestDto.ScoreStructureId), false, c => c.Children);
@@ -164,23 +168,15 @@ namespace KLTN.Application.Services
                 {
                     groups = await GenerateAutoGroupsAsync(course,newAssignmentId.ToString(),requestDto.AssignmentOptions.AutoGenerateCount.Value);
                 }
-                else if (requestDto.AssignmentOptions.OtherAssignmentId != null) 
+                else if (requestDto.AssignmentOptions.UseFinalGroup.HasValue && requestDto.AssignmentOptions.UseFinalGroup == true)
                 {
-                    var otherGroups = await GetGroupFromOtherAssignmentAsync(requestDto.AssignmentOptions.OtherAssignmentId);
-                    await AddGroupsToAssignmentsAsync(otherGroups,newAssignmentId.ToString());
-                    groups = mapper.Map<List<GroupDto>>(otherGroups);
-                }else if (requestDto.AssignmentOptions.UseFinalGroup.HasValue && requestDto.AssignmentOptions.UseFinalGroup == true)
-                {
-                    var finalGroups = await GetFinalGroupsInCourseAsync(course);
-                    await AddGroupsToAssignmentsAsync(finalGroups,newAssignmentId.ToString());
-                    groups = mapper.Map<List<GroupDto>>(finalGroups);
+                   var finalGroups = await GetFinalGroupsInCourseAsync(course);
+                   await AddGroupsToAssignmentsAsync(finalGroups,newAssignmentId.ToString());
+                   groups = mapper.Map<List<GroupDto>>(finalGroups);
                 }
             }
 
-            if (!await courseService.CheckIsTeacherAsync(userId, newAssignment.CourseId))
-            {
-                return new ApiResponse<object>(403, "Bạn không có quyền tạo bài tập", null);
-            }
+
             await unitOfWork.SaveChangesAsync();
 
             var responseDto = mapper.Map<AssignmentDto>(newAssignment);
@@ -305,8 +301,17 @@ namespace KLTN.Application.Services
 
                 foreach (var item in assignmentDto.Groups) 
                 {
-                    var memberByGroup = groupmembers.Where(c => c.GroupId.Equals(item.GroupId)).ToList();
-                    item.GroupMembers = mapper.Map<List<GroupMemberDto>>(memberByGroup);
+                    var membersByGroup = groupmembers.Where(c => c.GroupId.Equals(item.GroupId)).ToList();
+                    
+                    var membersByGroupDto = new List<GroupMemberDto>();
+                    foreach(var member in membersByGroup)
+                    {
+                        var groupMemberDto = mapper.Map<GroupMemberDto>(member);
+                        groupMemberDto.StudentObj = mapper.Map<UserDto>(member.Member);
+                        membersByGroupDto.Add(groupMemberDto);
+                    }
+                    item.GroupMembers = membersByGroupDto;
+          
                 }
             }
             return assignmentDto;
@@ -352,46 +357,46 @@ namespace KLTN.Application.Services
             }
             return newGroupsAdded;
         }
-        private async Task<List<Group>> GetGroupFromOtherAssignmentAsync(string assignmentId)
+        private async Task<List<GroupDto>> AddGroupsToAssignmentsAsync(List<Group> groups,string assignmentId)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId, false,c => c.Groups);
-            if (assignment == null)
-            {
-                return null;
-            }
-            if(assignment.Groups == null)
-            {
-                throw new Exception("Bài tập trên không có nhóm");
-            }
-            var groups = assignment.Groups;
-            var groupIds = assignment.Groups.Select(c => c.GroupId);
-            var groupmembers = await unitOfWork.GroupMemberRepository.FindByCondition(c => groupIds.Contains(c.GroupId), false, c => c.Member!).ToListAsync();
-
-            foreach (var item in groups)
-            {
-                var memberByGroup = groupmembers.Where(c => c.GroupId.Equals(item.GroupId)).ToList();
-                item.GroupMembers = memberByGroup;
-            }
-            return groups.ToList();
-        }
-        private async Task AddGroupsToAssignmentsAsync(List<Group> groups,string assignmentId)
-        {
+            var newListGroups = new List<GroupDto>();
             foreach(var item in groups)
             {
-                item.GroupId = Guid.NewGuid().ToString();
-                item.AssignmentId = assignmentId;
-                item.GroupType = Constants.GroupType.Normal;
+                var newGroup  = new Group()
+                {
+                    GroupId = Guid.NewGuid().ToString(),    
+                    GroupName = item.GroupName,
+                    CourseId = item.CourseId,
+                    ProjectId  = item.ProjectId,
+                    IsApproved = item.IsApproved,
+                    NumberOfMembers = item.NumberOfMembers,
+                    AssignmentId = assignmentId,
+                    GroupType = Constants.GroupType.Normal ,
+                 
+                };
+                newGroup.GroupMembers = new List<GroupMember>();
                 foreach(var groupMember in item.GroupMembers!)
                 {
-                    groupMember.GroupId = item.GroupId;
+                    newGroup.GroupMembers.Add(new GroupMember
+                    {
+                         StudentId = groupMember.StudentId,
+                         GroupId = Guid.NewGuid().ToString(),
+                         IsLeader = groupMember.IsLeader,
+                         CreatedAt =DateTime.Now,
+                    });
                 }
-                await unitOfWork.GroupRepository.AddAsync(item);
-                await unitOfWork.GroupMemberRepository.AddRangeAsync(item.GroupMembers.ToList());
-            }    
+                await unitOfWork.GroupRepository.AddAsync(newGroup);
+                foreach(var groupmember in newGroup.GroupMembers)
+                {
+                    await unitOfWork.GroupMemberRepository.AddAsync(groupmember);
+                }
+                newListGroups.Add(mapper.Map<GroupDto>(newGroup));
+            }
+            return newListGroups;
         }
         private async Task<List<Group>> GetFinalGroupsInCourseAsync(Course course)
         {
-            var finalGroups = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(course.CourseId) && c.GroupType.Equals(Constants.GroupType.Final)).ToListAsync();
+            var finalGroups = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(course.CourseId) && c.GroupType.Equals(Constants.GroupType.Final),false).ToListAsync();
             var finalGroupsId = finalGroups.Select(c=>c.GroupId).ToList();
             var groupmembers = await unitOfWork.GroupMemberRepository.FindByCondition(c => finalGroupsId.Contains(c.GroupId), false, c => c.Member!).ToListAsync();
 
