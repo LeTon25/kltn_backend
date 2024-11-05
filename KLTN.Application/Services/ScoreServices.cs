@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Scores;
 using KLTN.Application.Helpers.Response;
+using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Net.WebSockets;
 using static System.Formats.Asn1.AsnWriter;
 
 
@@ -31,7 +33,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<List<ScoreDto>>("Không tìm thấy bài nộp");
             }
-            if (currentUserId != submission.Assignment.Course!.LecturerId)
+            if (currentUserId != submission.Assignment!.Course!.LecturerId)
             {
                 return new ApiBadRequestResponse<List<ScoreDto>>("Chỉ có giáo viên của lớp mới có quyền chấm điểm");
             }
@@ -56,8 +58,16 @@ namespace KLTN.Application.Services
                 }
                 else
                 {
-                    var groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(submission.Assignment.CourseId), false, c => c.GroupMembers).ToListAsync();
+                    var groupsInCourse = new List<Group>();
 
+                    if (submission.Assignment.Type.Equals(Constants.AssignmentType.Final))
+                    {
+                         groupsInCourse =  await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(submission.Assignment.CourseId) && c.GroupType.Equals(Constants.GroupType.Final), false, c => c.GroupMembers).ToListAsync();
+                    }
+                    else
+                    {
+                        groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(submission.Assignment.CourseId) && c.GroupType.Equals(Constants.GroupType.Normal) && c.AssignmentId != null && c.AssignmentId.Equals(submission.AssignmentId), false, c => c.GroupMembers).ToListAsync();
+                    }
                     var groupByUser = groupsInCourse.Where(c => c.GroupMembers.Any(e => e.StudentId.Equals(submission.UserId))).FirstOrDefault();
                     if (groupByUser == null)
                     {
