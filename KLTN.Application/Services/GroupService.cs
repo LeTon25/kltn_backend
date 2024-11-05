@@ -51,10 +51,22 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<GroupDto>> PostGroupAsync(CreateGroupRequestDto requestDto)
         {
-            if (await _unitOfWork.GroupRepository.AnyAsync(c => c.GroupName == requestDto.GroupName && c.CourseId == requestDto.CourseId))
+            if(requestDto.GroupType == Constants.GroupType.Final)
             {
-                return new ApiBadRequestResponse<GroupDto>("Tên nhóm đã tồn tại");
+                if (await _unitOfWork.GroupRepository.AnyAsync(c => c.GroupName == requestDto.GroupName && c.CourseId == requestDto.CourseId && c.GroupType.Equals(Constants.GroupType.Final)))
+                {
+                    return new ApiBadRequestResponse<GroupDto>("Tên nhóm đã tồn tại");
+                }
             }
+            else
+            {
+                if (await _unitOfWork.GroupRepository.AnyAsync(c => c.GroupName == requestDto.GroupName && c.CourseId == requestDto.CourseId && c.GroupType.Equals(Constants.GroupType.Normal) && c.AssignmentId.Equals(requestDto.AssessmentId)))
+                {
+                    return new ApiBadRequestResponse<GroupDto>("Tên nhóm đã tồn tại");
+                }
+
+            }    
+         
             var userId = _httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == requestDto.CourseId,false,c=>c.Setting!);
             if (course == null)
@@ -79,6 +91,7 @@ namespace KLTN.Application.Services
                 DeletedAt = null,
                 IsApproved = true,
                 GroupType = requestDto.GroupType,
+                AssignmentId = requestDto.AssessmentId
             };
             await _unitOfWork.GroupRepository.AddAsync(newGroup);
 
@@ -107,6 +120,7 @@ namespace KLTN.Application.Services
             group.UpdatedAt = DateTime.Now;
             group.NumberOfMembers = requestDto.NumberOfMembers;
             group.GroupType = requestDto.GroupType;
+            group.AssignmentId = requestDto.AssessmentId;
             _unitOfWork.GroupRepository.Update(group);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -333,7 +347,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiResponse<List<GroupDto>>(403,"Chỉ có giáo viên mới có quyền tạo nhóm tự động");
             }    
-            var allGroupsInCourse = await _unitOfWork.GroupRepository.FindByCondition(c=>c.CourseId.Equals(courseId),false).ToListAsync();
+            var allGroupsInCourse = await _unitOfWork.GroupRepository.FindByCondition(c=>c.CourseId.Equals(courseId) && c.AssignmentId == null && c.GroupType.Equals(Constants.GroupType.Final),false).ToListAsync();
             var totalGroup = allGroupsInCourse.Count;
             var newGroupsAdded = new List<GroupDto>();
             for (int i = 0 ; i < requestDto.Count;i++)
@@ -357,6 +371,8 @@ namespace KLTN.Application.Services
                     UpdatedAt = null,
                     DeletedAt = null,
                     IsApproved = true,
+                    GroupType = Constants.GroupType.Final
+                   
                 };
                 await _unitOfWork.GroupRepository.AddAsync(newGroup);
                 allGroupsInCourse.Add(newGroup);

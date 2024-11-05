@@ -1,5 +1,4 @@
 ﻿using Amazon.S3;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using KLTN.Application.Helpers.Response;
 using KLTN.Application.DTOs.Uploads;

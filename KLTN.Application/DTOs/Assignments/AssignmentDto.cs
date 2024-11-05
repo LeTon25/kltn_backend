@@ -1,5 +1,6 @@
 ﻿using KLTN.Application.DTOs.Comments;
 using KLTN.Application.DTOs.Courses;
+using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.DTOs.Submissions;
 using KLTN.Application.DTOs.Uploads;
@@ -33,5 +34,6 @@ namespace KLTN.Application.DTOs.Assignments
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public SubmissionDto? Submission { get; set; }
+        public List<GroupDto>? Groups { get; set; }
     }
 }

@@ -2,7 +2,6 @@
 using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
-using KLTN.Application.Helpers.Pagination;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;

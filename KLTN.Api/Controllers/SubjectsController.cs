@@ -1,6 +1,4 @@
-﻿using Amazon.S3.Model.Internal.MarshallTransformations;
-using AutoMapper;
-using KLTN.Application.DTOs.Subjects;
+﻿using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Services;
 using Microsoft.AspNetCore.Authorization;
