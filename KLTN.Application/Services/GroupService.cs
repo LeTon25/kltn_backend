@@ -60,7 +60,7 @@ namespace KLTN.Application.Services
             }
             else
             {
-                if (await _unitOfWork.GroupRepository.AnyAsync(c => c.GroupName == requestDto.GroupName && c.CourseId == requestDto.CourseId && c.GroupType.Equals(Constants.GroupType.Normal) && c.AssignmentId.Equals(requestDto.AssessmentId)))
+                if (await _unitOfWork.GroupRepository.AnyAsync(c => c.GroupName == requestDto.GroupName && c.CourseId == requestDto.CourseId && c.GroupType.Equals(Constants.GroupType.Normal) && c.AssignmentId.Equals(requestDto.AssignmentId)))
                 {
                     return new ApiBadRequestResponse<GroupDto>("Tên nhóm đã tồn tại");
                 }
@@ -91,7 +91,7 @@ namespace KLTN.Application.Services
                 DeletedAt = null,
                 IsApproved = true,
                 GroupType = requestDto.GroupType,
-                AssignmentId = requestDto.AssessmentId
+                AssignmentId = requestDto.AssignmentId
             };
             await _unitOfWork.GroupRepository.AddAsync(newGroup);
 
@@ -120,7 +120,7 @@ namespace KLTN.Application.Services
             group.UpdatedAt = DateTime.Now;
             group.NumberOfMembers = requestDto.NumberOfMembers;
             group.GroupType = requestDto.GroupType;
-            group.AssignmentId = requestDto.AssessmentId;
+            group.AssignmentId = requestDto.AssignmentId;
             _unitOfWork.GroupRepository.Update(group);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -265,7 +265,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetReportsInGroupAsync(string groupId)
         {
-            var reports = await _unitOfWork.ReportRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.CreateUser!).ToListAsync();
+            var reports = await _unitOfWork.ReportRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.CreateUser!,c =>c.Brief).ToListAsync();
             var reportDtos = mapper.Map<List<ReportDto>>(reports);
             foreach (var reportDto in reportDtos)
             {

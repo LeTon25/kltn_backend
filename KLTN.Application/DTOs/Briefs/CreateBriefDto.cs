@@ -5,5 +5,6 @@ namespace KLTN.Application.DTOs.Briefs
     {
         public string Title {get; set; }
         public string Content { get; set; }
+        public string? ReportId { get; set; }
     }
 }

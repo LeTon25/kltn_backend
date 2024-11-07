@@ -31,7 +31,7 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PostReportAsync(CreateReportRequestDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await reportService.CreateReportAsync(userId,requestDto));
+            return SetResponse(await reportService.CreateReportAsync(userId!,requestDto));
         }
         [HttpPatch("{groupId}/report/{reportId}")]
         [ApiValidationFilter]

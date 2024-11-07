@@ -35,7 +35,7 @@ namespace KLTN.Application.Services
         #region for_controller
         public async Task<ApiResponse<object>> GetReportByIdAsync(string reportId)
         {
-            var entity = await unitOfWork.ReportRepository.GetFirstOrDefaultAsync(c=>c.ReportId.Equals(reportId),false,c=>c.CreateUser);
+            var entity = await unitOfWork.ReportRepository.GetFirstOrDefaultAsync(c=>c.ReportId.Equals(reportId),false,c=>c.CreateUser!,c =>c.Brief);
             if (entity == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy báo cáo");

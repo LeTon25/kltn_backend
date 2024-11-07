@@ -21,8 +21,7 @@ namespace KLTN.Domain.Entities
         public Group? Group { get; set; }
         public User? CreateUser { get; set; }
         public string Content { get; set; }
-
-
+        public Brief? Brief { get; set; }  
 
     }
 }
