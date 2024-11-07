@@ -1,5 +1,7 @@
 ﻿using Hangfire;
 using KLTN.BackgroundJobs.ScheduleJobs;
+using KLTN.BackgroundJobs.Services;
+using KLTN.BackgroundJobs.Services.Interfaces;
 using KLTN.Domain.ScheduleJobs;
 using KLTN.Domain.Services;
 using KLTN.Domain.Settings;
@@ -12,6 +14,7 @@ namespace KLTN.BackgroundJobs.Extensions
         public static IServiceCollection AddCustomService(this IServiceCollection services)
         {
             services.AddTransient<IScheduleJobService,HangfireService>();
+            services.AddTransient<IBackgroundJobService, BackgroundJobService>();
             return services;
         }
         public static IServiceCollection AddHangfireService(this IServiceCollection services,IConfiguration configuration)
