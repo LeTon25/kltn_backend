@@ -13,6 +13,7 @@ namespace KLTN.Application.Services.HttpServices
             client.BaseAddress = new Uri(backgroundJobUrl);
             client.DefaultRequestHeaders.Clear();
             client.DefaultRequestHeaders.Add("Accept", "application/json");
+
             Client = client;
         }
     }

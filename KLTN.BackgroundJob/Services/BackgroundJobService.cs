@@ -1,21 +1,20 @@
 ﻿using KLTN.BackgroundJobs.Services.Interfaces;
 using KLTN.Domain.ScheduleJobs;
 using KLTN.Domain.Services;
-using KLTN.Domain.Shared.DTOs;
 
 namespace KLTN.BackgroundJobs.Services
 {
     public class BackgroundJobService : IBackgroundJobService
     {
-        private readonly IScheduleJobService _scheduleJobService;
         private readonly ISMTPEmailService _mailService;
+
+        public IScheduleJobService ScheduleJobService { get; private set; }
+
         public BackgroundJobService(IScheduleJobService scheduleJobService, ISMTPEmailService mailService)
         {
-            _scheduleJobService = scheduleJobService;
+            ScheduleJobService = scheduleJobService;
             _mailService = mailService;
         }
-
-
         public string SendReminderAssignmentDueDate(List<string> Emails, string CourseName, string AssignmentName, DateTime DueDate)
         {
             var emailRequest = new MailRequest()
@@ -31,9 +30,14 @@ namespace KLTN.BackgroundJobs.Services
                 { "DueDate" , DueDate.ToString("dd-MM-yyyy HH:mm:ss") }
             };
 
-            var jobId = _scheduleJobService.Schedule(() => _mailService.SendEmail(emailRequest, "AssignmentDeadline", placeHolders,new CancellationToken()), enqueueAt: DueDate.AddHours(-8));
+            var jobId = ScheduleJobService.Schedule(() => _mailService.SendEmail(emailRequest, "AssignmentDeadline", placeHolders,new CancellationToken()), enqueueAt: DueDate.AddHours(-8));
 
             return jobId;
+        }
+        public bool DeleteJobById(string jobId)
+        {
+            var result = ScheduleJobService.Delete(jobId);
+            return result;
         }
     }
 }

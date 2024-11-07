@@ -3,14 +3,8 @@ using KLTN.Application.DTOs.Requests;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace KLTN.Application.Services
 {
@@ -130,7 +124,7 @@ namespace KLTN.Application.Services
             {
                 StudentId = request.UserId,
                 GroupId = request.GroupId,
-                IsLeader = false,
+                IsLeader = memberCount == 0 ? true : false,
                 CreatedAt = DateTime.Now,
             }); 
             _unitOfWork.RequestRepository.Delete(request);
