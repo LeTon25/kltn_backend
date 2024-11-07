@@ -30,7 +30,8 @@ namespace KLTN.BackgroundJobs.Services
                 { "DueDate" , DueDate.ToString("dd-MM-yyyy HH:mm:ss") }
             };
 
-            var jobId = ScheduleJobService.Schedule(() => _mailService.SendEmail(emailRequest, "AssignmentDeadline", placeHolders,new CancellationToken()), enqueueAt: DueDate.AddHours(-8));
+            var enqueueAt = DueDate.AddHours(-8);
+            var jobId = ScheduleJobService.Schedule(() => _mailService.SendEmail(emailRequest, "AssignmentDeadline", placeHolders,new CancellationToken()), enqueueAt: enqueueAt);
 
             return jobId;
         }
