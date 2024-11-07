@@ -11,6 +11,7 @@ namespace KLTN.Domain.Entities
         public string? ScoreStructureId { get; set; }
         public bool IsGroupAssigned {  get; set; }
         public string Type { get; set; }
+        public string? JobId { get; set; }   
         public DateTime? DueDate { get; set; }
         public List<MetaLinkData> AttachedLinks { get; set; }
         public List<File> Attachments { get; set; }

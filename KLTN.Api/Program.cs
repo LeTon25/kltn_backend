@@ -17,6 +17,7 @@ using KLTN.Api.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.AddAppConfigurations();
 Log.Logger = new LoggerConfiguration()
 #if DEBUG
     .MinimumLevel.Debug()
@@ -28,7 +29,6 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .WriteTo.Async(c => c.Console())
     .CreateLogger();
-
 builder.Services.AddControllers();
 //Add Identity 
 builder.Services.ConfigureIdentity();
@@ -81,6 +81,7 @@ builder.Services.AddFluentValidationAutoValidation()
 //Add Mailing
 builder.Services.ConfigureEmailSettings(builder.Configuration);
 //Add HttpService
+builder.Services.AddCustomHttpServices();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(

@@ -6,12 +6,16 @@ using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.DTOs.Submissions;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
+using KLTN.Application.Services.HttpServices;
 using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Enums;
+using KLTN.Domain.Extensions;
 using KLTN.Domain.Repositories;
+using KLTN.Domain.Shared.DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using File = KLTN.Domain.Entities.File;
 using Group = KLTN.Domain.Entities.Group;
 namespace KLTN.Application.Services
@@ -23,17 +27,23 @@ namespace KLTN.Application.Services
         private readonly CourseService courseService;  
         private readonly UserManager<User> userManager;
         private readonly CommentService commentService;
+        private readonly IConfiguration configuration;
+        private readonly BackgroundJobHttpService backgroundJobHttpService;
         public AssignmentService(IUnitOfWork unitOfWork, 
             CourseService courseService, 
             UserManager<User> userManager, 
             CommentService commentService,
-            IMapper mapper)
+            IMapper mapper,
+            IConfiguration configuration,
+            BackgroundJobHttpService backgroundJobHttpService)
         {
             this.unitOfWork = unitOfWork;
             this.mapper = mapper;
             this.userManager = userManager; 
             this.courseService = courseService;
-            this.commentService = commentService;   
+            this.commentService = commentService; 
+            this.configuration = configuration; 
+            this.backgroundJobHttpService = backgroundJobHttpService;   
         }
         #region for_controller
         public async Task<ApiResponse<object>> GetAssignmentByIdAsync(string assignmentId,string currentUserId)
@@ -47,15 +57,19 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> DeleteAssignmentAsync(string userId,string assignmentId)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.Course);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.Course!);
             if (assignment == null)
             {
                 return new ApiNotFoundResponse<object>("Không thể tìm thấy bài tập với id");
             }
-            if (assignment.Course.LecturerId != userId)
+            if (assignment.Course!.LecturerId != userId)
             {
                 return new ApiResponse<object>(403, "Bạn không có quyền xóa bài tập này", null);
             }
+            if(assignment.JobId != null)
+            {
+                await TriggerDeleteSendEmailReminderAsync(assignment.JobId);    
+            }    
             unitOfWork.AssignmentRepository.Delete(assignment);
             var result = await unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -66,12 +80,12 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> UpdateAssignmentAsync(string userId,string assignmentId, UpSertAssignmentRequestDto requestDto)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.Course!);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.Course!,c =>c.Course.EnrolledCourses);
             if (assignment == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy bài tập");
             }
-            if (assignment.Course.LecturerId != userId)
+            if (assignment.Course!.LecturerId != userId)
             {
                 return new ApiResponse<object>(403, "Bạn không có quyền chỉnh sửa bài tập này", null);
             }
@@ -90,11 +104,26 @@ namespace KLTN.Application.Services
                 {
                     return new ApiBadRequestResponse<object>("Chưa bật điểm cuối kì cho lớp học");
                 }
-            }    
+            }
+            string? jobId = null;
+            if (assignment.DueDate != requestDto.DueDate && assignment.Course.EnrolledCourses != null && assignment.Course.EnrolledCourses.Count > 0) 
+            {
+                if(assignment.JobId != null)
+                {
+                    await TriggerDeleteSendEmailReminderAsync(assignment.JobId);
+                }    
+                if(requestDto.DueDate != null)
+                {
+                    var duration = requestDto.DueDate - DateTime.Now;
+                    if (duration.Value.TotalHours > 8)
+                    {
+                        jobId = await TriggerSendEmailReminderAsync(assignment.Course, requestDto.Title, requestDto.DueDate.Value);
+                    }
+                }    
 
+            }
             assignment.Title = requestDto.Title;
             assignment.Content = requestDto.Content;
-            assignment.CourseId = requestDto.CourseId;
             assignment.DueDate = requestDto.DueDate;
             assignment.AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks);
             assignment.UpdatedAt = DateTime.Now;
@@ -112,7 +141,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> CreateAssignmentAsync(string userId,UpSertAssignmentRequestDto requestDto)
         {
-            var course = await unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(requestDto.CourseId), false, c => c.Setting!);
+            var course = await unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(requestDto.CourseId), false, c => c.Setting!,c =>c.EnrolledCourses);
             ScoreStructure scoreStructure = new ScoreStructure();
             List<GroupDto> groups = new List<GroupDto>();
             if(course == null)
@@ -136,7 +165,15 @@ namespace KLTN.Application.Services
                     return new ApiBadRequestResponse<object>("Cột điểm đã được chấm bởi bài tập khác");
                 }
             }
-            
+            string? jobId = null;
+            if(requestDto.DueDate != null && course.EnrolledCourses != null && course.EnrolledCourses.Count > 0)
+            {
+                var duration = requestDto.DueDate - DateTime.Now;
+                if(duration.Value.TotalHours > 8)
+                {
+                    jobId = await TriggerSendEmailReminderAsync(course,requestDto.Title,requestDto.DueDate.Value);
+                }    
+            }    
             var newAssignmentId = Guid.NewGuid();
             var newAssignment = new Assignment()
             {
@@ -152,6 +189,7 @@ namespace KLTN.Application.Services
                 UpdatedAt = null,
                 DeletedAt = null,
                 Type = requestDto.Type,
+                JobId = jobId,  
                 IsGroupAssigned = requestDto.IsGroupAssigned,
             };
             await unitOfWork.AssignmentRepository.AddAsync(newAssignment);
@@ -205,7 +243,7 @@ namespace KLTN.Application.Services
             var usersInCourse = userData
                 .Where(u => assignment.Course.EnrolledCourses.Any(e => e.StudentId == u.Id))
                 .ToList();
-            var submissions = await unitOfWork.SubmissionRepository.FindByCondition(c=>c.AssignmentId.Equals(assignmentId),false,c=>c.CreateUser,c => c.Scores).ToListAsync();
+            var submissions = await unitOfWork.SubmissionRepository.FindByCondition(c=>c.AssignmentId.Equals(assignmentId),false,c=>c.CreateUser!,c => c.Scores).ToListAsync();
             var groupsInCourse = new List<Group>();  
             if (assignment.Type.Equals(Constants.AssignmentType.Final))
             { 
@@ -286,7 +324,7 @@ namespace KLTN.Application.Services
         #region for_service
         public async Task<AssignmentDto> GetAssignmentDtoByIdAsync(string assignmentId,string currentUserId)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.ScoreStructure,c => c.Groups);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.ScoreStructure,c => c.Groups!);
             if (assignment == null)
             {
                 return null;
@@ -415,6 +453,50 @@ namespace KLTN.Application.Services
                 item.GroupMembers = memberByGroup;
             }
             return finalGroups;
+        }
+        private async Task<string?> TriggerSendEmailReminderAsync(Course course,string assignmentTitle,DateTime dueDate)
+        {
+            try
+            {
+                var uri = "/api/schedule-jobs/assignment-due-date";
+                
+                var studentIds = course.EnrolledCourses!.Select(c => c.StudentId).ToList();
+                var students = await unitOfWork.UserRepository.FindByCondition(c => studentIds.Contains(c.Id)).ToListAsync();
+                var model = new AssignmentReminderDto()
+                    {
+                        CourseName = course.Name,
+                        AssignmentTitle = assignmentTitle,
+                        DueDate = dueDate,
+                        Emails = students != null ? students.Select(c=>c.Email!).ToList() : new List<string>() ,
+                    };
+                    var response = await backgroundJobHttpService.Client.PostAsJson(uri, model);
+
+                    if (response.EnsureSuccessStatusCode().IsSuccessStatusCode) 
+                    {
+                        var jobId = await response.ReadContentAs<string>();
+                        if (!string.IsNullOrEmpty(jobId)) 
+                        {
+                            return jobId;
+                        }  
+                    }
+                return null;
+                
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        private async Task TriggerDeleteSendEmailReminderAsync(string jobId)
+        {
+            try
+            {
+                var uri = $"/api/schedule-jobs/{jobId}";
+                await backgroundJobHttpService.Client.DeleteAsync(uri);
+            }
+            catch
+            {
+            }
         }
         #endregion
 

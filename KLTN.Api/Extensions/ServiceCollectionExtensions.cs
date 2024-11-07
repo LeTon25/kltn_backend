@@ -46,7 +46,7 @@ namespace KLTN.Api.Extensions
             return services;
         }
 
-        public static IServiceCollection AddCustomHttpServices(this ServiceCollection services)
+        public static IServiceCollection AddCustomHttpServices(this IServiceCollection services)
         {
             services.AddHttpClient<BackgroundJobHttpService>();
             return services;

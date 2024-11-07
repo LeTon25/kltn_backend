@@ -19,7 +19,7 @@ namespace KLTN.BackgroundJobs.Controllers
             var JobId = backgroundJobService.SendReminderAssignmentDueDate(dto.Emails, dto.CourseName, dto.AssignmentTitle, dto.DueDate);
             return Ok(JobId);
         }
-        [HttpDelete("jobs/{jobId}")]
+        [HttpDelete("{jobId}")]
         public IActionResult DeleteJob(string jobId) 
         {
             var result = backgroundJobService.ScheduleJobService.Delete(jobId);
