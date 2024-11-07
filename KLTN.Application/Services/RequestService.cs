@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Requests;
 using KLTN.Application.Helpers.Response;
+using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Metadata;
 
 
 namespace KLTN.Application.Services
@@ -41,8 +43,18 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<RequestDto>("Bạn chưa tham gia lớp học");
             }
-            var otherGroup = await _unitOfWork.GroupRepository
-                .FindByCondition(c => c.CourseId.Equals(group.CourseId) && c.GroupId != groupId, false, c => c.GroupMembers).ToListAsync();
+            var otherGroup = new List<Group>();
+            if (group.GroupType == Constants.GroupType.Final)
+            {
+                otherGroup = await _unitOfWork.GroupRepository
+                .FindByCondition(c => c.CourseId.Equals(group.CourseId) && c.GroupType.Equals(Constants.GroupType.Final) && c.GroupId != groupId, false, c => c.GroupMembers).ToListAsync();
+            }
+            else
+            {
+                otherGroup = await _unitOfWork.GroupRepository
+                .FindByCondition(c => c.CourseId.Equals(group.CourseId) && c.AssignmentId != null && c.AssignmentId.Equals(group.AssignmentId) &&  c.GroupType.Equals(Constants.GroupType.Normal) && c.GroupId != groupId, false, c => c.GroupMembers).ToListAsync();
+            }
+            
             if (otherGroup.Any(c => c.GroupMembers
                             .Any(e => e.StudentId.Equals(currentUserId))))
             {
