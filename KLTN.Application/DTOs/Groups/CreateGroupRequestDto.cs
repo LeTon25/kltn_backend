@@ -9,7 +9,7 @@ namespace KLTN.Application.DTOs.Groups
         public int NumberOfMembers { get; set; }
         public bool IsApproved { get; set; }
         public string GroupType { get; set; } = string.Empty;
-        public string? AssessmentId { get; set; }    
+        public string? AssignmentId { get; set; }    
 
     }
 }

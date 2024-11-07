@@ -265,7 +265,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetReportsInGroupAsync(string groupId)
         {
-            var reports = await _unitOfWork.ReportRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.CreateUser!).ToListAsync();
+            var reports = await _unitOfWork.ReportRepository.FindByCondition(c => c.GroupId.Equals(groupId), false, c => c.CreateUser!,c =>c.Brief).ToListAsync();
             var reportDtos = mapper.Map<List<ReportDto>>(reports);
             foreach (var reportDto in reportDtos)
             {

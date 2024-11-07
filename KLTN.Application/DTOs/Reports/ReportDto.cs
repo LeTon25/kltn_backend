@@ -1,12 +1,8 @@
-﻿using KLTN.Application.DTOs.Comments;
+﻿using KLTN.Application.DTOs.Briefs;
+using KLTN.Application.DTOs.Comments;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KLTN.Application.DTOs.Reports
 {
@@ -24,5 +20,6 @@ namespace KLTN.Application.DTOs.Reports
         public DateTime? DeletedAt { get; set; }
         public UserDto? CreateUser { get; set; }
         public List<CommentDto> Comments { get; set; }  
+        public BriefDto? Brief { get; set; } 
     }
 }

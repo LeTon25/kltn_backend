@@ -5,11 +5,7 @@ using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace KLTN.Application.Services
 {
@@ -40,6 +36,7 @@ namespace KLTN.Application.Services
                 GroupId = groupId,
                 Title = requestDto.Title,
                 Id = newId,
+                ReportId = requestDto.ReportId,
                 CreatedAt = DateTime.Now,
                 Content = requestDto.Content
             };
@@ -109,7 +106,7 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<List<BriefDto>>("Chỉ giáo viên mới có quyền được tạo bản tóm tắt");
             }
-            var briefs = await unitOfWork.BriefRepository.FindByCondition(c => c.GroupId.Equals(groupId),false,c=>c.Group,c =>c.Group.Course).ToListAsync();
+            var briefs = await unitOfWork.BriefRepository.FindByCondition(c => c.GroupId.Equals(groupId),false,c=>c.Group!,c =>c.Group!.Course!).ToListAsync();
             var dto = mapper.Map<List<BriefDto>>(briefs);
 
             return new ApiResponse<List<BriefDto>>(200, "Thành công", dto);

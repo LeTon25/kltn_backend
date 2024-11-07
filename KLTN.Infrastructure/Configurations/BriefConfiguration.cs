@@ -1,11 +1,6 @@
 ﻿using KLTN.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KLTN.Infrastructure.Configurations
 {
@@ -21,6 +16,12 @@ namespace KLTN.Infrastructure.Configurations
             builder.HasOne(c => c.Group)
                 .WithMany(e => e.Briefs)
                 .HasForeignKey(c => c.GroupId);
+
+            builder.HasOne(c => c.Report)
+                .WithOne(e=>e.Brief)
+                .HasForeignKey<Brief>(c => c.ReportId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
