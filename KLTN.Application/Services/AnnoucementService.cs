@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Comments;
+using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
@@ -63,7 +64,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> UpdateAnnouncementAsync(string announcementId, CreateAnnouncementRequestDto requestDto)
         {
-            var announcement = await unitOfWork.AnnnouncementRepository.GetFirstOrDefaultAsync(c => c.AnnouncementId == announcementId);
+            var announcement = await unitOfWork.AnnnouncementRepository.GetFirstOrDefaultAsync(c => c.AnnouncementId == announcementId,false,c=>c.CreateUser!);
             if (announcement == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy thông báo");
@@ -101,7 +102,11 @@ namespace KLTN.Application.Services
             };
             await unitOfWork.AnnnouncementRepository.AddAsync(newAnnouncement);
             await unitOfWork.SaveChangesAsync();
-            return new ApiResponse<object>(200, "Cập nhập thành công", mapper.Map<AnnouncementDto>(newAnnouncement));
+
+            var dto = mapper.Map<AnnouncementDto>(newAnnouncement);
+            var createUser = await unitOfWork.UserRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(requestDto.UserId));
+            dto.CreateUser = mapper.Map<UserDto>(createUser);
+            return new ApiResponse<object>(200, "Tạo thành công", mapper.Map<AnnouncementDto>(newAnnouncement));
         }
         #endregion
         #region for_service
