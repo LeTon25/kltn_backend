@@ -1,0 +1,38 @@
+name: Deploy API to AWS EC2
+
+on:
+  push:
+    branches:
+      - deploy-api
+jobs:
+  deploy-classroom-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+      - name : Set up .NET SDK
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '8.0'
+
+      - name: Publish the project
+        run: dotnet publish ./KLTN.Api/KLTN.Api.csproj --configuration Release --output ./publish-classroom --os linux
+        
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.AWS_CLASSROOM_HOST }}
+          username: ${{ secrets.AWS_CLASSROOM_USER }}
+          key: ${{ secrets.AWS_CLASSROOM_SSH_KEY }}
+          source: ./publish-classroom/
+          target: ${{ secrets.AWS_CLASSROOM_TARGET_DIR }}
+          
+      - name: Restart service on EC2
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.AWS_CLASSROOM_HOST }}
+          username: ${{ secrets.AWS_CLASSROOM_USER }}
+          key: ${{ secrets.AWS_CLASSROOM_SSH_KEY }}
+          script: |
+            sudo systemctl restart ${{ secrets.AWS_CLASSROOM_SERVICE_NAME }}
+      
