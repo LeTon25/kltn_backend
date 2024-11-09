@@ -24,7 +24,9 @@
   <ItemGroup>
     <ProjectReference Include="..\KLTN.Domain\KLTN.Domain.csproj" />
   </ItemGroup>
-
+  <ItemGroup>
+	<None Include="EmailTemplates\*.html" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup> 
   <ItemGroup>
     <Folder Include="Migrations\" />
   </ItemGroup>

@@ -397,7 +397,7 @@ namespace KLTN.Application.Services
         public async Task<ApiResponse<StatisticDto>> GetStatisticAsync(string courseId)
         {
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false, c => c.EnrolledCourses,c => c.Projects);
-            var groups = await _unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(course.CourseId), false, c => c.GroupMembers).ToListAsync();
+            var groups = await _unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(course.CourseId) && c.GroupType.Equals(Constants.GroupType.Final), false, c => c.GroupMembers).ToListAsync();
 
             var allStudentIdsInCourseCount = 0;
             var allStudentIdsHasGroupCount = 0;
