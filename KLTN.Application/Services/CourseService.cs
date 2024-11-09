@@ -528,6 +528,7 @@ namespace KLTN.Application.Services
                 {
                     await scoreStructureService.LoadChildrenAsync(score);
                     courseDto.ScoreStructure = mapper.Map<ScoreStructureDto>(score);
+                    courseDto.ScoreStructure.Children = courseDto.ScoreStructure.Children!.OrderByDescending(c => c.ColumnName).ToList();
                 }
             }
             if (isLoadAssignment)
