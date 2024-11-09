@@ -1,6 +1,7 @@
 ﻿using KLTN.Domain.Services;
 using KLTN.Domain.Settings;
 using MailKit.Net.Smtp;
+using Microsoft.Extensions.Logging;
 using MimeKit;
 
 namespace KLTN.Infrastructure.Mailing
@@ -21,7 +22,8 @@ namespace KLTN.Infrastructure.Mailing
             if (templateName != null)
             {
                 var currentDirectory = Directory.GetCurrentDirectory();
-                var templatePath = Path.Combine(_settings.TemplateFolderPath, $"{templateName}.html");
+                var templateFolderPath = Path.Combine(currentDirectory, _settings.TemplateFolderPath);
+                var templatePath = Path.Combine(templateFolderPath, $"{templateName}.html");
                 if (!File.Exists(templatePath))
                 {
                     throw new FileNotFoundException($"Template {templateName} not found.");
