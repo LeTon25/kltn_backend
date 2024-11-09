@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain;
@@ -59,6 +60,8 @@ namespace KLTN.Application.Services
             }
             await LoadChildrenAsync(existingEntity);
             var data = _mapper.Map<ScoreStructureDto>(existingEntity);
+            data.Children = data.Children!.OrderByDescending(c => c.ColumnName).ToList();
+
             return new ApiResponse<object>(200, "Lấy dữ liệu thành công", data);
         }
         public async Task<ApiResponse<object>> GetScoreStructureByCourseIdAsync(string courseId)
@@ -91,6 +94,7 @@ namespace KLTN.Application.Services
                 var endtermScore = scoreStructure.Children!.FirstOrDefault(c=>c.ColumnName.Equals(Constants.Score.EndtermColumnName));
                 scoreStructure.Children!.Remove(endtermScore!);
             }
+            scoreStructure.Children = scoreStructure.Children!.OrderByDescending(c => c.ColumnName).ToList();   
             var studentIds = course.EnrolledCourses.Select(c=>c.StudentId).ToList();
             var students = await _unitOfWork.UserRepository.FindByCondition(c => studentIds.Contains(c.Id),false,c=>c.Scores).ToListAsync();
 
