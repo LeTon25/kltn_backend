@@ -34,7 +34,7 @@ jobs:
       - name: Run SCP command manually
         run: |
           scp -i ~/.ssh/id_rsa -r ./publish-classroom/* ${{ secrets.AWS_CLASSROOM_USER }}@${{ secrets.AWS_CLASSROOM_HOST }}:${{ secrets.AWS_CLASSROOM_TARGET_DIR }} 
-          cat ${{ secrets.AWS_CLASSROOM_TARGET_DIR }}appsettings.json
+          cat /home/ec2-user/classroom/appsettings.json
           
       - name: Restart service on EC2
         uses: appleboy/ssh-action@v0.1.8
