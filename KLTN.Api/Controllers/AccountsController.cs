@@ -230,11 +230,6 @@ namespace KLTN.Api.Controllers
 
             return Ok(new ApiResponse<string>(200,"Đổi mật khẩu thành công"));
         }
-        [HttpGet("test-ci-cd")]
-        public IActionResult TestCiCd()
-        {
-            return Ok("co cicd");
-        }
         protected IActionResult SetResponse(ApiResponse<object> api)
         {
             switch (api.StatusCode)
