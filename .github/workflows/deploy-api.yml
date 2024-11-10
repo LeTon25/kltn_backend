@@ -20,7 +20,7 @@ jobs:
       - name: List files in publish folder
         run: ls -la ./publish-classroom
       - name: Copy files to EC2
-        uses: appleboy/scp-action@v0.1.8
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.AWS_CLASSROOM_HOST }}
           username: ${{ secrets.AWS_CLASSROOM_USER }}
