@@ -34,5 +34,5 @@ jobs:
           username: ${{ secrets.AWS_CLASSROOM_USER }}
           key: ${{ secrets.AWS_CLASSROOM_SSH_KEY }}
           script: |
-            sudo systemctl restart ${{ secrets.AWS_CLASSROOM_SERVICE_NAME }}
+            sudo systemctl stop ${{ secrets.AWS_CLASSROOM_SERVICE_NAME }}
       
