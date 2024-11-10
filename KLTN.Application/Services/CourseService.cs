@@ -90,7 +90,7 @@ namespace KLTN.Application.Services
             {
                 CourseId = newCourseId.ToString(),
                 CourseGroup = requestDto.CourseGroup,
-                EnableInvite = requestDto.EnableInvite,
+                EnableInvite = true,
                 InviteCode = requestDto.InviteCode ?? GenerateRandomNumericString(6),
                 LecturerId = currentUserId!,
                 SubjectId = requestDto.SubjectId,
@@ -528,6 +528,7 @@ namespace KLTN.Application.Services
                 {
                     await scoreStructureService.LoadChildrenAsync(score);
                     courseDto.ScoreStructure = mapper.Map<ScoreStructureDto>(score);
+                    courseDto.ScoreStructure.Children = courseDto.ScoreStructure.Children!.OrderByDescending(c => c.ColumnName).ToList();
                 }
             }
             if (isLoadAssignment)
