@@ -26,7 +26,7 @@ jobs:
           key: ${{ secrets.AWS_CLASSROOM_SSH_KEY }}
           source: ./publish-classroom/
           target: ${{ secrets.AWS_CLASSROOM_TARGET_DIR }}
-          args: "-v"
+          
       - name: Restart service on EC2
         uses: appleboy/ssh-action@v0.1.8
         with:
