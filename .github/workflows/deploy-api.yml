@@ -18,9 +18,22 @@ jobs:
       - name: Publish the project
         run: dotnet publish ./KLTN.Api/KLTN.Api.csproj --configuration Release --output ./publish-classroom --os linux
         
+      - name: Set up SSH key
+        run: |
+          echo "${{ secrets.AWS_CLASSROOM_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.AWS_CLASSROOM_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Set up SSH config
+        run: |
+          echo "Host *" >> ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+          echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+
       - name: Run SCP command manually
         run: |
-          scp -i ${{ secrets.AWS_CLASSROOM_SSH_KEY }} -r ./publish-classroom/* ${{ secrets.AWS_CLASSROOM_USER }}@${{ secrets.AWS_CLASSROOM_HOST }}:${{ secrets.AWS_CLASSROOM_TARGET_DIR }} 
+          scp -i ~/.ssh/id_rsa -r ./publish-classroom/* ${{ secrets.AWS_CLASSROOM_USER }}@${{ secrets.AWS_CLASSROOM_HOST }}:${{ secrets.AWS_CLASSROOM_TARGET_DIR }} 
           cat ${{ secrets.AWS_CLASSROOM_TARGET_DIR }}appsettings.json
           
       - name: Restart service on EC2
