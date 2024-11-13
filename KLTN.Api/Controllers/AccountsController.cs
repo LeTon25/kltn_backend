@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Accounts;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
@@ -9,7 +8,6 @@ using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Services;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -55,11 +53,11 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> Register(RegisterRequestDto requestDto)
         {
             var users = _userManager.Users;
-            if (await users.AnyAsync(c => c.UserName == requestDto.UserName || c.CustomId == requestDto.UserName))
+            if (await users.AnyAsync(c => c.UserName == requestDto.UserName|| c.Email == requestDto.UserName || c.CustomId == requestDto.UserName))
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Tên người dùng không được trùng"));
             }
-            if (await users.AnyAsync(c => c.Email == requestDto.Email))
+            if (await users.AnyAsync(c => c.Email == requestDto.Email || c.UserName == requestDto.Email))
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Email người dùng không được trùng"));
             }

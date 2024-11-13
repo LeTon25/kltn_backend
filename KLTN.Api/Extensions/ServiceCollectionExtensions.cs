@@ -68,6 +68,9 @@ namespace KLTN.Api.Extensions
         public static IServiceCollection ConfigureAuthentication(this IServiceCollection services,IConfiguration configuration)
         {
             var googleOptions = configuration.GetSection(nameof(KLTN.Domain.Settings.GoogleOptions)).Get<KLTN.Domain.Settings.GoogleOptions>();
+            if (googleOptions == null || googleOptions.ClientId == null || googleOptions.ClientSecret == null || googleOptions.CallbackPath == null)
+                throw new Exception("Missing Google Options");
+            services.AddSingleton<GoogleOptions>(googleOptions!);
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
