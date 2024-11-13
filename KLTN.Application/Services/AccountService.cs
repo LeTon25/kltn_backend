@@ -7,13 +7,9 @@ using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
+using KLTN.Domain.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KLTN.Application.Services
 {
@@ -22,11 +18,16 @@ namespace KLTN.Application.Services
         private readonly IUnitOfWork unitOfWork;
         private readonly UserManager<User> userManager;
         private readonly IMapper mapper;
-        public AccountService(IUnitOfWork unitOfWork,UserManager<User> userManager,IMapper mapper)
+        private readonly ITokenService _tokenService;
+        public AccountService(IUnitOfWork unitOfWork,
+            UserManager<User> userManager,
+            IMapper mapper,
+            ITokenService tokenService)
         {
             this.unitOfWork = unitOfWork;
             this.userManager = userManager;
             this.mapper = mapper;
+            this._tokenService = tokenService;
         }
         public async Task<ApiResponse<List<RequestDto>>> GetRequestsByUserAsync(string userId)
         {
@@ -107,6 +108,60 @@ namespace KLTN.Application.Services
                ArchivedCourses = data 
             });
         }
+        public async Task<ApiResponse<AuthResponseDto>> HandleLoginByGoogleAsync(string email,string name)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                user = await CreateNewUserLoginGoogleAsync(email, name);
+            }
 
+            var data = await GenerateAuthResponseAsync(user);
+
+
+            return new ApiResponse<AuthResponseDto>(200,"Đăng nhập thành công", data);
+
+        }
+        private async Task<User> CreateNewUserLoginGoogleAsync(string email,string name)
+        {
+            var newUser = new User
+            {
+                Id = Guid.NewGuid().ToString(),
+                UserName = email,
+                Email = email,
+                LockoutEnabled = false,
+                Gender = "Nam",
+                DoB = null,
+                CustomId = "",
+                UserType = Domain.Enums.UserType.Student,
+                FullName = name,
+                CreatedAt = DateTime.Now,
+            };
+            var createResult = await userManager.CreateAsync(newUser);
+            if (!createResult.Succeeded)
+            {
+                throw new Exception("Can not create User");
+            }
+            return newUser;
+        }
+        private async Task<AuthResponseDto> GenerateAuthResponseAsync(User user)
+        {
+            DateTime expiresAt = DateTime.Now.AddDays(2);
+            DateTime refreshTokenExpiresAt = DateTime.Now.AddMonths(2);
+            string token = await _tokenService.GenerateTokens(user, expiresAt);
+            var authResponse = new AuthResponseDto
+            {
+                Token = token,
+                RefreshToken = _tokenService.GenerateRefreshToken(),
+                TokenExpiresAt = expiresAt,
+                RefreshTokenExpiresAt = refreshTokenExpiresAt,
+                User = mapper.Map<UserDto>(user),
+            };
+            user.RefreshToken = authResponse.RefreshToken;
+            user.RefreshTokenExpiry = refreshTokenExpiresAt;
+
+            await userManager.UpdateAsync(user);
+            return authResponse;
+        }
     }
 }

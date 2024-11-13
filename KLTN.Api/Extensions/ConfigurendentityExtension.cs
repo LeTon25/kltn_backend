@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace KLTN.Api.Extensions
 {
+
     public static class ConfigureIndentityExtension
     {
         public static IServiceCollection ConfigureIdentity(this IServiceCollection services)

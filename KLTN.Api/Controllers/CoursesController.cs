@@ -154,5 +154,12 @@ namespace KLTN.Api.Controllers
             var response = await _courseService.CancelArchiveCourseAsync(courseId, currentUserId);
             return StatusCode(response.StatusCode, response);
         }
+        //[HttpPost("{courseId}/import-student")]
+        //public async Task<IActionResult> ImportStudentsAsync()
+        //{
+        //    string currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        //}
+
     }
 }

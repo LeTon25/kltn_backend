@@ -8,6 +8,9 @@ using KLTN.Application.Services;
 using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -145,7 +148,35 @@ namespace KLTN.Api.Controllers
             await _userManager.UpdateAsync(user);
             return Ok(new ApiSuccessResponse<AuthResponseDto>(200,"Đăng nhập thành công",authResponse));
         }
+        [HttpGet("google-callback")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GoogleLoginCallback()
+        {
+            var authenticateResult = await HttpContext.AuthenticateAsync("Identity.External");
 
+            if (!authenticateResult.Succeeded)
+            {
+                return Unauthorized();
+            }
+
+            var userInfo = authenticateResult.Principal;
+
+            var email = userInfo.Claims.FirstOrDefault(c=>c.Type == ClaimTypes.Email)!.Value;
+            var name = userInfo.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)!.Value;
+            var response = await _accountService.HandleLoginByGoogleAsync(email,name);
+
+            return StatusCode(response.StatusCode,response);
+        }
+        [HttpGet("login-google")]
+        public IActionResult GoogleLogin()
+        {
+            var properties = new AuthenticationProperties
+            {
+                RedirectUri = "/api/accounts/google-callback",
+            };
+
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(RefreshTokenModel model)
         {
