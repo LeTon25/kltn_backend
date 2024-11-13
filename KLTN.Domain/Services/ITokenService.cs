@@ -1,11 +1,11 @@
 ﻿using KLTN.Domain.Entities;
 using System.Security.Claims;
 
-namespace KLTN.Api.Services.Interfaces
+namespace KLTN.Domain.Services
 {
     public interface ITokenService
     {
-        Task<string> GenerateTokens(User user,DateTime expiresAt);
+        Task<string> GenerateTokens(User user, DateTime expiresAt);
         string GenerateRefreshToken();
         ClaimsPrincipal? GetTokenPrincipal(string token);
     }

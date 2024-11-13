@@ -1,19 +1,15 @@
-﻿using KLTN.Api.Extensions;
+﻿using FluentValidation;
+using FluentValidation.AspNetCore;
+using KLTN.Api.Extensions;
+using KLTN.Api.Middleware;
+using KLTN.Application.DTOs.Users;
 using KLTN.Infrastructure.Data;
+using KLTN.Infrastructure.Seeders;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Serilog.Events;
-using Serilog;
-using KLTN.Infrastructure.Seeders;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using KLTN.Application.DTOs.Users;
 using Microsoft.OpenApi.Models;
-
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using KLTN.Api.Middleware;
+using Serilog;
+using Serilog.Events;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -32,22 +28,9 @@ Log.Logger = new LoggerConfiguration()
 builder.Services.AddControllers();
 //Add Identity 
 builder.Services.ConfigureIdentity();
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateLifetime = false,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("JWT:SigningKey").Value))
-    };
-});
+// Add Authentication
+
+
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddAuthorization();
 //Add Aws Service
@@ -80,6 +63,9 @@ builder.Services.AddFluentValidationAutoValidation()
     .AddValidatorsFromAssemblyContaining<CreateUserRequestDtoValidator>();
 //Add Mailing
 builder.Services.ConfigureEmailSettings(builder.Configuration);
+//
+builder.Services.ConfigureAuthentication(builder.Configuration);
+
 //Add HttpService
 builder.Services.AddCustomHttpServices();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -128,7 +114,7 @@ app.UseCors("AllowAll");
 app.UseStaticFiles();
 app.UseDefaultFiles();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
