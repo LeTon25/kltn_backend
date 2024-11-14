@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
@@ -159,11 +160,16 @@ namespace KLTN.Api.Controllers
 
             var userInfo = authenticateResult.Principal;
 
-            var email = userInfo.Claims.FirstOrDefault(c=>c.Type == ClaimTypes.Email)!.Value;
+            var email = userInfo.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)!.Value;
             var name = userInfo.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)!.Value;
-            var response = await _accountService.HandleLoginByGoogleAsync(email,name);
+            var avatar = userInfo.Claims.FirstOrDefault(c => c.Type == "picture")?.Value;
 
-            return StatusCode(response.StatusCode,response);
+            var response = await _accountService.HandleLoginByGoogleAsync(email, name, avatar);
+            var authData = response.Data;
+
+            // Redirect to frontend with query parameters
+            var redirectUrl = $"http://localhost:8888/login?token={authData.Token}&refreshToken={authData.RefreshToken}&refreshTokenExpiresAt={authData.RefreshTokenExpiresAt}&user={Uri.EscapeDataString(JsonConvert.SerializeObject(authData.User))}";
+            return Redirect(redirectUrl);
         }
         [HttpGet("login-google")]
         public IActionResult GoogleLogin()
