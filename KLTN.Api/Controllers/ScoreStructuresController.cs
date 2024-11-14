@@ -44,5 +44,12 @@ namespace KLTN.Api.Controllers
             var response = await _scoreStructureService.GetTransciptAsync(courseId);
             return StatusCode(response.StatusCode,response);
         }
+        [HttpGet("{courseId}/transcripts/statistics")]
+        [ServiceFilter(typeof(CourseResourceAccessFilter))]
+        public async Task<IActionResult> GetTranscriptStatisticsAsync(string courseId)
+        {
+            var response = await _scoreStructureService.GetTransciptStatisticsAsync(courseId);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

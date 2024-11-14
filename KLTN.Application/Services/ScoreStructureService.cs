@@ -78,12 +78,12 @@ namespace KLTN.Application.Services
 
         public async Task<ApiResponse<object>> GetTransciptAsync(string courseId)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false, c => c.EnrolledCourses,c => c.Setting);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId) , false, c => c.EnrolledCourses,c => c.Setting);
             if (course == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp học");
             }    
-            var scoreStructure = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false,c=>c.Scores);
+            var scoreStructure = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId)&& c.ColumnName.Equals(Constants.Score.FinalColumnName), false,c=>c.Scores);
             if (scoreStructure == null) 
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy cột điểm");
@@ -105,6 +105,34 @@ namespace KLTN.Application.Services
                 Scores = CalculateScore(scoreStructure,student.Id)
             }).ToList();
             return new ApiResponse<object>(200, "Thành công", studentScores);
+        }
+        public async Task<ApiResponse<TranscriptStatisticsDto>> GetTransciptStatisticsAsync(string courseId)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId), false, c => c.EnrolledCourses, c => c.Setting!);
+            if (course == null)
+            {
+                return new ApiNotFoundResponse<TranscriptStatisticsDto>("Không tìm thấy lớp học");
+            }
+            var scoreStructure = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId!.Equals(courseId) && c.ColumnName.Equals(Constants.Score.FinalColumnName), false, c => c.Scores);
+            await LoadChildrenWithScoreAsync(scoreStructure);
+
+            if (!course.Setting!.HasFinalScore)
+            {
+                var endtermScore = scoreStructure.Children!.FirstOrDefault(c => c.ColumnName.Equals(Constants.Score.EndtermColumnName));
+                scoreStructure.Children!.Remove(endtermScore!);
+            }
+            scoreStructure.Children = scoreStructure.Children!.OrderByDescending(c => c.ColumnName).ToList();
+            var studentIds = course.EnrolledCourses.Select(c => c.StudentId).ToList();
+            var students = await _unitOfWork.UserRepository.FindByCondition(c => studentIds.Contains(c.Id), false, c => c.Scores).ToListAsync();
+
+            var studentScores = students.Select(student => new StudentScoreDTO
+            {
+                Id = student.Id,
+                FullName = student.UserName!,
+                Scores = CalculateScore(scoreStructure, student.Id)
+            }).ToList();
+            var statisticsDto = CalculateStatistics(studentScores,course.Setting.HasFinalScore);
+            return new ApiResponse<TranscriptStatisticsDto>(200, "Thành công", statisticsDto);
         }
         #endregion
         private bool ValidateColumnNameDuplicate(UpSertScoreStructureDto dto)
@@ -305,6 +333,74 @@ namespace KLTN.Application.Services
                 parent.Children.Add(child);
                 await LoadChildrenWithScoreAsync(child);
             }
+        }
+        private TranscriptStatisticsDto CalculateStatistics(List<StudentScoreDTO> studentScores,bool hasFinalScore)
+        {
+            var statistics = new TranscriptStatisticsDto();
+            // Thống kê điểm quá trình
+            var midtermScores = new  List<double>();
+                foreach (var item in studentScores) 
+                {
+                    var midtermScore = item.Scores.Children.FirstOrDefault(c => c.ColumnName.Equals(Constants.Score.MidtermColumnName));
+
+                    midtermScores.Add(midtermScore!.Value ?? 0);
+                }
+            var midtermStatistic = new ColumnStatistics();
+            midtermStatistic.Distribution = CalculateScoreDistribution(midtermScores);
+            midtermStatistic.Max = midtermScores.Max();
+            midtermStatistic.Min = midtermScores.Min(); 
+            midtermStatistic.Average  = midtermScores.Average();
+            midtermStatistic.ColumnName = Constants.Score.MidtermColumnName;
+
+            statistics.ColumnStatistics.Add(midtermStatistic);  
+
+            //Thống kê điểm đồ án cuối kì
+            if (hasFinalScore)
+            {
+                var endtermScores = new List<double>();
+                if (hasFinalScore)
+                {
+                    foreach (var item in studentScores)
+                    {
+                        var endtermScore = item.Scores.Children.FirstOrDefault(c => c.ColumnName.Equals(Constants.Score.EndtermColumnName));
+
+                        endtermScores.Add(endtermScore!.Value ?? 0);
+                    }
+                }
+                var endtermStatistic = new ColumnStatistics();
+                endtermStatistic.Distribution = CalculateScoreDistribution(endtermScores);
+                endtermStatistic.Max = endtermScores.Max();
+                endtermStatistic.Min = endtermScores.Min();
+                endtermStatistic.Average = endtermScores.Average();
+                endtermStatistic.ColumnName = Constants.Score.EndtermColumnName;
+
+                statistics.ColumnStatistics.Add(endtermStatistic);
+
+            }
+
+
+            return statistics;
+        }
+        private Dictionary<string, int> CalculateScoreDistribution(List<double> scores)
+        {
+            var distribution = new Dictionary<string, int>
+            {
+                {"F", 0},
+                {"D", 0},
+                {"C", 0},
+                {"B", 0},
+                {"A", 0}
+            };
+            foreach (var score in scores)
+            {
+                if (score >= 0 && score < 4) distribution["F"]++;
+                else if (score >= 4 && score < 5.4) distribution["D"]++;
+                else if (score >= 5.5 && score < 6.9) distribution["C"]++;
+                else if (score >= 7 && score < 8.4) distribution["B"]++;
+                else if (score >= 8.5 && score <= 10) distribution["A"]++;
+            }
+
+            return distribution;
         }
     }
 }
