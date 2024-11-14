@@ -538,7 +538,7 @@ namespace KLTN.Application.Services
                         FullName = item.Name,
                         CreatedAt = DateTime.Now,
                     };
-                    var createResult = await _userManager.CreateAsync(newUser);
+                    var createResult = await _userManager.CreateAsync(newUser,"Kltn@2425");
                     if (!createResult.Succeeded)
                     {
                         throw new Exception("Can not create User");
