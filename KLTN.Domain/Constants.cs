@@ -20,6 +20,7 @@ namespace KLTN.Domain
         {
             public const string MidtermColumnName = "Quá trình";
             public const string EndtermColumnName = "Cuối kì";
+            public const string FinalColumnName = "Điểm sinh viên";
         }
         public class AssignmentType
         {
