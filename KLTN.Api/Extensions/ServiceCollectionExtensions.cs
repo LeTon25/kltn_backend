@@ -15,6 +15,7 @@ using KLTN.Infrastructure.Token;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 namespace KLTN.Api.Extensions
@@ -97,15 +98,15 @@ namespace KLTN.Api.Extensions
                 {
                     options.ClientId = googleOptions!.ClientId;
                     options.ClientSecret = googleOptions.ClientSecret;
-                    //options.CallbackPath = googleOptions!.CallbackPath;
                     options.SaveTokens = true;
+                    options.Scope.Add("profile");
                     options.Events = new OAuthEvents
                     {
                         OnCreatingTicket = async context =>
                         {
-                            var state = context.Request.Query["state"];
-                            var code = context.Request.Query["code"];
-                            Console.WriteLine($"{state} : {code}");
+                            var picture = context.User.GetProperty("picture").GetString();
+
+                            context.Identity.AddClaim(new Claim("picture", picture));
                         },
                       
 
