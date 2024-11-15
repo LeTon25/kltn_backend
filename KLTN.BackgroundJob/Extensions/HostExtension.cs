@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using KLTN.BackgroundJobs.Author;
 using KLTN.Domain.Settings;
 
 namespace KLTN.BackgroundJobs.Extensions
@@ -24,7 +25,9 @@ namespace KLTN.BackgroundJobs.Extensions
                 throw new Exception("Hangfire Settings is missing");
             app.UseHangfireDashboard(hangfireSettings.Route, new DashboardOptions
             {
-                //Authorization = new object[] {},
+                Authorization = new [] {
+                    new CustomDashboardAuthorizationFilter(hangfireSettings.Dashboard.UserName,hangfireSettings.Dashboard.Password)
+                },
                 DashboardTitle = configDashboard.DashboardTitle,
                 StatsPollingInterval = configDashboard.StatsPollingInterval,
                 AppPath = configDashboard.AppPath,
