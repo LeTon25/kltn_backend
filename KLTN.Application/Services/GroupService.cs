@@ -121,6 +121,7 @@ namespace KLTN.Application.Services
             group.NumberOfMembers = requestDto.NumberOfMembers;
             group.GroupType = requestDto.GroupType;
             group.AssignmentId = requestDto.AssignmentId;
+            group.IsApproved = requestDto.IsApproved;
             _unitOfWork.GroupRepository.Update(group);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
