@@ -61,10 +61,6 @@ namespace KLTN.Api.Controllers
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Email người dùng không được trùng"));
             }
-            if (await users.AnyAsync(c => c.CustomId == requestDto.CustomId || c.UserName == requestDto.CustomId))
-            {
-                return BadRequest(new ApiBadRequestResponse<string>("Mã cán bộ/sinh viên không được trùng"));
-            }
             var result = await _userManager.CreateAsync(new User
             {
                 Id = Guid.NewGuid().ToString(),
@@ -73,7 +69,6 @@ namespace KLTN.Api.Controllers
                 LockoutEnabled = false,
                 Gender = "Nam",
                 DoB = null,
-                CustomId = requestDto.CustomId,
                 UserType = Domain.Enums.UserType.Student,
                 FullName = requestDto.FullName,
                 CreatedAt = DateTime.Now,
