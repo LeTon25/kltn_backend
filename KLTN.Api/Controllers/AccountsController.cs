@@ -161,9 +161,9 @@ namespace KLTN.Api.Controllers
 
             var response = await _accountService.HandleLoginByGoogleAsync(email, name, avatar);
             var authData = response.Data;
-
+            var frontEndUrl = _configuration.GetSection("ClientUrl").Value;
             // Redirect to frontend with query parameters
-            var redirectUrl = $"http://localhost:8888/login?token={authData.Token}&refreshToken={authData.RefreshToken}&refreshTokenExpiresAt={authData.RefreshTokenExpiresAt}&user={Uri.EscapeDataString(JsonConvert.SerializeObject(authData.User))}";
+            var redirectUrl = $"{frontEndUrl}/login?token={authData.Token}&refreshToken={authData.RefreshToken}&refreshTokenExpiresAt={authData.RefreshTokenExpiresAt}&user={Uri.EscapeDataString(JsonConvert.SerializeObject(authData.User))}";
             return Redirect(redirectUrl);
         }
         [HttpGet("login-google")]

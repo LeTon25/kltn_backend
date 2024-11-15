@@ -108,12 +108,12 @@ namespace KLTN.Application.Services
                ArchivedCourses = data 
             });
         }
-        public async Task<ApiResponse<AuthResponseDto>> HandleLoginByGoogleAsync(string email,string name)
+        public async Task<ApiResponse<AuthResponseDto>> HandleLoginByGoogleAsync(string email,string name,string avatar)
         {
             var user = await userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                user = await CreateNewUserLoginGoogleAsync(email, name);
+                user = await CreateNewUserLoginGoogleAsync(email, name,avatar);
             }
 
             var data = await GenerateAuthResponseAsync(user);
@@ -122,7 +122,7 @@ namespace KLTN.Application.Services
             return new ApiResponse<AuthResponseDto>(200,"Đăng nhập thành công", data);
 
         }
-        private async Task<User> CreateNewUserLoginGoogleAsync(string email,string name)
+        private async Task<User> CreateNewUserLoginGoogleAsync(string email,string name,string avatar)
         {
             var newUser = new User
             {
@@ -135,6 +135,7 @@ namespace KLTN.Application.Services
                 CustomId = "",
                 UserType = Domain.Enums.UserType.Student,
                 FullName = name,
+                Avatar = avatar,
                 CreatedAt = DateTime.Now,
             };
             var createResult = await userManager.CreateAsync(newUser);
