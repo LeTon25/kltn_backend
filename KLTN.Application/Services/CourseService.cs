@@ -280,7 +280,18 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetGroupsInCourseAsync(string courseId)
         {
-            var groups = await _unitOfWork.GroupRepository.FindByCondition(c=>c.CourseId.Equals(courseId) && c.GroupType.Equals(Constants.GroupType.Final),false).ToListAsync();
+            var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId),false);
+            var groups = new List<KLTN.Domain.Entities.Group>();
+            if(course.LecturerId != currentUserId)
+            {
+                groups = await _unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(courseId) && c.GroupType.Equals(Constants.GroupType.Final) && c.IsApproved == true, false).ToListAsync();
+            }
+            else
+            {
+                groups = await _unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(courseId) && c.GroupType.Equals(Constants.GroupType.Final), false).ToListAsync();
+            }
             var groupIds = groups.Where(c=>c.CourseId == courseId).Select(c=>c.GroupId).ToList();
             var groupsDto = new List<GroupDto>();
             foreach(var groupId in groupIds)
