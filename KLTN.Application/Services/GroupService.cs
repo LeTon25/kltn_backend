@@ -90,7 +90,7 @@ namespace KLTN.Application.Services
                 UpdatedAt = null,
                 DeletedAt = null,
                 IsApproved = true,
-                GroupType = requestDto.GroupType,
+                GroupType = !string.IsNullOrEmpty(requestDto.GroupType) ? requestDto.GroupType : Constants.GroupType.Normal ,
                 AssignmentId = requestDto.AssignmentId
             };
             await _unitOfWork.GroupRepository.AddAsync(newGroup);

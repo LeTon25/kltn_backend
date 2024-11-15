@@ -1,4 +1,6 @@
 ﻿
+using KLTN.Domain;
+
 namespace KLTN.Application.DTOs.Groups
 {
     public class CreateGroupRequestDto
@@ -8,7 +10,7 @@ namespace KLTN.Application.DTOs.Groups
         public string CourseId { get; set; } = string.Empty;
         public int NumberOfMembers { get; set; }
         public bool IsApproved { get; set; }
-        public string GroupType { get; set; } = string.Empty;
+        public string GroupType { get; set; } = Constants.GroupType.Normal;
         public string? AssignmentId { get; set; }    
 
     }
