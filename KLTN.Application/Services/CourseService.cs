@@ -22,6 +22,7 @@ using KLTN.Domain;
 using KLTN.Application.DTOs.Comments;
 using KLTN.Domain.Enums;
 using KLTN.Application.DTOs.Submissions;
+using System.Xml.Linq;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -279,7 +280,18 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetGroupsInCourseAsync(string courseId)
         {
-            var groups = await _unitOfWork.GroupRepository.FindByCondition(c=>c.CourseId.Equals(courseId) && c.GroupType.Equals(Constants.GroupType.Final),false).ToListAsync();
+            var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId),false);
+            var groups = new List<KLTN.Domain.Entities.Group>();
+            if(course.LecturerId != currentUserId)
+            {
+                groups = await _unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(courseId) && c.GroupType.Equals(Constants.GroupType.Final) && c.IsApproved == true, false).ToListAsync();
+            }
+            else
+            {
+                groups = await _unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(courseId) && c.GroupType.Equals(Constants.GroupType.Final), false).ToListAsync();
+            }
             var groupIds = groups.Where(c=>c.CourseId == courseId).Select(c=>c.GroupId).ToList();
             var groupsDto = new List<GroupDto>();
             foreach(var groupId in groupIds)
@@ -496,6 +508,67 @@ namespace KLTN.Application.Services
             });
 
         }
+        public async Task<ApiResponse<CourseDto>> ImportStudentsToCourseAsync(string courseId,List<ImportStudent> dto,string currentUserId)
+        {
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c=>c.CourseId.Equals(courseId),false,c=>c.EnrolledCourses);
+            if (course == null)
+                return new ApiNotFoundResponse<CourseDto>("Không tìm thấy khóa học");
+            if (course.LecturerId != currentUserId)
+                return new ApiBadRequestResponse<CourseDto>("Chỉ có giáo viên mới có thể import danh sách sinh viên");
+            foreach(var item in dto)
+            {
+                var existingStudent = await _unitOfWork.UserRepository
+                    .GetFirstOrDefaultAsync(s => s.CustomId == item.CustomId || s.Email == item.Email);
+                if(existingStudent != null)
+                {
+                    if (!course.EnrolledCourses.Any(e => e.StudentId == existingStudent.Id))
+                    {
+                        var newEnrollCourse = new EnrolledCourse
+                        {
+                            CourseId = courseId,
+                            StudentId = existingStudent!.Id
+                        };
+                        course.EnrolledCourses.Add(newEnrollCourse);
+                        await _unitOfWork.EnrolledCourseRepository.AddAsync(newEnrollCourse);
+                    }
+                }
+                else
+                {
+                    var newUser = new User
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        UserName = item.CustomId,
+                        Email = item.Email,
+                        LockoutEnabled = false,
+                        Gender = "Nam",
+                        DoB = item.BirthDay,
+                        PhoneNumber = item.PhoneNumber,
+                        CustomId = "",
+                        UserType = Domain.Enums.UserType.Student,
+                        FullName = item.Name,
+                        CreatedAt = DateTime.Now,
+                    };
+                    var createResult = await _userManager.CreateAsync(newUser,"Kltn@2425");
+                    if (!createResult.Succeeded)
+                    {
+                        throw new Exception("Can not create User");
+                    }
+                    await _unitOfWork.UserRepository.AddAsync(newUser);
+                    var newEnrollCourse = new EnrolledCourse
+                    {
+                        CourseId = courseId,
+                        StudentId = existingStudent!.Id
+                    };
+                    course.EnrolledCourses.Add(newEnrollCourse);
+                    await _unitOfWork.EnrolledCourseRepository.AddAsync(newEnrollCourse);
+
+                }
+            }
+            await _unitOfWork.SaveChangesAsync();
+            var data = await GetCourseDtoByIdAsync(courseId);
+
+            return new ApiResponse<CourseDto>(200,"Thêm danh sách thành công",data);
+        }    
         #endregion
 
         #region for_service

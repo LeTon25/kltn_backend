@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using KLTN.Api.Services.Interfaces;
 using KLTN.Application.DTOs.Accounts;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
@@ -8,10 +7,13 @@ using KLTN.Application.Services;
 using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
@@ -52,17 +54,13 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> Register(RegisterRequestDto requestDto)
         {
             var users = _userManager.Users;
-            if (await users.AnyAsync(c => c.UserName == requestDto.UserName || c.CustomId == requestDto.UserName))
+            if (await users.AnyAsync(c => c.UserName == requestDto.UserName|| c.Email == requestDto.UserName || c.CustomId == requestDto.UserName))
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Tên người dùng không được trùng"));
             }
-            if (await users.AnyAsync(c => c.Email == requestDto.Email))
+            if (await users.AnyAsync(c => c.Email == requestDto.Email || c.UserName == requestDto.Email))
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Email người dùng không được trùng"));
-            }
-            if (await users.AnyAsync(c => c.CustomId == requestDto.CustomId || c.UserName == requestDto.CustomId))
-            {
-                return BadRequest(new ApiBadRequestResponse<string>("Mã cán bộ/sinh viên không được trùng"));
             }
             var result = await _userManager.CreateAsync(new User
             {
@@ -72,7 +70,6 @@ namespace KLTN.Api.Controllers
                 LockoutEnabled = false,
                 Gender = "Nam",
                 DoB = null,
-                CustomId = requestDto.CustomId,
                 UserType = Domain.Enums.UserType.Student,
                 FullName = requestDto.FullName,
                 CreatedAt = DateTime.Now,
@@ -145,7 +142,40 @@ namespace KLTN.Api.Controllers
             await _userManager.UpdateAsync(user);
             return Ok(new ApiSuccessResponse<AuthResponseDto>(200,"Đăng nhập thành công",authResponse));
         }
+        [HttpGet("google-callback")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GoogleLoginCallback()
+        {
+            var authenticateResult = await HttpContext.AuthenticateAsync("Identity.External");
 
+            if (!authenticateResult.Succeeded)
+            {
+                return Unauthorized();
+            }
+
+            var userInfo = authenticateResult.Principal;
+
+            var email = userInfo.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)!.Value;
+            var name = userInfo.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)!.Value;
+            var avatar = userInfo.Claims.FirstOrDefault(c => c.Type == "picture")?.Value;
+
+            var response = await _accountService.HandleLoginByGoogleAsync(email, name, avatar);
+            var authData = response.Data;
+            var frontEndUrl = _configuration.GetSection("ClientUrl").Value;
+            // Redirect to frontend with query parameters
+            var redirectUrl = $"{frontEndUrl}/login?token={authData.Token}&refreshToken={authData.RefreshToken}&refreshTokenExpiresAt={authData.RefreshTokenExpiresAt}&user={Uri.EscapeDataString(JsonConvert.SerializeObject(authData.User))}";
+            return Redirect(redirectUrl);
+        }
+        [HttpGet("login-google")]
+        public IActionResult GoogleLogin()
+        {
+            var properties = new AuthenticationProperties
+            {
+                RedirectUri = "/api/accounts/google-callback",
+            };
+
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(RefreshTokenModel model)
         {

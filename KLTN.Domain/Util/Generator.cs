@@ -20,7 +20,7 @@ namespace KLTN.Domain.Util
                 CourseId = courseId,
                 Percent = 100,
                 ParentId = null,
-                ColumnName = "Điểm sinh viên",
+                ColumnName = Constants.Score.FinalColumnName,
                 Children = new List<ScoreStructure>()
                 {
                     new ScoreStructure()

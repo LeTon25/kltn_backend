@@ -11,6 +11,12 @@ using KLTN.Domain.Settings;
 using KLTN.Infrastructure.Mailing;
 using KLTN.Infrastructure.Repositories;
 using KLTN.Infrastructure.Seeders;
+using KLTN.Infrastructure.Token;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OAuth;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
 
 namespace KLTN.Api.Extensions
 {
@@ -58,6 +64,55 @@ namespace KLTN.Api.Extensions
             services.AddSingleton<ISMTPEmailSettings>(emailSettings!);
             services.AddTransient<ISMTPEmailService, SmtpEmailService>();
 
+            return services;
+        }
+        public static IServiceCollection ConfigureAuthentication(this IServiceCollection services,IConfiguration configuration)
+        {
+            var googleOptions = configuration.GetSection(nameof(KLTN.Domain.Settings.GoogleOptions)).Get<KLTN.Domain.Settings.GoogleOptions>();
+            if (googleOptions == null || googleOptions.ClientId == null || googleOptions.ClientSecret == null || googleOptions.CallbackPath == null)
+                throw new Exception("Missing Google Options");
+            services.AddSingleton<GoogleOptions>(googleOptions!);
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = false,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection("JWT:SigningKey")!.Value))
+                };
+            })
+            .AddCookie(options =>
+            {
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.IsEssential = true;
+                options.LoginPath = "/signin-google";
+            })
+            .AddGoogle(
+                options =>
+                {
+                    options.ClientId = googleOptions!.ClientId;
+                    options.ClientSecret = googleOptions.ClientSecret;
+                    options.SaveTokens = true;
+                    options.Scope.Add("profile");
+                    options.Events = new OAuthEvents
+                    {
+                        OnCreatingTicket = async context =>
+                        {
+                            var picture = context.User.GetProperty("picture").GetString();
+
+                            context.Identity.AddClaim(new Claim("picture", picture));
+                        },
+                      
+
+                    };
+                } 
+            );
             return services;
         }
     }

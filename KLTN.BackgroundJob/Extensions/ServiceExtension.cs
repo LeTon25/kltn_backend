@@ -34,6 +34,7 @@ namespace KLTN.BackgroundJobs.Extensions
             services.AddHangfireServer(serverOptions
                => { 
                      serverOptions.ServerName = settings.ServerName; 
+                     
                   });
             return services;
         }

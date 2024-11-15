@@ -341,6 +341,11 @@ namespace KLTN.Application.Services
                 var submission = await unitOfWork.SubmissionRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignment.AssignmentId) && c.UserId.Equals(currentUserId), false,c=>c.CreateUser);
                 assignmentDto.Submission = mapper.Map<SubmissionDto>(submission);
             }
+            if (currentUserId != assignmentDto.Course.LecturerId && assignmentDto.Groups != null)
+            {
+                var listGroupApproved = assignmentDto.Groups.Where(c => c.IsApproved==true).ToList();
+                assignmentDto.Groups = listGroupApproved;
+            }    
             if (assignmentDto.Groups != null)
             {
                 var groupIds = assignmentDto.Groups.Select(c => c.GroupId);

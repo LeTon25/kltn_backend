@@ -90,7 +90,7 @@ namespace KLTN.Application.Services
                 UpdatedAt = null,
                 DeletedAt = null,
                 IsApproved = true,
-                GroupType = requestDto.GroupType,
+                GroupType = !string.IsNullOrEmpty(requestDto.GroupType) ? requestDto.GroupType : Constants.GroupType.Normal ,
                 AssignmentId = requestDto.AssignmentId
             };
             await _unitOfWork.GroupRepository.AddAsync(newGroup);
@@ -121,6 +121,7 @@ namespace KLTN.Application.Services
             group.NumberOfMembers = requestDto.NumberOfMembers;
             group.GroupType = requestDto.GroupType;
             group.AssignmentId = requestDto.AssignmentId;
+            group.IsApproved = requestDto.IsApproved;
             _unitOfWork.GroupRepository.Update(group);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)

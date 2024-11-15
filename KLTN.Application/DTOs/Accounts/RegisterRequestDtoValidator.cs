@@ -16,9 +16,6 @@ namespace KLTN.Application.DTOs.Accounts
             
             RuleFor(x => x.FullName)
                 .NotEmpty().WithMessage("Họ và tên không được để trống");
-
-            RuleFor(x => x.CustomId)
-                .NotEmpty().WithMessage("Mã cán bộ/ sinh viên không được để trống");
             
             RuleFor(x => x.Password)
                     .NotEmpty().WithMessage("Mật khẩu không được để trống")
