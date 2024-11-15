@@ -497,14 +497,14 @@ namespace KLTN.Application.Services
             });
 
         }
-        public async Task<ApiResponse<CourseDto>> ImportStudentsToCourseAsync(string courseId,ImportListStudentDto dto,string currentUserId)
+        public async Task<ApiResponse<CourseDto>> ImportStudentsToCourseAsync(string courseId,List<ImportStudent> dto,string currentUserId)
         {
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c=>c.CourseId.Equals(courseId),false,c=>c.EnrolledCourses);
             if (course == null)
                 return new ApiNotFoundResponse<CourseDto>("Không tìm thấy khóa học");
             if (course.LecturerId != currentUserId)
                 return new ApiBadRequestResponse<CourseDto>("Chỉ có giáo viên mới có thể import danh sách sinh viên");
-            foreach(var item in dto.Students)
+            foreach(var item in dto)
             {
                 var existingStudent = await _unitOfWork.UserRepository
                     .GetFirstOrDefaultAsync(s => s.CustomId == item.CustomId || s.Email == item.Email);
@@ -519,7 +519,6 @@ namespace KLTN.Application.Services
                         };
                         course.EnrolledCourses.Add(newEnrollCourse);
                         await _unitOfWork.EnrolledCourseRepository.AddAsync(newEnrollCourse);
-                        
                     }
                 }
                 else

@@ -155,7 +155,7 @@ namespace KLTN.Api.Controllers
             return StatusCode(response.StatusCode, response);
         }
         [HttpPost("{courseId}/import-student")]
-        public async Task<IActionResult> ImportStudentsAsync(string courseId,[FromBody]ImportListStudentDto dto)
+        public async Task<IActionResult> ImportStudentsAsync(string courseId,[FromBody]List<ImportStudent> dto)
         {
             string currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var response = await _courseService.ImportStudentsToCourseAsync(courseId, dto, currentUserId);

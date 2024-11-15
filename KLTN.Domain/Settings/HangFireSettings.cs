@@ -16,5 +16,7 @@
         public string AppPath { get; set; }
         public int StatsPollingInterval { get; set; }
         public string DashboardTitle { get; set; }
+        public string UserName { get; set; }
+        public string Password { get; set; }
     }
 }
