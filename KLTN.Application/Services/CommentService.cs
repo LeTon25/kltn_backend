@@ -29,6 +29,10 @@ namespace KLTN.Application.Services
         public async Task<ApiResponse<object>> CreateCommentsAsync(string commentableId, CreateCommentRequestDto request,string userId)
         {
             string? commentableType =  null;
+            if (string.IsNullOrWhiteSpace(request.Content))
+            {
+                return new ApiResponse<object>(400,"Không được bỏ trống nội dung bình luận");
+            }
             if(await _unitOfWork.AnnnouncementRepository.AnyAsync(c=>c.AnnouncementId.Equals(commentableId)))
             {
                 commentableType = CommentableType.Announcement;
@@ -93,7 +97,10 @@ namespace KLTN.Application.Services
                 return new ApiBadRequestResponse<object>($"Không thể tìm thấy bình luận với id : {commentId}");
             if (comment.UserId != userId)
                 return new ApiResponse<object>(403,"Không thể cập nhật comment");
-
+            if (string.IsNullOrWhiteSpace(request.Content))
+            {
+                return new ApiResponse<object>(400,"Không được bỏ trống nội dung bình luận");
+            }
             comment.Content = request.Content;
             comment.UpdatedAt = DateTime.Now;
             _unitOfWork.CommentRepository.Update(comment);
