@@ -106,7 +106,7 @@ namespace KLTN.Application.Services
             var dto = mapper.Map<AnnouncementDto>(newAnnouncement);
             var createUser = await unitOfWork.UserRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(requestDto.UserId));
             dto.CreateUser = mapper.Map<UserDto>(createUser);
-            return new ApiResponse<object>(200, "Tạo thành công", mapper.Map<AnnouncementDto>(newAnnouncement));
+            return new ApiResponse<object>(200, "Tạo thành công", mapper.Map<AnnouncementDto>(dto));
         }
         #endregion
         #region for_service
