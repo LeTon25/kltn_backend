@@ -23,6 +23,7 @@ using KLTN.Application.DTOs.Comments;
 using KLTN.Domain.Enums;
 using KLTN.Application.DTOs.Submissions;
 using System.Xml.Linq;
+using System.Globalization;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -545,7 +546,7 @@ namespace KLTN.Application.Services
                         Email = item.Email,
                         LockoutEnabled = false,
                         Gender = "Nam",
-                        DoB = item.BirthDay,
+                        DoB = !string.IsNullOrEmpty(item.BirthDay) ? DateTime.ParseExact(item.BirthDay,"dd-MM-yyyy", CultureInfo.InvariantCulture) : null,
                         PhoneNumber = item.PhoneNumber,
                         CustomId = "",
                         UserType = Domain.Enums.UserType.Student,
