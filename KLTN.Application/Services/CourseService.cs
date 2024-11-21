@@ -273,9 +273,12 @@ namespace KLTN.Application.Services
             var projects = _unitOfWork.ProjectRepository.GetAll(c=>c.CourseId == courseId);
             var projectDtos = mapper.Map<List<ProjectDto>>(projects.ToList());
 
+            var userIds = projectDtos.Select(c=>c.CreateUserId).ToList();
+            var users = await _unitOfWork.UserRepository.FindByCondition(c => userIds.Contains(c.Id)).ToListAsync();
             foreach(var projectDto in projectDtos)
             {
-                projectDto.CreateUser = mapper.Map<UserDto>(await _userManager.FindByIdAsync(projectDto.CreateUserId));
+                var createUser = users.FirstOrDefault(c=>c.Id.Equals(projectDto.CreateUserId));
+                projectDto.CreateUser = mapper.Map<UserDto>(createUser);
             }
             return new ApiResponse<object>(200, "Thành công", projectDtos);
         }

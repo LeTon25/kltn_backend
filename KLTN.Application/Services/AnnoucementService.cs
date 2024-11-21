@@ -116,10 +116,16 @@ namespace KLTN.Application.Services
         {
             var announcements = unitOfWork.AnnnouncementRepository.FindByCondition(c => c.CourseId.Equals(courseId), false, c => c.CreateUser!);
             var announcementDtos = mapper.Map<List<AnnouncementDto>>(announcements);
+
+            var announcementIds = announcements.Select(a => a.AnnouncementId).ToList();
+            
+            var comments = await unitOfWork.CommentRepository.FindByCondition(c => announcementIds.Contains(c.CommentableId) , false, c => c.User!).ToListAsync();
+
+            var commentDtos = mapper.Map<List<CommentDto>>(comments);
+
             for (int i = 0; i < announcementDtos.Count; i++)
             {
-                var comments = await unitOfWork.CommentRepository.FindByCondition(c => c.CommentableId.Equals(announcementDtos[i].AnnouncementId), false, c => c.User).ToListAsync();
-                announcementDtos[i].Comments = mapper.Map<List<CommentDto>>(comments);
+                announcementDtos[i].Comments = commentDtos.Where(c => c.CommentableId.Equals(announcementDtos[i].AnnouncementId)).ToList();
             }
             return announcementDtos;
         }
