@@ -15,7 +15,7 @@ namespace KLTN.Application.DTOs.Courses
         public string CustomId { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Email {  get; set; } = string.Empty;
-        public DateTime? BirthDay { get; set; } 
+        public string? BirthDay { get; set; } 
         public string? PhoneNumber { get; set; }
     }
 }

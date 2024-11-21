@@ -23,6 +23,7 @@ using KLTN.Application.DTOs.Comments;
 using KLTN.Domain.Enums;
 using KLTN.Application.DTOs.Submissions;
 using System.Xml.Linq;
+using System.Globalization;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -373,24 +374,28 @@ namespace KLTN.Application.Services
             var enrollDatas = course.EnrolledCourses != null ? course.EnrolledCourses : new List<EnrolledCourse>();
             if(dto.Emails != null && dto.Emails.Count > 0)
             {
-                foreach(var email in dto.Emails)
+                var users = await Task.WhenAll(dto.Emails.Select(email => _userManager.FindByEmailAsync(email)));
+
+                var vadidUser = users.Where(user => user != null).ToList();
+                if(vadidUser.Count != dto.Emails.Count)
                 {
-                    var user = await _userManager.FindByEmailAsync(email);
-                    if (user != null)
-                    { 
-                        if(enrollDatas.Any(c=>c.StudentId.Equals(user.Id)))
+                    return new ApiBadRequestResponse<object>("Có email không tồn tại trong hệ thống");
+                }
+
+                foreach (var user in users)
+                {
+                        if(enrollDatas.Any(c=>c.StudentId.Equals(user!.Id)))
                         {
                             return new ApiBadRequestResponse<object>("Có người dùng đã tham gia lớp học");
                         }
                         var newEnrollData = new EnrolledCourse()
                         {
-                            StudentId = user.Id,
+                            StudentId = user!.Id,
                             CourseId = courseId,
                             CreatedAt = DateTime.UtcNow,
                         };
                         await _unitOfWork.EnrolledCourseRepository.AddAsync(newEnrollData);
                         enrollDatas.Add(newEnrollData);
-                    }
                 }    
             }
             await _unitOfWork.SaveChangesAsync();
@@ -541,7 +546,7 @@ namespace KLTN.Application.Services
                         Email = item.Email,
                         LockoutEnabled = false,
                         Gender = "Nam",
-                        DoB = item.BirthDay,
+                        DoB = !string.IsNullOrEmpty(item.BirthDay) ? DateTime.ParseExact(item.BirthDay,"dd-MM-yyyy", CultureInfo.InvariantCulture) : null,
                         PhoneNumber = item.PhoneNumber,
                         CustomId = "",
                         UserType = Domain.Enums.UserType.Student,
