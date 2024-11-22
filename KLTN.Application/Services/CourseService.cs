@@ -544,7 +544,7 @@ namespace KLTN.Application.Services
                         Email = item.Email,
                         LockoutEnabled = false,
                         Gender = "Nam",
-                        DoB = !string.IsNullOrEmpty(item.BirthDay) ? DateTime.ParseExact(item.BirthDay,"dd-MM-yyyy", CultureInfo.InvariantCulture) : null,
+                        DoB = !string.IsNullOrEmpty(item.BirthDay) ? DateTime.ParseExact(item.BirthDay,"dd/MM/yyyy", CultureInfo.InvariantCulture) : null,
                         PhoneNumber = item.PhoneNumber,
                         CustomId = "",
                         UserType = Domain.Enums.UserType.Student,
@@ -556,11 +556,10 @@ namespace KLTN.Application.Services
                     {
                         throw new Exception("Can not create User");
                     }
-                    await _unitOfWork.UserRepository.AddAsync(newUser);
                     var newEnrollCourse = new EnrolledCourse
                     {
                         CourseId = courseId,
-                        StudentId = existingStudent!.Id
+                        StudentId = newUser!.Id
                     };
                     course.EnrolledCourses.Add(newEnrollCourse);
                     await _unitOfWork.EnrolledCourseRepository.AddAsync(newEnrollCourse);
