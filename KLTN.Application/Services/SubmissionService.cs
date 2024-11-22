@@ -133,7 +133,7 @@ namespace KLTN.Application.Services
                 return new ApiBadRequestResponse<object>("Vui lòng đính kèm ít nhất một file");
             }
 
-            if(assignment.IsGroupAssigned)
+            if(assignment.IsGroupAssigned && assignment.IsIndividualSubmissionRequired == false)
             {
                 var groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId),false,c=>c.GroupMembers).ToListAsync();
                 var groupByUser = groupsInCourse.FirstOrDefault(c=>c.GroupMembers.Any(e=>e.StudentId.Equals(currentUserId)));

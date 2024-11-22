@@ -191,6 +191,7 @@ namespace KLTN.Application.Services
                 Type = requestDto.Type,
                 JobId = jobId,  
                 IsGroupAssigned = requestDto.IsGroupAssigned,
+                IsIndividualSubmissionRequired = requestDto.AssignmentOptions.IsIndividualSubmissionRequired ?? false
             };
             await unitOfWork.AssignmentRepository.AddAsync(newAssignment);
             
@@ -239,12 +240,13 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<object>("Bạn không có quyền lấy danh sách bài nộp");
             }
-            var userData = await userManager.Users.ToListAsync();
-            var usersInCourse = userData
-                .Where(u => assignment.Course.EnrolledCourses.Any(e => e.StudentId == u.Id))
-                .ToList();
+
+            var usersInCourseIds = assignment.Course.EnrolledCourses.Select(c=>c.StudentId).ToList();
+            var usersInCourse = await unitOfWork.UserRepository.FindByCondition(c=> usersInCourseIds.Contains(c.Id)).ToListAsync();
+            
             var submissions = await unitOfWork.SubmissionRepository.FindByCondition(c=>c.AssignmentId.Equals(assignmentId),false,c=>c.CreateUser!,c => c.Scores).ToListAsync();
             var groupsInCourse = new List<Group>();  
+
             if (assignment.Type.Equals(Constants.AssignmentType.Final))
             { 
                 groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId) && c.GroupType.Equals(Constants.GroupType.Final), false, c => c.GroupMembers).ToListAsync();
@@ -324,7 +326,7 @@ namespace KLTN.Application.Services
         #region for_service
         public async Task<AssignmentDto> GetAssignmentDtoByIdAsync(string assignmentId,string currentUserId)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.ScoreStructure,c => c.Groups!);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.ScoreStructure,c => c.Groups);
             if (assignment == null)
             {
                 return null;

@@ -22,7 +22,7 @@ namespace KLTN.Application.DTOs.Assignments
         public bool IsGroupAssigned { get; set; }
         public string? ScoreStructureId { get; set; }
         public string Type { get; set; }
-
+        public bool IsIndividualSubmissionRequired { get; set; }
         public ScoreStructureDto? ScoreStructure { get; set; }
         public DateTime? DueDate { get; set; }
         public List<MetaLinkDataDto> AttachedLinks { get; set; }
