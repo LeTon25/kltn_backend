@@ -44,7 +44,7 @@ namespace KLTN.Application.Services
             if(submission.Scores == null || submission.Scores.Count == 0 )
             {
                 var scoresToAdd = new List<Score>();
-                if (!submission.Assignment.IsGroupAssigned)
+                if (!submission.Assignment.IsGroupAssigned || (submission.Assignment.IsGroupAssigned && submission.Assignment.IsIndividualSubmissionRequired))
                 {
                     var newId = Guid.NewGuid().ToString();
                     scoresToAdd.Add(new Score

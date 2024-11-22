@@ -10,6 +10,7 @@ namespace KLTN.Domain.Entities
         public string Content { get; set; }
         public string? ScoreStructureId { get; set; }
         public bool IsGroupAssigned {  get; set; }
+        public bool IsIndividualSubmissionRequired { get; set; }
         public string Type { get; set; }
         public string? JobId { get; set; }   
         public DateTime? DueDate { get; set; }

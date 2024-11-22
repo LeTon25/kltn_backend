@@ -4,5 +4,7 @@
     {
         public int? AutoGenerateCount { get; set; }
         public bool? UseFinalGroup { get; set; }
+        public bool? IsIndividualSubmissionRequired { get; set; }
+
     }
 }
