@@ -5,7 +5,6 @@ using AutoMapper;
 using KLTN.Application.Helpers.Response;
 using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Users;
-using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Projects;
 using Microsoft.EntityFrameworkCore;
 using KLTN.Application.DTOs.Groups;
@@ -14,15 +13,11 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using KLTN.Domain.Util;
 using KLTN.Application.DTOs.ScoreStructures;
-using System.Text.RegularExpressions;
 using KLTN.Application.DTOs.Settings;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Reflection.Metadata;
 using KLTN.Domain;
 using KLTN.Application.DTOs.Comments;
 using KLTN.Domain.Enums;
 using KLTN.Application.DTOs.Submissions;
-using System.Xml.Linq;
 using System.Globalization;
 namespace KLTN.Application.Services
 {
@@ -569,7 +564,6 @@ namespace KLTN.Application.Services
                     };
                     course.EnrolledCourses.Add(newEnrollCourse);
                     await _unitOfWork.EnrolledCourseRepository.AddAsync(newEnrollCourse);
-
                 }
             }
             await _unitOfWork.SaveChangesAsync();
