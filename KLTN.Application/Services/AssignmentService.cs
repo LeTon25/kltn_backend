@@ -66,10 +66,10 @@ namespace KLTN.Application.Services
             {
                 return new ApiResponse<object>(403, "Bạn không có quyền xóa bài tập này", null);
             }
-            if(assignment.JobId != null)
-            {
-                await TriggerDeleteSendEmailReminderAsync(assignment.JobId);    
-            }    
+            //if(assignment.JobId != null)
+            //{
+            //    await TriggerDeleteSendEmailReminderAsync(assignment.JobId);    
+            //}    
             unitOfWork.AssignmentRepository.Delete(assignment);
             var result = await unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -105,23 +105,23 @@ namespace KLTN.Application.Services
                     return new ApiBadRequestResponse<object>("Chưa bật điểm cuối kì cho lớp học");
                 }
             }
-            string? jobId = null;
-            if (assignment.DueDate != requestDto.DueDate && assignment.Course.EnrolledCourses != null && assignment.Course.EnrolledCourses.Count > 0) 
-            {
-                if(assignment.JobId != null)
-                {
-                    await TriggerDeleteSendEmailReminderAsync(assignment.JobId);
-                }    
-                if(requestDto.DueDate != null)
-                {
-                    var duration = requestDto.DueDate - DateTime.Now;
-                    if (duration.Value.TotalHours > 8)
-                    {
-                        jobId = await TriggerSendEmailReminderAsync(assignment.Course, requestDto.Title, requestDto.DueDate.Value);
-                    }
-                }    
+            //string? jobId = null;
+            //if (assignment.DueDate != requestDto.DueDate && assignment.Course.EnrolledCourses != null && assignment.Course.EnrolledCourses.Count > 0) 
+            //{
+            //    if(assignment.JobId != null)
+            //    {
+            //        await TriggerDeleteSendEmailReminderAsync(assignment.JobId);
+            //    }    
+            //    if(requestDto.DueDate != null)
+            //    {
+            //        var duration = requestDto.DueDate - DateTime.Now;
+            //        if (duration.Value.TotalHours > 8)
+            //        {
+            //            jobId = await TriggerSendEmailReminderAsync(assignment.Course, requestDto.Title, requestDto.DueDate.Value);
+            //        }
+            //    }    
 
-            }
+            //}
             assignment.Title = requestDto.Title;
             assignment.Content = requestDto.Content;
             assignment.DueDate = requestDto.DueDate;
@@ -130,6 +130,7 @@ namespace KLTN.Application.Services
             assignment.Attachments = mapper.Map<List<KLTN.Domain.Entities.File>>(requestDto.Attachments);
             assignment.ScoreStructureId = requestDto.ScoreStructureId;
             assignment.Type = requestDto.Type;
+            //assignment.JobId = jobId != null ? jobId.ToString() : assignment.JobId;
             unitOfWork.AssignmentRepository.Update(assignment);
             var result = await unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -165,15 +166,15 @@ namespace KLTN.Application.Services
                     return new ApiBadRequestResponse<object>("Cột điểm đã được chấm bởi bài tập khác");
                 }
             }
-            string? jobId = null;
-            if(requestDto.DueDate != null && course.EnrolledCourses != null && course.EnrolledCourses.Count > 0)
-            {
-                var duration = requestDto.DueDate - DateTime.Now;
-                if(duration.Value.TotalHours > 8)
-                {
-                    jobId = await TriggerSendEmailReminderAsync(course,requestDto.Title,requestDto.DueDate.Value);
-                }    
-            }    
+            //string? jobId = null;
+            //if(requestDto.DueDate != null && course.EnrolledCourses != null && course.EnrolledCourses.Count > 0)
+            //{
+            //    var duration = requestDto.DueDate - DateTime.Now;
+            //    if(duration.Value.TotalHours > 8)
+            //    {
+            //        jobId = await TriggerSendEmailReminderAsync(course,requestDto.Title,requestDto.DueDate.Value);
+            //    }    
+            //}    
             var newAssignmentId = Guid.NewGuid();
             var newAssignment = new Assignment()
             {
@@ -189,7 +190,7 @@ namespace KLTN.Application.Services
                 UpdatedAt = null,
                 DeletedAt = null,
                 Type = requestDto.Type,
-                JobId = jobId,  
+                //JobId = jobId,  
                 IsGroupAssigned = requestDto.IsGroupAssigned,
                 IsIndividualSubmissionRequired = requestDto.AssignmentOptions.IsIndividualSubmissionRequired ?? false
             };
@@ -214,8 +215,6 @@ namespace KLTN.Application.Services
                    groups = mapper.Map<List<GroupDto>>(finalGroups);
                 }
             }
-
-
             await unitOfWork.SaveChangesAsync();
 
             var responseDto = mapper.Map<AssignmentDto>(newAssignment);
@@ -323,7 +322,6 @@ namespace KLTN.Application.Services
             return new ApiResponse<object>(200,"Lấy dữ liệu thành công", responseData);
         }
         #endregion
-
         #region for_service
         public async Task<AssignmentDto> GetAssignmentDtoByIdAsync(string assignmentId,string currentUserId)
         {
