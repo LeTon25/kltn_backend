@@ -12,8 +12,7 @@ namespace KLTN.Domain
         public class Role
         {
             public const string Admin = "Admin";
-            public const string Lecturer = "Lecturer";
-            public const string Student = "Student";
+            public const string User = "User";
 
         }
         public class Score

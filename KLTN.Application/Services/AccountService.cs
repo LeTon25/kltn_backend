@@ -5,6 +5,7 @@ using KLTN.Application.DTOs.Requests;
 using KLTN.Application.DTOs.Subjects;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
+using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
 using KLTN.Domain.Services;
@@ -148,7 +149,10 @@ namespace KLTN.Application.Services
             {
                 throw new Exception("Can not create User");
             }
-            return newUser;
+           var user = await userManager.FindByNameAsync(newUser.UserName);
+           await userManager.AddToRoleAsync(user, Constants.Role.User);
+
+           return newUser;
         }
         private async Task<AuthResponseDto> GenerateAuthResponseAsync(User user)
         {

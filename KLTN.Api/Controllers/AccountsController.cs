@@ -77,7 +77,7 @@ namespace KLTN.Api.Controllers
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByNameAsync(requestDto.UserName);
-                await _userManager.AddToRoleAsync(user, Constants.Role.Student);
+                await _userManager.AddToRoleAsync(user, Constants.Role.User);
 
                 DateTime expiresAt = DateTime.Now.AddDays(2);
                 DateTime refreshTokenExpiresAt = DateTime.Now.AddMonths(2);
@@ -89,6 +89,7 @@ namespace KLTN.Api.Controllers
                     TokenExpiresAt = expiresAt,
                     RefreshTokenExpiresAt = refreshTokenExpiresAt,
                     User = _mapper.Map<UserDto>(user),
+                    Role = Constants.Role.User
                 };
                 user.RefreshToken = authResponse.RefreshToken;
                 user.RefreshTokenExpiry = refreshTokenExpiresAt;
@@ -112,12 +113,12 @@ namespace KLTN.Api.Controllers
             || x.Email == requestDto.Identifier
             || x.CustomId == requestDto.Identifier);
 
-
+            
             if (user == null) 
             { 
                 return Ok(new ApiResponse<string>(401,"Thông tin đăng nhập không đúng"));
             }
-
+            
             var result = await _signInManager.CheckPasswordSignInAsync(user,requestDto.Password,false);
 
             if (!result.Succeeded)
@@ -126,8 +127,10 @@ namespace KLTN.Api.Controllers
             }
             DateTime expiresAt = DateTime.Now.AddDays(2);
             DateTime refreshTokenExpiresAt = DateTime.Now.AddMonths(2);
-            string token = await _tokenService.GenerateTokens(user, expiresAt);
 
+            
+            string token = await _tokenService.GenerateTokens(user, expiresAt);
+            var role = await _userManager.GetRolesAsync(user);
             var authResponse = new AuthResponseDto
             {
                 Token = token,
@@ -135,6 +138,7 @@ namespace KLTN.Api.Controllers
                 TokenExpiresAt = expiresAt,
                 RefreshTokenExpiresAt = refreshTokenExpiresAt,
                 User = _mapper.Map<UserDto>(user),
+                Role = role.FirstOrDefault()
             };
             user.RefreshToken = authResponse.RefreshToken;
             user.RefreshTokenExpiry = refreshTokenExpiresAt;
