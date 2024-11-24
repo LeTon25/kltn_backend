@@ -14,8 +14,7 @@ namespace KLTN.Infrastructure.Seeders
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly string AdminRoleName = "Admin";
-        private readonly string LecturerRoleName = "Lecturer";
-        private readonly string StudentRoleName = "Student";
+        private readonly string UserRoleName = "User";
         private readonly IUnitOfWork _unitOfWork;    
         public DbInitializer(ApplicationDbContext context,
                 UserManager<User> userManager,
@@ -42,15 +41,9 @@ namespace KLTN.Infrastructure.Seeders
                 });
                 await _roleManager.CreateAsync(new IdentityRole
                 {
-                    Id = LecturerRoleName,
-                    Name = LecturerRoleName,
-                    NormalizedName = LecturerRoleName.ToUpper(),
-                });
-                await _roleManager.CreateAsync(new IdentityRole
-                {
-                    Id = StudentRoleName,
-                    Name = StudentRoleName,
-                    NormalizedName = StudentRoleName.ToUpper(),
+                    Id = UserRoleName,
+                    Name = UserRoleName,
+                    NormalizedName = UserRoleName.ToUpper(),
                 });
             }
 
@@ -93,7 +86,7 @@ namespace KLTN.Infrastructure.Seeders
                 if (result2.Succeeded)
                 {
                     var user = await _userManager.FindByNameAsync("thanhhung");
-                    await _userManager.AddToRoleAsync(user, LecturerRoleName);
+                    await _userManager.AddToRoleAsync(user, UserRoleName);
                 }
                 var result3 = await _userManager.CreateAsync(new User
                 {
@@ -110,7 +103,7 @@ namespace KLTN.Infrastructure.Seeders
                 if (result3.Succeeded)
                 {
                     var user = await _userManager.FindByNameAsync("letoan");
-                    await _userManager.AddToRoleAsync(user, LecturerRoleName);
+                    await _userManager.AddToRoleAsync(user, UserRoleName);
                 }
             }
 

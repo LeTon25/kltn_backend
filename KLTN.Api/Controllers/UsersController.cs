@@ -85,7 +85,7 @@ namespace KLTN.Api.Controllers
         {
             var users = _userManager.Users;
 
-            var uservms = await users.Select(u=> _mapper.Map<UserDto>(u)).ToListAsync();
+            var uservms = await users.Select(u=> _mapper.Map<UserDto>(u) ).ToListAsync();
 
             return Ok(new ApiResponse<List<UserDto>>(200,"Thành công",uservms));
         }
@@ -132,6 +132,32 @@ namespace KLTN.Api.Controllers
             return BadRequest(new ApiBadRequestResponse<string>(result));
         }
 
+        [HttpPatch("admin/{id}")]
+        [ApiValidationFilter]
+        [RoleRequirement(["Admin"])]
+        public async Task<IActionResult> PutUserByAdminAsync(string id, [FromBody] UpdateUserByAdminRequestDto request)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+
+            if (user == null)
+                return NotFound(new ApiNotFoundResponse<string>($"Không thể tìm thấy người dùng với id : {id}"));
+            user.PhoneNumber = request.PhoneNumber;
+            user.FullName = request.FullName;
+            user.DoB = request.DoB;
+            user.Gender = request.Gender;
+            user.Avatar = request.Avatar;
+            user.CustomId = request.CustomId;  
+            user.UpdatedAt = DateTime.Now;
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                var data = _mapper.Map<UserDto>(user);
+                var response = new ApiResponse<UserDto>(200, "Cập nhật thành công", data);
+                return StatusCode(response.StatusCode, response);
+            }
+            return BadRequest(new ApiBadRequestResponse<string>(result));
+        }
         [HttpPatch("{id}/change-password")]
         public async Task<IActionResult> PutUserPasswordAsync(string id, [FromBody] ChangeUserPasswordRequestDto request)
         {
@@ -158,6 +184,7 @@ namespace KLTN.Api.Controllers
 
         [HttpDelete("{id}")]
         [ApiValidationFilter]
+        [RoleRequirement(["Admin"])]
         public async Task<IActionResult> DeleteUserAsync(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -189,6 +216,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpPost("{userId}/roles")]
+        [RoleRequirement(["Admin"])]
         public async Task<IActionResult> PostRolesToUserUserAsync(string userId, [FromBody] RolesAssignRequestDto request)
         {
             if (request.RoleNames?.Length == 0)
@@ -206,6 +234,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpDelete("{userId}/roles")]
+        [RoleRequirement(["Admin"])]
         public async Task<IActionResult> RemoveRolesFromUserAsync(string userId, [FromBody] RolesAssignRequestDto request)
         {
             if (request.RoleNames?.Length == 0)

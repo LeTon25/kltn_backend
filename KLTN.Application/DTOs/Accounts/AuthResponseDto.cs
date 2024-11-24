@@ -14,7 +14,7 @@ namespace KLTN.Application.DTOs.Accounts
         public string RefreshToken { get; set; }    
         public DateTime TokenExpiresAt { get; set; }
         public DateTime RefreshTokenExpiresAt { get; set; }
-
+        public string Role { get; set; }
         public UserDto User { get; set; }
     }
 }

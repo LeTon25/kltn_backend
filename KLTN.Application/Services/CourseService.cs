@@ -19,6 +19,7 @@ using KLTN.Application.DTOs.Comments;
 using KLTN.Domain.Enums;
 using KLTN.Application.DTOs.Submissions;
 using System.Globalization;
+using System.Net.WebSockets;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -36,17 +37,25 @@ namespace KLTN.Application.Services
             AnnoucementService annoucementService,
             GroupService groupService,
             ScoreStructureService scoreStructureService,
-            IHttpContextAccessor httpContextAccessor) 
-        { 
+            IHttpContextAccessor httpContextAccessor)
+        {
             this._unitOfWork = unitOfWork;
             this._userManager = userManager;
-            this.mapper = mapper;  
+            this.mapper = mapper;
             this.annoucementService = annoucementService;
             this.groupService = groupService;
             this.scoreStructureService = scoreStructureService;
             this.httpContextAccessor = httpContextAccessor;
         }
         #region for controller
+        public async Task<ApiResponse<List<CourseDto>>> GetAllCoursesAsync()
+        {
+            var courses = _unitOfWork.CourseRepository.FindByCondition(c=>true,false,c=>c.Lecturer!,c => c.EnrolledCourses);
+
+            var dtos = mapper.Map<List<CourseDto>>(courses);
+
+            return new ApiResponse<List<CourseDto>>(200,"Lấy dữ liệu thành công",dtos);
+        }
         public async Task<ApiResponse<object>> UpdateInviteCodeAsync(string courseId, string inviteCode)
         {
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
@@ -546,7 +555,7 @@ namespace KLTN.Application.Services
                         Gender = "Nam",
                         DoB = !string.IsNullOrEmpty(item.BirthDay) ? DateTime.ParseExact(item.BirthDay,"dd/MM/yyyy", CultureInfo.InvariantCulture) : null,
                         PhoneNumber = item.PhoneNumber,
-                        CustomId = "",
+                        CustomId = item.CustomId,
                         UserType = Domain.Enums.UserType.Student,
                         FullName = item.Name,
                         CreatedAt = DateTime.Now,

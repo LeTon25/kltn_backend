@@ -19,6 +19,13 @@ namespace KLTN.Api.Controllers
         { 
             this._courseService = courseService;
         }
+        [HttpGet]
+        [RoleRequirement(["Admin"])]
+        public async Task<IActionResult> GetAllCoursesAsync()
+        {
+            var response = await _courseService.GetAllCoursesAsync();
+            return StatusCode(response.StatusCode, response);
+        }
         [HttpGet("{courseId}")]
         [ServiceFilter(typeof(CourseResourceAccessFilter))]
         public async Task<IActionResult> GetByIdAsync(string courseId)
