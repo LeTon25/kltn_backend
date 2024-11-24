@@ -46,6 +46,7 @@ namespace KLTN.Api.Extensions
             services.AddTransient<BriefService>();
             services.AddTransient<RequestService>();
             services.AddTransient<SettingService>();
+            services.AddTransient<DashboardService>();
             //
             services.AddScoped<CourseResourceAccessFilter>();
             services.AddScoped<GroupResourceAccessFilter>();
