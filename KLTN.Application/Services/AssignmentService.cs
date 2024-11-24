@@ -258,7 +258,8 @@ namespace KLTN.Application.Services
             var responseData = new List<SubmissionUserDto>();
             foreach(var student in usersInCourse)
             {
-                if (!assignment.IsGroupAssigned) 
+                if (!assignment.IsGroupAssigned || (assignment.IsGroupAssigned
+                    && assignment.IsIndividualSubmissionRequired)) 
                 {
                     var submissionSubmitedByUser = submissions.FirstOrDefault(c => c.UserId.Equals(student.Id));
                     if (submissionSubmitedByUser != null)
