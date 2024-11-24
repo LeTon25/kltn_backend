@@ -546,7 +546,7 @@ namespace KLTN.Application.Services
                         Gender = "Nam",
                         DoB = !string.IsNullOrEmpty(item.BirthDay) ? DateTime.ParseExact(item.BirthDay,"dd/MM/yyyy", CultureInfo.InvariantCulture) : null,
                         PhoneNumber = item.PhoneNumber,
-                        CustomId = "",
+                        CustomId = item.CustomId,
                         UserType = Domain.Enums.UserType.Student,
                         FullName = item.Name,
                         CreatedAt = DateTime.Now,
