@@ -276,16 +276,20 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> GetProjectsInCourseAsync(string courseId)
         {
-            var projects = _unitOfWork.ProjectRepository.GetAll(c=>c.CourseId == courseId);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c=>c.CourseId.Equals(courseId));
+            var projects = new List<Project>();
+            var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if(currentUserId != course.LecturerId)
+            {
+                projects = await _unitOfWork.ProjectRepository.FindByCondition(c=>c.CourseId.Equals(courseId),false,c=>c.User!).ToListAsync();
+            }
+            else
+            {
+                projects = await _unitOfWork.ProjectRepository.FindByCondition(c => c.CourseId.Equals(courseId) && c.IsApproved == true, false, c => c.User!).ToListAsync();
+            }
+
             var projectDtos = mapper.Map<List<ProjectDto>>(projects.ToList());
 
-            var userIds = projectDtos.Select(c=>c.CreateUserId).ToList();
-            var users = await _unitOfWork.UserRepository.FindByCondition(c => userIds.Contains(c.Id)).ToListAsync();
-            foreach(var projectDto in projectDtos)
-            {
-                var createUser = users.FirstOrDefault(c=>c.Id.Equals(projectDto.CreateUserId));
-                projectDto.CreateUser = mapper.Map<UserDto>(createUser);
-            }
             return new ApiResponse<object>(200, "Thành công", projectDtos);
         }
         public async Task<ApiResponse<object>> GetGroupsInCourseAsync(string courseId)
