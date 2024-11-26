@@ -4,6 +4,7 @@ using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Filter;
 using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
+using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -20,17 +21,20 @@ namespace KLTN.Api.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IMapper _mapper;
         private readonly IStorageService _storageService;
+        private readonly IUnitOfWork unitOfWork;
         public UsersController(
            UserManager<User> userManager,
            RoleManager<IdentityRole> roleManager,
            IMapper mapper,
-           IStorageService storageService
+           IStorageService storageService,
+           IUnitOfWork unitOfWork
            )
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _mapper = mapper;
             _storageService = storageService;
+            this.unitOfWork = unitOfWork;
         }
         [HttpPost]
         [ApiValidationFilter]
@@ -141,11 +145,15 @@ namespace KLTN.Api.Controllers
 
             if (user == null)
                 return NotFound(new ApiNotFoundResponse<string>($"Không thể tìm thấy người dùng với id : {id}"));
-            user.PhoneNumber = request.PhoneNumber;
-            user.FullName = request.FullName;
-            user.DoB = request.DoB;
-            user.Gender = request.Gender;
-            user.Avatar = request.Avatar;
+            if (await unitOfWork.UserRepository.AnyAsync(c => c.CustomId.Equals(request.CustomId) && !c.Id.Equals(id)))
+            {
+                return BadRequest(new ApiBadRequestResponse<string>($"Mã bị trùng"));
+            }
+            user.PhoneNumber = string.IsNullOrEmpty(request.PhoneNumber) ? user.PhoneNumber : request.PhoneNumber;
+            user.FullName = string.IsNullOrEmpty(request.FullName) ? user.FullName : request.FullName;
+            user.DoB = request.DoB == null ? user.DoB : request.DoB ;
+            user.Gender = string.IsNullOrEmpty(request.Gender) ? user.Gender : request.Gender;
+            user.Avatar = string.IsNullOrEmpty(request.Avatar) ? user.Avatar : request.Avatar;
             user.CustomId = request.CustomId;  
             user.UpdatedAt = DateTime.Now;
             var result = await _userManager.UpdateAsync(user);
