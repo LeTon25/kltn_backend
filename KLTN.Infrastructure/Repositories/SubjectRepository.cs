@@ -20,23 +20,42 @@ namespace KLTN.Infrastructure.Repositories
         public async Task<List<MonthlyStatistic>> GetMonthlySubjectStatistics(int year)
         {
             var statistics = await _db.Subjects
-            .Where(u => u.CreatedAt.Year == year)
-            .GroupBy(u => u.CreatedAt.Month)
-            .Select(g => new MonthlyStatistic
-            {
-                Month = g.Key.ToString(),
-                Count = g.Count()
-            })
-            .OrderBy(stat => stat.Month)
-            .ToListAsync();
+                        .Where(u => u.CreatedAt.Year <= year)
+                        .GroupBy(u => new
+                        {
+                            Year = u.CreatedAt.Year,
+                            Month = u.CreatedAt.Month,
+                        })
+                        .Select(g => new
+                        {
+                            g.Key.Year,
+                            g.Key.Month,
+                            Count = g.Count()
+                        })
+                        .OrderBy(stat => stat.Year)
+                        .OrderBy(stat => stat.Month)
+                        .ToListAsync();
 
-                        var result = Enumerable.Range(1, 12)
-                         .Select(month => new MonthlyStatistic
-                         {
-                             Month = month.ToString(),
-                             Count = statistics.FirstOrDefault(s => s.Month == month.ToString())?.Count ?? 0
-                         })
-                         .ToList();
+            var result = new List<MonthlyStatistic>();
+            var fullYearMonths = Enumerable.Range(1, 12)
+           .Select(month => new
+           {
+               Year = year,
+               Month = month,
+               CumulativeUserCount = 0
+           }).ToList();
+            foreach (var monthStat in fullYearMonths)
+            {
+                var matchingStat = statistics
+                    .Where(stat => stat.Year < year || (stat.Year == year && stat.Month <= monthStat.Month))
+                    .Sum(stat => stat.Count);
+
+                result.Add(new MonthlyStatistic
+                {
+                    Month = monthStat.Month.ToString(),
+                    Count = matchingStat
+                });
+            }
             return result;
         }
     }
