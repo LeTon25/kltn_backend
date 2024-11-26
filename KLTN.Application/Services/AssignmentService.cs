@@ -69,8 +69,12 @@ namespace KLTN.Application.Services
             //if(assignment.JobId != null)
             //{
             //    await TriggerDeleteSendEmailReminderAsync(assignment.JobId);    
-            //}    
+            //}
+            //
+            var groups = unitOfWork.GroupRepository.FindByCondition(c =>c.AssignmentId != null && c.AssignmentId.Equals(assignment.AssignmentId));
+            unitOfWork.GroupRepository.DeleteRange(groups);
             unitOfWork.AssignmentRepository.Delete(assignment);
+
             var result = await unitOfWork.SaveChangesAsync();
             if (result > 0)
             {
@@ -389,7 +393,7 @@ namespace KLTN.Application.Services
                     GroupId = Guid.NewGuid().ToString(),
                     GroupName = newGroupName,
                     ProjectId = null,
-                    NumberOfMembers = course.Setting!.MaxGroupSize,
+                    NumberOfMembers = course.Setting!.MaxGroupSize ?? 5,
                     CourseId = course.CourseId,
                     CreatedAt = DateTime.Now,
                     UpdatedAt = null,

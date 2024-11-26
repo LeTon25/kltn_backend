@@ -45,7 +45,7 @@ namespace KLTN.Application.Services
         {
             var subjectData = await unitOfWork.SubjectRepository.GetAllAsync();
             //Khóa học do người dùng giảng dạy
-            var teachingCourses = unitOfWork.CourseRepository.GetAll(c => c.LecturerId == userId && c.SaveAt == null).ToList();
+            var teachingCourses =await  unitOfWork.CourseRepository.FindByCondition(c => c.LecturerId == userId && c.SaveAt == null,false,c=>c.Lecturer!,c => c.Setting!).ToListAsync();
             var teachingCourseDtos = mapper.Map<List<CourseDto>>(teachingCourses);
             
             var lecturer = await userManager.FindByIdAsync(userId);
@@ -59,7 +59,7 @@ namespace KLTN.Application.Services
             var enrollData = unitOfWork.EnrolledCourseRepository.GetAll(c => c.StudentId == userId);
 
             var enrollCourseIds = enrollData.Select(e => e.CourseId).ToList();
-            var enrollCourses = unitOfWork.CourseRepository.GetAll(c => enrollCourseIds.Contains(c.CourseId) && c.SaveAt == null).ToList();
+            var enrollCourses = await unitOfWork.CourseRepository.FindByCondition(c => enrollCourseIds.Contains(c.CourseId) && c.SaveAt == null,false,c=>c.Setting!,c =>c.Lecturer!).ToListAsync();
 
             var enrollCourseDto = mapper.Map<List<CourseDto>>(enrollCourses);
             var lecturerIds = enrollCourseDto.Select(c => c.LecturerId).ToList();
