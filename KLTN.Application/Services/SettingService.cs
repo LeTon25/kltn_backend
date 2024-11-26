@@ -37,6 +37,7 @@ namespace KLTN.Application.Services
             setting.HasFinalScore = dto.HasFinalScore;
             setting.MaxGroupSize = dto.MaxGroupSize;
             setting.MinGroupSize = dto.MinGroupSize;
+            setting.AllowStudentCreateProject = dto.AllowStudentCreateProject;
             setting.DueDateToJoinGroup = dto.DueDateToJoinGroup == null ? setting.DueDateToJoinGroup : dto.DueDateToJoinGroup;
             unitOfWork.SettingRepository.Update(setting);
             
