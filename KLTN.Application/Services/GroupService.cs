@@ -107,7 +107,7 @@ namespace KLTN.Application.Services
                 return new ApiNotFoundResponse<GroupDto>($"Không tìm thấy nhóm với id : {groupId}");
             }
 
-            if (await _unitOfWork.GroupRepository.AnyAsync(e => e.GroupName == requestDto.GroupName && e.GroupId != groupId && e.CourseId == group.CourseId))
+            if (await _unitOfWork.GroupRepository.AnyAsync(e => e.AssignmentId.Equals(group.AssignmentId) && e.GroupName == requestDto.GroupName && e.GroupId != groupId && e.CourseId == group.CourseId))
             {
                 return new ApiBadRequestResponse<GroupDto>("Tên nhóm không được trùng");
             }
