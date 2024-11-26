@@ -104,6 +104,7 @@ namespace KLTN.Application.Services
                 Semester = requestDto.Semester,
                 UpdatedAt = null,
                 DeletedAt = null,
+                Background = requestDto.Background,
                 Name = requestDto.Name,
             };
             await _unitOfWork.CourseRepository.AddAsync(newCourse);
@@ -171,6 +172,7 @@ namespace KLTN.Application.Services
             course.IsHidden = requestDto.IsHidden;
             course.Name = requestDto.Name;
             course.Semester = requestDto.Semester;
+            course.Background = string.IsNullOrEmpty(requestDto.Background) ? course.Background : requestDto.Background;
             _unitOfWork.CourseRepository.Update(course);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)

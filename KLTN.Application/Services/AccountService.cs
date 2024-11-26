@@ -159,6 +159,8 @@ namespace KLTN.Application.Services
             DateTime expiresAt = DateTime.Now.AddDays(2);
             DateTime refreshTokenExpiresAt = DateTime.Now.AddMonths(2);
             string token = await _tokenService.GenerateTokens(user, expiresAt);
+            var role = await userManager.GetRolesAsync(user);
+
             var authResponse = new AuthResponseDto
             {
                 Token = token,
@@ -166,6 +168,7 @@ namespace KLTN.Application.Services
                 TokenExpiresAt = expiresAt,
                 RefreshTokenExpiresAt = refreshTokenExpiresAt,
                 User = mapper.Map<UserDto>(user),
+                Role = role.FirstOrDefault()!
             };
             user.RefreshToken = authResponse.RefreshToken;
             user.RefreshTokenExpiry = refreshTokenExpiresAt;
