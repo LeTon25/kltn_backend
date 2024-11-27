@@ -571,6 +571,7 @@ namespace KLTN.Application.Services
                     {
                         throw new Exception("Can not create User");
                     }
+                    await _userManager.AddToRoleAsync(newUser, Constants.Role.User);
                     var newEnrollCourse = new EnrolledCourse
                     {
                         CourseId = courseId,
