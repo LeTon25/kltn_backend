@@ -279,7 +279,7 @@ namespace KLTN.Application.Services
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c=>c.CourseId.Equals(courseId));
             var projects = new List<Project>();
             var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if(currentUserId != course.LecturerId)
+            if(currentUserId == course.LecturerId)
             {
                 projects = await _unitOfWork.ProjectRepository.FindByCondition(c=>c.CourseId.Equals(courseId),false,c=>c.User!).ToListAsync();
             }
