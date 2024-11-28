@@ -167,7 +167,7 @@ namespace KLTN.Api.Controllers
             var authData = response.Data;
             var frontEndUrl = _configuration.GetSection("ClientUrl").Value;
             // Redirect to frontend with query parameters
-            var redirectUrl = $"{frontEndUrl}/login?token={authData.Token}&refreshToken={authData.RefreshToken}&refreshTokenExpiresAt={authData.RefreshTokenExpiresAt}&user={Uri.EscapeDataString(JsonConvert.SerializeObject(authData.User))}";
+            var redirectUrl = $"{frontEndUrl}/login?token={authData.Token}&refreshToken={authData.RefreshToken}&refreshTokenExpiresAt={authData.RefreshTokenExpiresAt}&user={Uri.EscapeDataString(JsonConvert.SerializeObject(authData.User))}&role={authData.Role}";
             return Redirect(redirectUrl);
         }
         [HttpGet("login-google")]
