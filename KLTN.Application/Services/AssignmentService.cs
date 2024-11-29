@@ -196,7 +196,7 @@ namespace KLTN.Application.Services
                 Type = requestDto.Type,
                 //JobId = jobId,  
                 IsGroupAssigned = requestDto.IsGroupAssigned,
-                IsIndividualSubmissionRequired = requestDto.AssignmentOptions.IsIndividualSubmissionRequired ?? false
+                IsIndividualSubmissionRequired = requestDto.IsIndividualSubmissionRequired ?? false
             };
             await unitOfWork.AssignmentRepository.AddAsync(newAssignment);
             
