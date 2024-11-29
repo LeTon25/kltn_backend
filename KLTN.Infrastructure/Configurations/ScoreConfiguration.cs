@@ -34,7 +34,7 @@ namespace KLTN.Infrastructure.Configurations
                 .WithMany(e => e.Scores)
                 .HasForeignKey(c => c.SubmissionId)
                 .IsRequired(false)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Cascade);
             #endregion
         }
     }
