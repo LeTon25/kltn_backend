@@ -20,17 +20,25 @@ namespace KLTN.Application.Services
             this.mapper = mapper;
             this.userManager = userManager;
         }
-        public async Task<ApiResponse<ProjectDto>> GetProjectByIdAsync(string projectId)
+        public async Task<ApiResponse<ProjectDto>> GetProjectByIdAsync(string projectId,string currentUserId)
         {
             var project = await _unitOfWork.ProjectRepository.GetFirstOrDefaultAsync(
                 c => c.ProjectId.Equals(projectId),
                 false,
-                c=>c.Course!
+                c=>c.Course!,
+                c =>c.Course.EnrolledCourses
                 );
+   
             if(project == null)
             {
                 return new ApiNotFoundResponse<ProjectDto>("Không tìm thấy đề tài");
-            }    
+            }
+            if (currentUserId != project.Course.LecturerId &&
+                !project.Course.EnrolledCourses.Any(e => e.StudentId.Equals(currentUserId)))
+            {
+                return new ApiResponse<ProjectDto>(200,"Không được quyền xem đề tài");
+
+            }
             var projectDto = mapper.Map<ProjectDto>(project);
             var createUser = _unitOfWork.UserRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(project.CreateUserId),false);
 
