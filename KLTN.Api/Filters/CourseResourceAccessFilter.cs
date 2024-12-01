@@ -9,6 +9,8 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using KLTN.Application.Helpers.Response;
+using System.Reflection.Metadata;
+using KLTN.Domain;
 
 namespace KLTN.Api.Filters
 {
@@ -23,7 +25,7 @@ namespace KLTN.Api.Filters
         {
             var userId = context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var courseId = context.RouteData.Values["courseId"]?.ToString();
-
+            var role = context.HttpContext.User.FindFirstValue(ClaimTypes.Role);
             if (string.IsNullOrEmpty(courseId))
             {
                 context.Result = new BadRequestObjectResult(new ApiBadRequestResponse<object>("Invalid course ID"));
@@ -32,6 +34,10 @@ namespace KLTN.Api.Filters
 
             var course = await _db.Courses.AsNoTracking().FirstOrDefaultAsync(c => c.CourseId == courseId);
 
+            if(!string.IsNullOrEmpty(role ) && role.Equals(Constants.Role.Admin))
+            {
+                return;
+            }    
             if (course == null)
             {
                 context.Result = new BadRequestObjectResult(new ApiBadRequestResponse<object>("Course not found"));

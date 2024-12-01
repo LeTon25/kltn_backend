@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using KLTN.Application.Helpers.Response;
+using static KLTN.Domain.Constants;
+using KLTN.Domain;
 
 namespace KLTN.Api.Filters
 {
@@ -18,6 +20,7 @@ namespace KLTN.Api.Filters
         {
             var userId = context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var groupId = context.RouteData.Values["groupId"]?.ToString();
+            var role = context.HttpContext.User.FindFirstValue(ClaimTypes.Role);
 
             if (string.IsNullOrEmpty(groupId))
             {
@@ -35,7 +38,10 @@ namespace KLTN.Api.Filters
                 context.Result = new BadRequestObjectResult(new ApiBadRequestResponse<object>("Group not found"));
                 return;
             }
-
+            if (!string.IsNullOrEmpty(role) && role.Equals(Constants.Role.Admin))
+            {
+                return;
+            }
             if (group.Course?.LecturerId == userId)
             {
                 return;

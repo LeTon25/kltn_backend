@@ -26,11 +26,13 @@ namespace KLTN.Api.Controllers
         [HttpGet("{projectId}")]
         public async Task<IActionResult> GetByIdAsync(string projectId)
         {
-            var response = await projectService.GetProjectByIdAsync(projectId);
+            var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var response = await projectService.GetProjectByIdAsync(projectId,currentUserId);
             return StatusCode(response.StatusCode, response);
         }
         [HttpPost]
         [ApiValidationFilter]
+
         public async Task<IActionResult> PostProjectAsync(CreateProjectRequestDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -39,6 +41,7 @@ namespace KLTN.Api.Controllers
         }
         [HttpPatch("{projectId}")]
         [ApiValidationFilter]
+
         public async Task<IActionResult> PutProjectId(string projectId, [FromBody] CreateProjectRequestDto requestDto)
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -48,6 +51,7 @@ namespace KLTN.Api.Controllers
         }
 
         [HttpDelete("{projectId}")]
+
         public async Task<IActionResult> DeleteProjectAsync(string projectId)
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
