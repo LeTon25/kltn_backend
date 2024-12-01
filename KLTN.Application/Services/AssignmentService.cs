@@ -329,8 +329,13 @@ namespace KLTN.Application.Services
         #region for_service
         public async Task<AssignmentDto> GetAssignmentDtoByIdAsync(string assignmentId,string currentUserId)
         {
-            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.ScoreStructure,c => c.Groups);
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId == assignmentId,false,c=>c.ScoreStructure,c => c.Groups,c => c.Course,c => c.Course.EnrolledCourses);
             if (assignment == null)
+            {
+                return null;
+            }
+            if (assignment.Course!.LecturerId != currentUserId 
+                && !assignment.Course.EnrolledCourses.Any(e=>e.CourseId.Equals(assignment.Course.CourseId) && e.StudentId.Equals(currentUserId)))
             {
                 return null;
             }
