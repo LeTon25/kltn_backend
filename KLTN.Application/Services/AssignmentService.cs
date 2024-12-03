@@ -46,6 +46,13 @@ namespace KLTN.Application.Services
             this.backgroundJobHttpService = backgroundJobHttpService;   
         }
         #region for_controller
+        public async Task<ApiResponse<List<AssignmentDto>>> GetAllAssignmentsAsync()
+        {
+            var assignments = await unitOfWork.AssignmentRepository.FindByCondition(c => true, false, c => c.Groups, c => c.Course).ToListAsync();
+            var dto = mapper.Map<List<AssignmentDto>>(assignments);
+
+            return new ApiResponse<List<AssignmentDto>>(200, "Thành công", dto);
+        }
         public async Task<ApiResponse<object>> GetAssignmentByIdAsync(string assignmentId,string currentUserId)
         {
             var data = await GetAssignmentDtoByIdAsync(assignmentId,currentUserId);

@@ -8,6 +8,7 @@ using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using File = KLTN.Domain.Entities.File;
 
@@ -33,6 +34,13 @@ namespace KLTN.Application.Services
             this._httpContextAccessor = httpContextAccessor;
         }
         #region for_controller
+        public async Task<ApiResponse<List<ReportDto>>> GetAllReportsAsync()
+        {
+            var reports = await unitOfWork.ReportRepository.FindByCondition(c => true, false, c => c.Group,c => c.Brief).ToListAsync();
+            var dto = mapper.Map<List<ReportDto>>(reports);
+
+            return new ApiResponse<List<ReportDto>>(200, "Thành công", dto);
+        }
         public async Task<ApiResponse<object>> GetReportByIdAsync(string reportId)
         {
             var entity = await unitOfWork.ReportRepository.GetFirstOrDefaultAsync(c=>c.ReportId.Equals(reportId),false,c=>c.CreateUser!,c =>c.Brief);

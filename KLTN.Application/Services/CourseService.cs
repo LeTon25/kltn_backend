@@ -50,7 +50,7 @@ namespace KLTN.Application.Services
         #region for controller
         public async Task<ApiResponse<List<CourseDto>>> GetAllCoursesAsync()
         {
-            var courses = _unitOfWork.CourseRepository.FindByCondition(c=>true,false,c=>c.Lecturer!,c => c.EnrolledCourses);
+            var courses = await _unitOfWork.CourseRepository.FindByCondition(c=>true,false,c=>c.Lecturer!,c => c.EnrolledCourses,c => c.Setting).ToListAsync();
 
             var dtos = mapper.Map<List<CourseDto>>(courses);
 
