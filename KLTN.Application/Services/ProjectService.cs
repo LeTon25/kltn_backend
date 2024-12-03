@@ -5,6 +5,7 @@ using KLTN.Application.Helpers.Response;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace KLTN.Application.Services
@@ -19,6 +20,13 @@ namespace KLTN.Application.Services
             _unitOfWork = unitOfWork;
             this.mapper = mapper;
             this.userManager = userManager;
+        }
+        public async Task<ApiResponse<List<ProjectDto>>> GetAllProjectsAsync()
+        {
+            var projects = await _unitOfWork.ProjectRepository.FindByCondition(c=>true,false,c=>c.User!).ToListAsync();
+            var dto = mapper.Map<List<ProjectDto>>(projects);
+
+            return new ApiResponse<List<ProjectDto>>(200, "Lấy dữ liệu thành công", dto);
         }
         public async Task<ApiResponse<ProjectDto>> GetProjectByIdAsync(string projectId,string currentUserId)
         {

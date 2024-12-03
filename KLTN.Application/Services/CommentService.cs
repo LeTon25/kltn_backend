@@ -7,6 +7,7 @@ using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,12 @@ namespace KLTN.Application.Services
             _unitOfWork = unitOfWork;
             this.mapper = mapper;
             this.userManager = userManager;
+        }
+        public async Task<ApiResponse<object>> GetAllCommentAsync()
+        {
+            var comments = await _unitOfWork.CommentRepository.FindByCondition(c => true, false, c => c.User).ToListAsync();
+            var dto = mapper.Map<List<CommentDto>>(comments);
+            return new ApiResponse<object>(200,"Thành công",dto);
         }
         public async Task<ApiResponse<object>> CreateCommentsAsync(string commentableId, CreateCommentRequestDto request,string userId)
         {

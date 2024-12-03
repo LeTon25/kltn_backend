@@ -38,6 +38,12 @@ namespace KLTN.Application.Services
             await unitOfWork.SaveChangesAsync();
             return new ApiResponse<object>(200, "Thành công");
         }
+        public async Task<ApiResponse<object>> GetAllAnnouncementsAsync()
+        {
+            var annoucements = await unitOfWork.AnnnouncementRepository.FindByCondition(c => true, false, c => c.CreateUser,c=>c.Course).ToListAsync();
+            var annoucementDtos = mapper.Map<List<AnnouncementDto>>(annoucements);
+            return new ApiResponse<object>(200, "Thành công",annoucementDtos);
+        }
         public async Task<ApiResponse<object>> GetAnnouncementByIdAsync(string annoucementId)
         {
             var data = await GetAnnoucementDtoByIdAsync(annoucementId);

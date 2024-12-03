@@ -20,6 +20,13 @@ namespace KLTN.Application.Services
             this._unitOfWork = unitOfWork;
             this.mapper = mapper;
         }
+        public async Task<ApiResponse<List<RequestDto>>> GetAllRequestAsync()
+        {
+            var request = await _unitOfWork.RequestRepository.FindByCondition(c => true, false, c => c.User).ToListAsync();
+            var dto = mapper.Map<List<RequestDto>>(request);
+
+            return new ApiResponse<List<RequestDto>>(200, "Thành công", dto);
+        }
         public async Task<ApiResponse<RequestDto>> MakeRequestToJoinAsync(string groupId, string currentUserId)
         {
             var group = await _unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId.Equals(groupId), false, c => c.GroupMembers, c => c.Course!, c => c.Course.EnrolledCourses);
