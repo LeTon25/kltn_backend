@@ -40,6 +40,13 @@ namespace KLTN.Application.Services
             _httpContextAccessor = httpContextAccessor;
         }
         #region for controller
+        public async Task<ApiResponse<List<GroupDto>>> GetAllGroupsAsync()
+        {
+            var allGroups = await _unitOfWork.GroupRepository.FindByCondition(c => true, false, c => c.Course,c => c.Course.Lecturer,c => c.GroupMembers).ToListAsync();
+            var dto = mapper.Map<List<GroupDto>>(allGroups);
+
+            return new ApiResponse<List<GroupDto>>(200, "Thành công", dto);
+        }
         public async Task<ApiResponse<GroupDto>> GetByIdAsync(string Id)
         {
             var groupDto = await GetGroupDtoAsync(Id);
