@@ -140,7 +140,7 @@ namespace KLTN.Application.Services
             {
                 if (requestDto.DueDate == null)
                 {
-                    assignment.DueDate = requestDto.DueDate;
+                    assignment.DueDate = null;
                 }
                 else
                 {
