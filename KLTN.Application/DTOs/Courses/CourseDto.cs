@@ -25,7 +25,7 @@ namespace KLTN.Application.DTOs.Courses
         public DateTime? DeletedAt { get; set; }
         public DateTime? SaveAt { get; set; }
         public bool IsHidden { get; set; } = false;
-
+        public int? StudentCount { get; set; } 
         public SubjectDto? Subject { get; set; }   
         public UserDto? Lecturer { get ; set; }    
         public List<UserDto>? Students {get; set; }

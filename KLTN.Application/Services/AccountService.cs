@@ -45,7 +45,7 @@ namespace KLTN.Application.Services
         {
             var subjectData = await unitOfWork.SubjectRepository.GetAllAsync();
             //Khóa học do người dùng giảng dạy
-            var teachingCourses =await  unitOfWork.CourseRepository.FindByCondition(c => c.LecturerId == userId && c.SaveAt == null,false,c=>c.Lecturer!,c => c.Setting!).ToListAsync();
+            var teachingCourses =await  unitOfWork.CourseRepository.FindByCondition(c => c.LecturerId == userId && c.SaveAt == null,false,c=>c.Lecturer!,c => c.Setting!,c => c.EnrolledCourses).ToListAsync();
             var teachingCourseDtos = mapper.Map<List<CourseDto>>(teachingCourses);
             
             var lecturer = await userManager.FindByIdAsync(userId);
@@ -54,12 +54,14 @@ namespace KLTN.Application.Services
             {
                 teachingCourseDto.Subject = mapper.Map<SubjectDto>(subjectData.FirstOrDefault(c=>c.SubjectId==teachingCourseDto.SubjectId));
                 teachingCourseDto.Lecturer = mapper.Map<UserDto>(lecturer);
+                var data = teachingCourses.Where(c => c.CourseId.Equals(teachingCourseDto.CourseId)).FirstOrDefault();
+                teachingCourseDto.StudentCount = data.EnrolledCourses != null ? data.EnrolledCourses.Count : 0;
             }
             //Khóa học do người dùng đăng kí làm học viên
             var enrollData = unitOfWork.EnrolledCourseRepository.GetAll(c => c.StudentId == userId);
 
             var enrollCourseIds = enrollData.Select(e => e.CourseId).ToList();
-            var enrollCourses = await unitOfWork.CourseRepository.FindByCondition(c => enrollCourseIds.Contains(c.CourseId) && c.SaveAt == null,false,c=>c.Setting!,c =>c.Lecturer!).ToListAsync();
+            var enrollCourses = await unitOfWork.CourseRepository.FindByCondition(c => enrollCourseIds.Contains(c.CourseId) && c.SaveAt == null,false,c=>c.Setting!,c =>c.Lecturer!,c => c.EnrolledCourses).ToListAsync();
 
             var enrollCourseDto = mapper.Map<List<CourseDto>>(enrollCourses);
             var lecturerIds = enrollCourseDto.Select(c => c.LecturerId).ToList();
@@ -69,6 +71,8 @@ namespace KLTN.Application.Services
             {
                 courseDto.Subject = mapper.Map<SubjectDto>(subjectData.FirstOrDefault(c => c.SubjectId == courseDto.SubjectId));
                 courseDto.Lecturer = mapper.Map<UserDto>(lecturers.FirstOrDefault(c => c.Id == courseDto.SubjectId));
+                var data = enrollCourses.Where(c => c.CourseId.Equals(courseDto.CourseId)).FirstOrDefault();
+                courseDto.StudentCount = data.EnrolledCourses != null ? data.EnrolledCourses.Count : 0;
             }
             return new ApiResponse<object>(200, "Thành công", new CourseByUserDto()
             {
