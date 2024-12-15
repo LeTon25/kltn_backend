@@ -53,5 +53,12 @@ namespace KLTN.Api.Controllers
             var response = await assignmentService.GetSubmissionsInAssignmentsAsync(userId!,assignmentId);
             return StatusCode(response.StatusCode,response);
         }
+        [HttpGet("current-user")]
+        public async Task<IActionResult> GetAsignmentsByCurrentUser()
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var response = await assignmentService.GetAsignmentsByCurrentUserAsync(userId!);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }
