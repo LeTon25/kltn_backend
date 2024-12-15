@@ -238,7 +238,10 @@ namespace KLTN.Application.Services
                 }
             }
             await unitOfWork.SaveChangesAsync();
-
+            if (newAssignment.DueDate != null)
+            {
+                newAssignment.DueDate.Value.AddHours(-7);
+            }    
             var responseDto = mapper.Map<AssignmentDto>(newAssignment);
             
             responseDto.Course = mapper.Map<CourseDto>(course);
