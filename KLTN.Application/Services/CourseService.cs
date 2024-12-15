@@ -597,6 +597,7 @@ namespace KLTN.Application.Services
                 return null;
             }
             var courseDto = mapper.Map<CourseDto>(course);
+            courseDto.StudentCount = course.EnrolledCourses != null ? course.EnrolledCourses.Count : 0;
             if (isLoadAnnoucements)
             {
                 courseDto.Announcements = await annoucementService.GetAnnouncementDtosInCourseAsync(courseId);

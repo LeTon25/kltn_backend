@@ -30,15 +30,29 @@ namespace KLTN.Application.Services
             {
                 return new ApiBadRequestResponse<SettingDto>("Bạn không có quyền thay đổi cài đặt");
             }
-            if(setting.DueDateToJoinGroup == null && dto.DueDateToJoinGroup < DateTime.Now)
-            {
-                return new ApiBadRequestResponse<SettingDto>("Hạn tham gia nhóm không hợp lệ");
-            }
+            var now = DateTime.Now;
+            var isTimeChanged = setting.DueDateToJoinGroup == dto.DueDateToJoinGroup;
             setting.HasFinalScore = dto.HasFinalScore;
             setting.MaxGroupSize = dto.MaxGroupSize;
             setting.MinGroupSize = dto.MinGroupSize;
             setting.AllowStudentCreateProject = dto.AllowStudentCreateProject;
-            setting.DueDateToJoinGroup = dto.DueDateToJoinGroup == null ? setting.DueDateToJoinGroup : dto.DueDateToJoinGroup;
+            if(isTimeChanged)
+            {
+                if(dto.DueDateToJoinGroup == null)
+                {
+                    setting.DueDateToJoinGroup = null;
+                }
+                else
+                {
+                    if (dto.DueDateToJoinGroup < DateTime.Now)
+                    {
+                        return new ApiBadRequestResponse<SettingDto>("Hạn tham gia nhóm không hợp lệ");
+                    }
+                    setting.DueDateToJoinGroup = dto.DueDateToJoinGroup.Value.AddHours(7);
+                }  
+             
+               
+            }    
             unitOfWork.SettingRepository.Update(setting);
             
             
