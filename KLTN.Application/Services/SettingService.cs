@@ -31,7 +31,7 @@ namespace KLTN.Application.Services
                 return new ApiBadRequestResponse<SettingDto>("Bạn không có quyền thay đổi cài đặt");
             }
             var now = DateTime.Now;
-            var isTimeChanged = setting.DueDateToJoinGroup == dto.DueDateToJoinGroup;
+            var isTimeChanged = setting.DueDateToJoinGroup != dto.DueDateToJoinGroup;
             setting.HasFinalScore = dto.HasFinalScore;
             setting.MaxGroupSize = dto.MaxGroupSize;
             setting.MinGroupSize = dto.MinGroupSize;
@@ -57,8 +57,10 @@ namespace KLTN.Application.Services
             
             
             await unitOfWork.SaveChangesAsync();
-
-            return new ApiResponse<SettingDto>(200,"Cập nhật cài đặt thành công",mapper.Map<SettingDto>(setting));
+            var updatedSetting = await unitOfWork.SettingRepository.GetFirstOrDefaultAsync(c => c.SettingId.Equals(dto.SettingId), false, c => c.Course!);
+            var settingDto = mapper.Map<SettingDto>(updatedSetting);
+            
+            return new ApiResponse<SettingDto>(200,"Cập nhật cài đặt thành công",settingDto);
 
         }
     }
