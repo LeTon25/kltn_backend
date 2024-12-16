@@ -205,7 +205,7 @@ namespace KLTN.Application.Services
                 CourseId = requestDto.CourseId,
                 Title = requestDto.Title,
                 ScoreStructureId = requestDto.ScoreStructureId,
-                DueDate = requestDto.DueDate == null ? null : requestDto.DueDate.Value.AddHours(7),
+                DueDate = requestDto.DueDate,
                 AttachedLinks = mapper.Map<List<MetaLinkData>>(requestDto.AttachedLinks),
                 Attachments = mapper.Map<List<File>>(requestDto.Attachments),
                 CreatedAt = DateTime.Now,
@@ -238,10 +238,6 @@ namespace KLTN.Application.Services
                 }
             }
             await unitOfWork.SaveChangesAsync();
-            if (newAssignment.DueDate != null)
-            {
-                newAssignment.DueDate.Value.AddHours(-7);
-            }    
             var responseDto = mapper.Map<AssignmentDto>(newAssignment);
             
             responseDto.Course = mapper.Map<CourseDto>(course);
