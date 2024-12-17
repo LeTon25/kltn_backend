@@ -349,7 +349,7 @@ namespace KLTN.Application.Services
             midtermStatistic.Distribution = CalculateScoreDistribution(midtermScores);
             midtermStatistic.Max = midtermScores.Max();
             midtermStatistic.Min = midtermScores.Min(); 
-            midtermStatistic.Average  = midtermScores.Average();
+            midtermStatistic.Average  = Math.Round(midtermScores.Average(),2);
             midtermStatistic.ColumnName = Constants.Score.MidtermColumnName;
 
             statistics.ColumnStatistics.Add(midtermStatistic);  
