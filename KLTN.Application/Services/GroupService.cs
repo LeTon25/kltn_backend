@@ -311,11 +311,11 @@ namespace KLTN.Application.Services
             var groupsInCourse = new List<Group>();
             if(group.GroupType.Equals(Constants.GroupType.Final))
             {
-                groupsInCourse = allGroup.Where(c => c.CourseId == group.CourseId && group.GroupType.Equals(Constants.GroupType.Final)).ToList();
+                groupsInCourse = allGroup.Where(c => c.CourseId == group.CourseId && c.GroupType.Equals(Constants.GroupType.Final)).ToList();
             }
             else
             {
-                groupsInCourse = allGroup.Where(c => c.CourseId == group.CourseId && group.GroupType.Equals(Constants.GroupType.Normal) && c.AssignmentId != null && c.AssignmentId.Equals(group.AssignmentId)).ToList();
+                groupsInCourse = allGroup.Where(c => c.CourseId == group.CourseId && c.GroupType.Equals(Constants.GroupType.Normal) && c.AssignmentId != null && c.AssignmentId.Equals(group.AssignmentId)).ToList();
             }
 
             foreach (var gr in groupsInCourse)

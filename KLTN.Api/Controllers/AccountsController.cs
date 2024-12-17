@@ -62,6 +62,11 @@ namespace KLTN.Api.Controllers
             {
                 return BadRequest(new ApiBadRequestResponse<string>("Email người dùng không được trùng"));
             }
+            
+            if (!string.IsNullOrEmpty(requestDto.CustomId) && await users.AnyAsync(c => c.CustomId == requestDto.CustomId || c.UserName == requestDto.CustomId))
+            {
+                return BadRequest(new ApiBadRequestResponse<string>("Mã SV không được trùng"));
+            }
             var result = await _userManager.CreateAsync(new User
             {
                 Id = Guid.NewGuid().ToString(),
