@@ -376,12 +376,21 @@ namespace KLTN.Application.Services
             {
                 return null;
             }
+            
             if (assignment.Course!.LecturerId != currentUserId 
                 && !assignment.Course.EnrolledCourses.Any(e=>e.CourseId.Equals(assignment.Course.CourseId) && e.StudentId.Equals(currentUserId)))
             {
                 return null;
             }
             var assignmentDto = mapper.Map<AssignmentDto>(assignment);
+            if (assignmentDto.Type == Constants.AssignmentType.Final)
+            {
+                var groupsInFinalAssignment = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignmentDto.CourseId) && c.GroupType.Equals(Constants.GroupType.Final)).ToListAsync();
+                if(groupsInFinalAssignment != null)
+                {
+                    assignmentDto.Groups = mapper.Map<List<GroupDto>>(groupsInFinalAssignment);
+                }
+            }
             assignmentDto.Course = await courseService.GetCourseDtoByIdAsync(assignmentDto.CourseId, false, false,false,false);
 
             var userEntity = await userManager.Users.FirstOrDefaultAsync(c => c.Id.Equals(assignmentDto.Course.LecturerId));

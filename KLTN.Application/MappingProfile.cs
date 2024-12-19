@@ -33,7 +33,7 @@ namespace KLTN.Application
             CreateMap<AnnouncementDto, Announcement>();
 
             CreateMap<Course, CourseDto>().ReverseMap();
-
+            CreateMap<Course,CourseNoAssignmentDto>().ReverseMap();
             CreateMap<Project, ProjectDto>();
 
             CreateMap<Group,GroupDto>().ReverseMap();
