@@ -27,6 +27,7 @@ namespace KLTN.Application.DTOs.Assignments
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
+        public CourseNoAssignmentDto Course { get; set; }
         public ScoreStructureDto? ScoreStructure { get; set; }
 
     }
