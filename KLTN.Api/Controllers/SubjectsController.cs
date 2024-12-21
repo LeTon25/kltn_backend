@@ -27,23 +27,18 @@ namespace KLTN.Api.Controllers
         }
         [HttpPost]
         [ApiValidationFilter]
-        [RoleRequirement(["Admin"])]
-
         public async Task<IActionResult> PostSubjectAsync(CreateSubjectRequestDto requestDto)
         {
             return SetResponse(await _subjectService.AddSubjectAsync(requestDto));
         }
         [HttpPut("{subjectId}")]
         [ApiValidationFilter]
-        [RoleRequirement(["Admin"])]
         public async Task<IActionResult> PutSubjectId(string subjectId, [FromBody] CreateSubjectRequestDto requestDto)
         {
             return SetResponse(await _subjectService.UpdateSubjectAsync(subjectId, requestDto));
         }
 
         [HttpDelete("{subjectId}")]
-        [RoleRequirement(["Admin"])]
-
         public async Task<IActionResult> DeleteSubjectAsync(string subjectId)
         {
             return SetResponse(await _subjectService.DeleteSubjectAsync(subjectId));
