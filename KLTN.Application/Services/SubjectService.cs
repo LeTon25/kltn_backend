@@ -22,12 +22,12 @@ namespace KLTN.Application.Services
         public async Task<ApiResponse<List<SubjectDto>>> GetAllSubjectAsync()
         {
             var data =  await _unitOfWork.SubjectRepository.GetAllAsync();
-
+            data = data.Where(c => c.DeletedAt == null);
             return new ApiResponse<List<SubjectDto>>(200, "Thông báo", mapper.Map<List<SubjectDto>>(data.ToList())); 
         }
         public async Task<ApiResponse<object>> GetByIdAsync(string Id)
         {
-            var data = await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(x => x.SubjectId == Id);
+            var data = await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(x => x.SubjectId == Id && x.DeletedAt == null);
             if(data == null)
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy học kỳ cần tìm");
@@ -36,11 +36,11 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> AddSubjectAsync(CreateSubjectRequestDto requestDto)
         {
-            if (await _unitOfWork.SubjectRepository.AnyAsync(c => c.Name.Equals(requestDto.Name)))
+            if (await _unitOfWork.SubjectRepository.AnyAsync(c => c.Name.Equals(requestDto.Name) && c.DeletedAt == null))
             {
                 return new ApiBadRequestResponse<object>("Tên môn học không được trùng");
             }
-            if (await _unitOfWork.SubjectRepository.AnyAsync(c => c.SubjectCode.Equals(requestDto.SubjectCode)))
+            if (await _unitOfWork.SubjectRepository.AnyAsync(c => c.SubjectCode.Equals(requestDto.SubjectCode) && c.DeletedAt == null))
             {
                 return new ApiBadRequestResponse<object>("Mã môn học không được trùng");
             }
@@ -61,12 +61,13 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> DeleteSubjectAsync(string subjectId)
         {
-            var subject = await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c => c.SubjectId == subjectId);
+            var subject = await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c => c.SubjectId == subjectId && c.DeletedAt == null);
             if (subject == null)
             {
                 return new ApiNotFoundResponse<object>("Không thể tìm thấy môn học với id");
             }
-            _unitOfWork.SubjectRepository.Delete(subject);
+            subject.DeletedAt = DateTime.Now;
+            _unitOfWork.SubjectRepository.Update(subject);
             var result = await _unitOfWork.SaveChangesAsync();
             if (result > 0)
             {
@@ -76,17 +77,17 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> UpdateSubjectAsync(string subjectId, CreateSubjectRequestDto requestDto)
         {
-            var subject = await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c => c.SubjectId == subjectId);
+            var subject = await _unitOfWork.SubjectRepository.GetFirstOrDefaultAsync(c => c.SubjectId == subjectId && c.DeletedAt == null);
             if (subject == null)
             {
                 return new ApiNotFoundResponse<object>($"Không tìm thấy môn học với id : {subjectId}");
             }
-            if (await _unitOfWork.SubjectRepository.AnyAsync(e => e.Name == requestDto.Name && e.SubjectId != subjectId))
+            if (await _unitOfWork.SubjectRepository.AnyAsync(e => e.Name == requestDto.Name && e.DeletedAt == null && e.SubjectId != subjectId))
             {
                 return new ApiBadRequestResponse<object>("Tên môn học không được trùng");
             }
 
-            if (await _unitOfWork.SubjectRepository.AnyAsync(e => e.SubjectCode == requestDto.SubjectCode && e.SubjectId != subjectId))
+            if (await _unitOfWork.SubjectRepository.AnyAsync(e => e.SubjectCode == requestDto.SubjectCode && e.SubjectId != subjectId && e.DeletedAt == null))
             {
                 return new ApiBadRequestResponse<object>("Mã môn học không được trùng");
             }
