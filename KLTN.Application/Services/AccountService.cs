@@ -83,7 +83,7 @@ namespace KLTN.Application.Services
             foreach (var courseDto in enrollCourseDto)
             {
                 courseDto.Subject = mapper.Map<SubjectDto>(subjectData.FirstOrDefault(c => c.SubjectId == courseDto.SubjectId));
-                courseDto.Lecturer = mapper.Map<UserDto>(lecturers.FirstOrDefault(c => c.Id == courseDto.SubjectId));
+                courseDto.Lecturer = mapper.Map<UserDto>(lecturers.FirstOrDefault(c => c.Id == courseDto.LecturerId));
                 var data = enrollCourses.Where(c => c.CourseId.Equals(courseDto.CourseId)).FirstOrDefault();
                 courseDto.StudentCount = data.EnrolledCourses != null ? data.EnrolledCourses.Count : 0;
             }
