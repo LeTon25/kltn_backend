@@ -12,7 +12,6 @@ namespace KLTN.Application.DTOs.Projects
         public CreateProjectRequestDtoValidator() 
         {
             RuleFor(c=>c.Title).NotEmpty().WithMessage("Không được để trống tên đề tài");
-            RuleFor(c => c.Description).NotEmpty().WithMessage("Không được để trống mô tả đề tài");
         }
     }
 }
