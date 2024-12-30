@@ -33,9 +33,22 @@ namespace KLTN.Application.Services
         public async Task<ApiResponse<List<RequestDto>>> GetRequestsByUserAsync(string userId)
         {
             var requests = await unitOfWork.RequestRepository.FindByCondition(c => c.UserId.Equals(userId), false, c => c.Group!, c => c.User!).ToListAsync();
+            var courseIds = new List<string>(); 
             foreach(var item in requests)
             {
                 item.Group!.Requests = null;
+                if (item.Group.GroupType.Equals(Constants.GroupType.Final))
+                {
+                    courseIds.Add(item.Group.CourseId);
+                }
+            }
+            var finalAssignments = await unitOfWork.AssignmentRepository.FindByCondition(c=>courseIds.Contains(c.CourseId) && c.Type.Equals(Constants.AssignmentType.Final)).ToListAsync();
+            foreach(var item in requests)
+            {
+                if (item.Group!.GroupType.Equals(Constants.GroupType.Final))
+                {
+                    item.Group.AssignmentId = finalAssignments.FirstOrDefault(c=>c.CourseId.Equals(item.Group.CourseId))!.AssignmentId;
+                }
             }
             var dto = mapper.Map<List<RequestDto>>(requests);
 
