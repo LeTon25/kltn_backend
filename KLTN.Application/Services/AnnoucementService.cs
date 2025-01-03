@@ -3,10 +3,14 @@ using KLTN.Application.DTOs.Announcements;
 using KLTN.Application.DTOs.Comments;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
+using KLTN.Application.Services.HttpServices;
 using KLTN.Domain.Entities;
+using KLTN.Domain.Extensions;
 using KLTN.Domain.Repositories;
+using KLTN.Domain.Shared.DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using File = KLTN.Domain.Entities.File;
 
 namespace KLTN.Application.Services
@@ -18,12 +22,20 @@ namespace KLTN.Application.Services
         private readonly CommentService commentService;
         private readonly UserManager<User> userManager;
         private readonly IMapper mapper;
-        public AnnoucementService(IUnitOfWork unitOfWork,CommentService commentService,UserManager<User> userManager,IMapper mapper)
+        private readonly IConfiguration configuration;
+        private readonly BackgroundJobHttpService backgroundJobHttpService;
+
+
+        public AnnoucementService(IUnitOfWork unitOfWork,CommentService commentService,
+            UserManager<User> userManager,IMapper mapper,IConfiguration configuration,
+            BackgroundJobHttpService backgroundJobHttpService)
         {
             this.unitOfWork = unitOfWork;   
             this.commentService = commentService;
             this.userManager = userManager;
             this.mapper = mapper;
+            this.configuration = configuration;
+            this.backgroundJobHttpService = backgroundJobHttpService;
         }
         #region for_controller
         public async Task<ApiResponse<object>> TogglePinAnnouncement(string announcementId, bool isPinned)
@@ -108,16 +120,64 @@ namespace KLTN.Application.Services
             };
             await unitOfWork.AnnnouncementRepository.AddAsync(newAnnouncement);
             await unitOfWork.SaveChangesAsync();
-
+            
             var dto = mapper.Map<AnnouncementDto>(newAnnouncement);
             var createUser = await unitOfWork.UserRepository.GetFirstOrDefaultAsync(c => c.Id.Equals(requestDto.UserId));
             dto.CreateUser = mapper.Map<UserDto>(createUser);
+
+            var course = await unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(requestDto.CourseId), false, c => c.EnrolledCourses);
+            await SendNotiAsync(course, requestDto.UserId, newAnnouncement);
             return new ApiResponse<object>(200, "Tạo thành công", mapper.Map<AnnouncementDto>(dto));
         }
         #endregion
         #region for_service
 
         #endregion
+        private async Task SendNotiAsync(Course course,string createUserId,Announcement announcement)
+        {
+            try
+            {
+                var clientUrl = configuration.GetSection("ClientUrl").Value;
+                var uri = "/api/schedule-jobs/send-noti";
+                var emailsToSend = new List<string>();
+                
+                if (course.EnrolledCourses != null && course.EnrolledCourses.Count > 0)
+                {
+                    var userIds = course.EnrolledCourses!.Where(c=>c.StudentId != createUserId).Select(c => c.StudentId).ToList();
+                    if (announcement.Mentions.Count() > 0)
+                    {
+                        userIds.Clear();
+                        userIds.AddRange(announcement.Mentions);
+                    }    
+
+                    if(!createUserId.Equals(course.LecturerId))
+                    {
+                        userIds.Remove(createUserId);
+                        userIds.Add(course.LecturerId);
+                    }    
+                    var users = await unitOfWork.UserRepository.FindByCondition(c => userIds.Contains(c.Id)).ToListAsync();
+                    var userEmails = users.Where(c => c.Email != null && !c.Email.Contains("@example")).Select(c => c.Email!).ToList();
+                    
+                    emailsToSend.AddRange(userEmails);
+                }
+                if (emailsToSend.Count > 0) 
+                {
+                    var model = new NotiEventDto
+                    {
+                        CourseName = course.Name,
+                        Title = "Thông báo mới",
+                        Message = $"Một thông báo mới vừa được tạo",
+                        ObjectLink = $"{clientUrl}/courses/{course.CourseId}/",
+                        Emails = emailsToSend
+                    };
+                    var response = await backgroundJobHttpService.Client.PostAsJson(uri, model);
+                }
+            }
+            catch
+            {
+
+            }
+        }
         public async Task<List<AnnouncementDto>> GetAnnouncementDtosInCourseAsync(string courseId)
         {
             var announcements = unitOfWork.AnnnouncementRepository.FindByCondition(c => c.CourseId.Equals(courseId), false, c => c.CreateUser!);

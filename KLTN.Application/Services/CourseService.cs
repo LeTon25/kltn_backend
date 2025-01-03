@@ -20,6 +20,10 @@ using KLTN.Domain.Enums;
 using KLTN.Application.DTOs.Submissions;
 using System.Globalization;
 using System.Net.WebSockets;
+using KLTN.Application.Services.HttpServices;
+using Microsoft.Extensions.Configuration;
+using KLTN.Domain.Extensions;
+using KLTN.Domain.Shared.DTOs;
 namespace KLTN.Application.Services
 {
     public class CourseService
@@ -31,13 +35,17 @@ namespace KLTN.Application.Services
         private readonly GroupService groupService;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly ScoreStructureService scoreStructureService;
+        private readonly IConfiguration configuration;
+        private readonly BackgroundJobHttpService backgroundJobHttpService;
         public CourseService(IUnitOfWork unitOfWork,
             UserManager<User> userManager,
             IMapper mapper,
             AnnoucementService annoucementService,
             GroupService groupService,
             ScoreStructureService scoreStructureService,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IConfiguration configuration,
+            BackgroundJobHttpService backgroundJobHttpService)
         {
             this._unitOfWork = unitOfWork;
             this._userManager = userManager;
@@ -46,6 +54,8 @@ namespace KLTN.Application.Services
             this.groupService = groupService;
             this.scoreStructureService = scoreStructureService;
             this.httpContextAccessor = httpContextAccessor;
+            this.configuration = configuration;
+            this.backgroundJobHttpService = backgroundJobHttpService;   
         }
         #region for controller
         public async Task<ApiResponse<List<CourseDto>>> GetAllCoursesAsync()
@@ -375,7 +385,7 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<object>> AddStudentToCourseAsync(string courseId, AddStudentRequestDto dto, string currentUserId)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId),false, c=>c.EnrolledCourses);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(courseId),false, c=>c.EnrolledCourses,c=>c.Lecturer);
             if (course == null) 
             {
                 return new ApiNotFoundResponse<object>("Không tìm thấy lớp học");
@@ -412,6 +422,7 @@ namespace KLTN.Application.Services
                 }    
             }
             await _unitOfWork.SaveChangesAsync();
+            await SendNotiAsync(course,dto.Emails);
             var responseDto = await GetCourseDtoByIdAsync(courseId);
             return new ApiResponse<object>(200,"Thêm thành công",responseDto);
         }
@@ -528,11 +539,12 @@ namespace KLTN.Application.Services
         }
         public async Task<ApiResponse<CourseDto>> ImportStudentsToCourseAsync(string courseId,List<ImportStudent> dto,string currentUserId)
         {
-            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c=>c.CourseId.Equals(courseId),false,c=>c.EnrolledCourses);
+            var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c=>c.CourseId.Equals(courseId),false,c=>c.EnrolledCourses,c=>c.Lecturer!);
             if (course == null)
                 return new ApiNotFoundResponse<CourseDto>("Không tìm thấy khóa học");
             if (course.LecturerId != currentUserId)
                 return new ApiBadRequestResponse<CourseDto>("Chỉ có giáo viên mới có thể import danh sách sinh viên");
+            var emailsToSend = new List<string>();
             foreach(var item in dto)
             {
                 var existingStudent = await _unitOfWork.UserRepository
@@ -547,6 +559,10 @@ namespace KLTN.Application.Services
                             StudentId = existingStudent!.Id
                         };
                         course.EnrolledCourses.Add(newEnrollCourse);
+                        if(!string.IsNullOrEmpty(existingStudent.Email))
+                        {
+                            emailsToSend.Add(existingStudent.Email);
+                        }    
                         await _unitOfWork.EnrolledCourseRepository.AddAsync(newEnrollCourse);
                     }
                 }
@@ -579,9 +595,14 @@ namespace KLTN.Application.Services
                     };
                     course.EnrolledCourses.Add(newEnrollCourse);
                     await _unitOfWork.EnrolledCourseRepository.AddAsync(newEnrollCourse);
+                    if (!string.IsNullOrEmpty(newUser.Email))
+                    {
+                        emailsToSend.Add(newUser.Email);
+                    }
                 }
             }
             await _unitOfWork.SaveChangesAsync();
+            await SendNotiAsync(course, emailsToSend);
             var data = await GetCourseDtoByIdAsync(courseId);
 
             return new ApiResponse<CourseDto>(200,"Thêm danh sách thành công",data);
@@ -664,6 +685,31 @@ namespace KLTN.Application.Services
             }
 
             return new string(result);
+        }
+        private async Task SendNotiAsync(Course course,List<string> emails)
+        {
+            try
+            {
+                if (emails.Count > 0)
+                {
+                    var clientUrl = configuration.GetSection("ClientUrl").Value;
+                    var uri = "/api/schedule-jobs/send-noti";
+                    var model = new NotiEventDto
+                    {
+                        CourseName = course.Name,
+                        Title = "Thông báo",
+                        Message = $"Bạn đã được thêm vào lớp học bởi ${course.Lecturer?.FullName ?? "N/A" }",
+                        ObjectLink = $"{clientUrl}/courses/{course.CourseId}/",
+                        Emails = emails
+                    };
+                    var response = await backgroundJobHttpService.Client.PostAsJson(uri, model);
+
+                }
+            }
+            catch
+            {
+
+            }
         }
         #endregion
 
