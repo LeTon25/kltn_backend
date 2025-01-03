@@ -19,6 +19,12 @@ namespace KLTN.BackgroundJobs.Controllers
             var JobId = backgroundJobService.SendReminderAssignmentDueDate(dto.Emails, dto.CourseName, dto.AssignmentTitle, dto.DueDate);
             return Ok(JobId);
         }
+        [HttpPost("send-noti")]
+        public IActionResult SendNoti(NotiEventDto dto)
+        {
+            var JobId = backgroundJobService.SendNotiEvent(dto.Emails, dto.CourseName, dto.Title, dto.Message, dto.ObjectLink);
+            return Ok(JobId);
+        }
         [HttpDelete("{jobId}")]
         public IActionResult DeleteJob(string jobId) 
         {

@@ -33,14 +33,14 @@ namespace KLTN.Api.Controllers
         {
             return SetResponse(await annoucementService.CreateAnnouncementAsync(requestDto));
         }
-        [HttpPatch("{announcementId}")]
+        [HttpPatch("{courseId}/{announcementId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutAnnouncementId(string announcementId, [FromBody] CreateAnnouncementRequestDto requestDto)
         {
             return SetResponse(await annoucementService.UpdateAnnouncementAsync(announcementId, requestDto));
         }
 
-        [HttpDelete("{announcementId}")]
+        [HttpDelete("{courseId}/{announcementId}")]
         public async Task<IActionResult> DeleteAnnouncementAsync(string announcementId)
         {
             return SetResponse(await annoucementService.DeleteAnnouncementAsync(announcementId));

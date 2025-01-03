@@ -73,11 +73,11 @@ namespace KLTN.Application.Services
             {
                 return new ApiResponse<object>(403, "Bạn không có quyền xóa bài tập này", null);
             }
-            //if(assignment.JobId != null)
-            //{
-            //    await TriggerDeleteSendEmailReminderAsync(assignment.JobId);    
-            //}
-            //
+            if (assignment.JobId != null)
+            {
+                await TriggerDeleteSendEmailReminderAsync(assignment.JobId);
+            }
+
             var groups = unitOfWork.GroupRepository.FindByCondition(c =>c.AssignmentId != null && c.AssignmentId.Equals(assignment.AssignmentId));
             unitOfWork.GroupRepository.DeleteRange(groups);
             unitOfWork.AssignmentRepository.Delete(assignment);
@@ -116,23 +116,23 @@ namespace KLTN.Application.Services
                     return new ApiBadRequestResponse<object>("Chưa bật điểm cuối kì cho lớp học");
                 }
             }
-            //string? jobId = null;
-            //if (assignment.DueDate != requestDto.DueDate && assignment.Course.EnrolledCourses != null && assignment.Course.EnrolledCourses.Count > 0) 
-            //{
-            //    if(assignment.JobId != null)
-            //    {
-            //        await TriggerDeleteSendEmailReminderAsync(assignment.JobId);
-            //    }    
-            //    if(requestDto.DueDate != null)
-            //    {
-            //        var duration = requestDto.DueDate - DateTime.Now;
-            //        if (duration.Value.TotalHours > 8)
-            //        {
-            //            jobId = await TriggerSendEmailReminderAsync(assignment.Course, requestDto.Title, requestDto.DueDate.Value);
-            //        }
-            //    }    
+            string? jobId = null;
+            if (assignment.DueDate != requestDto.DueDate && assignment.Course.EnrolledCourses != null && assignment.Course.EnrolledCourses.Count > 0)
+            {
+                if (assignment.JobId != null)
+                {
+                    await TriggerDeleteSendEmailReminderAsync(assignment.JobId);
+                }
+                if (requestDto.DueDate != null)
+                {
+                    var duration = requestDto.DueDate - DateTime.Now;
+                    if (duration.Value.TotalHours > 8)
+                    {
+                        jobId = await TriggerSendEmailReminderAsync(assignment.Course, requestDto.Title, requestDto.DueDate.Value);
+                    }
+                }
 
-            //}
+                }
             var isDueDateChanged = assignment.DueDate != requestDto.DueDate;
             assignment.Title = requestDto.Title;
             assignment.Content = requestDto.Content;
@@ -152,7 +152,7 @@ namespace KLTN.Application.Services
             assignment.Attachments = mapper.Map<List<KLTN.Domain.Entities.File>>(requestDto.Attachments);
             assignment.ScoreStructureId = requestDto.ScoreStructureId;
             assignment.Type = requestDto.Type;
-            //assignment.JobId = jobId != null ? jobId.ToString() : assignment.JobId;
+            assignment.JobId = jobId != null ? jobId.ToString() : assignment.JobId;
             unitOfWork.AssignmentRepository.Update(assignment);
             var result = await unitOfWork.SaveChangesAsync();
             if (result > 0)
@@ -188,15 +188,15 @@ namespace KLTN.Application.Services
                     return new ApiBadRequestResponse<object>("Cột điểm đã được chấm bởi bài tập khác");
                 }
             }
-            //string? jobId = null;
-            //if(requestDto.DueDate != null && course.EnrolledCourses != null && course.EnrolledCourses.Count > 0)
-            //{
-            //    var duration = requestDto.DueDate - DateTime.Now;
-            //    if(duration.Value.TotalHours > 8)
-            //    {
-            //        jobId = await TriggerSendEmailReminderAsync(course,requestDto.Title,requestDto.DueDate.Value);
-            //    }    
-            //}    
+            string? jobId = null;
+            if (requestDto.DueDate != null && course.EnrolledCourses != null && course.EnrolledCourses.Count > 0)
+            {
+                var duration = requestDto.DueDate - DateTime.Now;
+                if (duration.Value.TotalHours > 8)
+                {
+                    jobId = await TriggerSendEmailReminderAsync(course, requestDto.Title, requestDto.DueDate.Value);
+                }
+            }
             var newAssignmentId = Guid.NewGuid();
             var newAssignment = new Assignment()
             {
@@ -212,7 +212,7 @@ namespace KLTN.Application.Services
                 UpdatedAt = null,
                 DeletedAt = null,
                 Type = requestDto.Type,
-                //JobId = jobId,  
+                JobId = jobId,  
                 IsGroupAssigned = requestDto.IsGroupAssigned,
                 IsIndividualSubmissionRequired = requestDto.IsIndividualSubmissionRequired ?? false
             };
@@ -238,6 +238,7 @@ namespace KLTN.Application.Services
                 }
             }
             await unitOfWork.SaveChangesAsync();
+            await SendNotiAsync(course, requestDto.Title, newAssignmentId.ToString());
             var responseDto = mapper.Map<AssignmentDto>(newAssignment);
             
             responseDto.Course = mapper.Map<CourseDto>(course);
@@ -519,6 +520,29 @@ namespace KLTN.Application.Services
                 item.GroupMembers = memberByGroup;
             }
             return finalGroups;
+        }
+        private async Task SendNotiAsync(Course course,string assignmentTitle,string assignmentId)
+        {
+            try
+            {
+                var clientUrl = configuration.GetSection("ClientUrl").Value;
+                var uri = "/api/schedule-jobs/send-noti";
+                var studentIds = course.EnrolledCourses!.Select(c=>c.StudentId).ToList();
+                var students = await unitOfWork.UserRepository.FindByCondition(c => studentIds.Contains(c.Id)).ToListAsync();
+                var model = new NotiEventDto
+                {
+                    CourseName = course.Name,
+                    Title = "Bài tập mới",
+                    Message = $" Bài tập '{assignmentTitle}' vừa được tạo",
+                    ObjectLink = $"{clientUrl}/courses/{course.CourseId}/assignments/{assignmentId}/",
+                    Emails = students != null ? students.Where(c=>c.Email!=null && !c.Email.Contains("@example")).Select(c => c.Email!).ToList() : new List<string>()
+                };
+                var response = await backgroundJobHttpService.Client.PostAsJson(uri, model);
+            }
+            catch
+            {
+
+            }
         }
         private async Task<string?> TriggerSendEmailReminderAsync(Course course,string assignmentTitle,DateTime dueDate)
         {
