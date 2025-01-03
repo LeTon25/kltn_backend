@@ -3,6 +3,7 @@ using KLTN.Application.DTOs.Scores;
 using KLTN.Application.DTOs.Submissions;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
+using KLTN.Domain;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Enums;
 using KLTN.Domain.Repositories;
@@ -133,23 +134,37 @@ namespace KLTN.Application.Services
                 return new ApiBadRequestResponse<object>("Vui lòng đính kèm ít nhất một file");
             }
 
-            if(assignment.IsGroupAssigned && assignment.IsIndividualSubmissionRequired == false)
+            if (assignment.IsGroupAssigned)
             {
-                var groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId),false,c=>c.GroupMembers).ToListAsync();
+                var groupsInCourse = new List<Group>();
+                if (!assignment.Type.Equals(Constants.AssignmentType.Final))
+                {
+                    groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId) 
+                    && c.AssignmentId != null 
+                    && c.AssignmentId.Equals(assignment.AssignmentId), false, c => c.GroupMembers).ToListAsync();
+                }
+                else
+                {
+                    groupsInCourse = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId)
+                    && c.AssignmentId ==null, false, c => c.GroupMembers).ToListAsync();
+                }
                 var groupByUser = groupsInCourse.FirstOrDefault(c=>c.GroupMembers.Any(e=>e.StudentId.Equals(currentUserId)));
                 if (groupByUser == null)
                 {
                     return new ApiBadRequestResponse<object>("Đây là bài tập nhóm.Bạn chưa tham gia vào nhóm");
                 }
-                foreach(var member in groupByUser.GroupMembers)
+                if(assignment.IsIndividualSubmissionRequired == false)
                 {
-                    if (assignment.Submissions.Any(c=>c.UserId.Equals(member.StudentId)))
+                    foreach (var member in groupByUser.GroupMembers)
                     {
-                        return new ApiBadRequestResponse<object>("Nhóm bạn đã nộp bài rồi");
+                        if (assignment.Submissions.Any(c => c.UserId.Equals(member.StudentId)))
+                        {
+                            return new ApiBadRequestResponse<object>("Nhóm bạn đã nộp bài rồi");
+                        }
                     }
                 }    
+               
             }    
-
             var newSubmissionId = Guid.NewGuid();
             var newSubmission = new Submission()
             {
