@@ -112,29 +112,21 @@
             <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
                 <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
             </svg>
-            Thông báo bài tập sắp đến hạn
+            {{Title}}
         </div>
 
         <div class="content">
             <div class="class-info">
-                <strong>Môn:</strong> {{ClassName}}
+                <strong>Môn:</strong> {{CourseName}}
             </div>
 
             <div class="assignment-card">
                 <div class="assignment-header">
-                    <div class="assignment-title">{{AssignmentTitle}}</div>
+                    <div class="assignment-title">{{Message}}</div>
                 </div>
-                <div class="assignment-details">
-                    <p class="due-date">Deadline: {{DueDate}}</p>
-                </div>
-                <!--
+             
                 <div class="action-buttons">
-                    <a href="{{AssignmentLink}}" class="btn btn-primary">Xem bài tập</a>
-                </div>
-             -->
-
-                <div style="margin-top: 8px; color: #5f6368 " ;>
-                    Lưu ý : Nếu sinh viên đã nộp bài vui lòng bỏ qua thông báo này
+                    <a href="{{ObjectLink}}" class="btn btn-primary"><p style="color:white !important;">Xem</p></a>
                 </div>
             </div>
         </div>

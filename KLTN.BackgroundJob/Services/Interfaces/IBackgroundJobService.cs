@@ -7,6 +7,6 @@ namespace KLTN.BackgroundJobs.Services.Interfaces
     {
         public IScheduleJobService ScheduleJobService { get; }
         string SendReminderAssignmentDueDate(List<string> Emails,string CourseName,string AssignmentName,DateTime DueDate);
-        //string SendNotiEvent(List<string> Emails, string CourseName, string Message, string ObjectLink);
+        string SendNotiEvent(List<string> Emails, string CourseName,string Title ,string Message, string ObjectLink);
     }
 }

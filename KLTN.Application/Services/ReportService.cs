@@ -2,13 +2,18 @@
 using KLTN.Application.DTOs.Reports;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
+using KLTN.Application.Services.HttpServices;
 using KLTN.Domain.Entities;
 using KLTN.Domain.Enums;
+using KLTN.Domain.Extensions;
 using KLTN.Domain.Repositories;
+using KLTN.Domain.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
+using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using File = KLTN.Domain.Entities.File;
 
@@ -22,9 +27,13 @@ namespace KLTN.Application.Services
         private readonly IMapper mapper;
         private readonly CommentService commentService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IConfiguration configuration;
+        private readonly BackgroundJobHttpService backgroundJobHttpService;
         public ReportService(IUnitOfWork unitOfWork,UserManager<User> userManager,IMapper mapper,
             CommentService commentService,
-            IHttpContextAccessor httpContextAccessor
+            IHttpContextAccessor httpContextAccessor,
+            IConfiguration configuration,
+            BackgroundJobHttpService backgroundJobHttpService
      )
         {
             this.unitOfWork = unitOfWork;   
@@ -32,6 +41,8 @@ namespace KLTN.Application.Services
             this.mapper = mapper;
             this.commentService = commentService;
             this._httpContextAccessor = httpContextAccessor;
+            this.configuration = configuration;
+            this.backgroundJobHttpService = backgroundJobHttpService;
         }
         #region for_controller
         public async Task<ApiResponse<List<ReportDto>>> GetAllReportsAsync()
@@ -108,12 +119,54 @@ namespace KLTN.Application.Services
             
             await unitOfWork.ReportRepository.AddAsync(newReport);
             await unitOfWork.SaveChangesAsync();
+            
+            
             var dto = mapper.Map<ReportDto>(newReport);
             var userEntity =  await userManager.FindByIdAsync(currentUserId);
             dto.CreateUser =  mapper.Map<UserDto>(userEntity) ;
+
+            var group = await unitOfWork.GroupRepository.GetFirstOrDefaultAsync(c => c.GroupId.Equals(requestDto.GroupId), false, c => c.GroupMembers, c => c.Course!, c => c.Course!.Lecturer!,c => c.Assignment);
+            await SendNotiAsync(group, newReportId.ToString(),currentUserId,requestDto.Title);
             return new ApiResponse<object>(200, "Cập nhập thành công",dto);
         }
         #endregion
+        private async Task SendNotiAsync(Group group,string newReportId,string createUserId,string reportTitle)
+        {
+            try
+            {
+                var clientUrl = configuration.GetSection("ClientUrl").Value;
+                var uri = "/api/schedule-jobs/send-noti";
+                if (group.GroupMembers != null && group.GroupMembers.Any()) 
+                {
+                    var userIds = new List<string>();
+                    userIds = group.GroupMembers.Select(c => c.StudentId).ToList();
+                    if (!createUserId.Equals(group.Course!.LecturerId))
+                    {
+                        userIds.Remove(createUserId);
+                        userIds.Add(group.Course!.LecturerId);
+                    }
+                    var users = await unitOfWork.UserRepository.FindByCondition(c => userIds.Contains(c.Id)).ToListAsync();
+                    var userEmails = users.Where(c => c.Email != null && !c.Email.Contains("@example")).Select(c => c.Email!).ToList();
+                    if (userEmails.Any()) 
+                    {
+                        var assignmentTitle = group.Assignment != null ? group.Assignment.Title : "Báo cáo cuối kì";
+                        var model = new NotiEventDto
+                        {
+                            CourseName = group.Course.Name,
+                            Title = $"Báo cáo mới - '{reportTitle}'",
+                            Message = $"Một báo cáo mới vừa được tạo ở nhóm {group.GroupName} - {assignmentTitle}",
+                            ObjectLink = $"{clientUrl}/groups/{group.CourseId}/{group.GroupId}/reports/",
+                            Emails = userEmails
+                        };
+                        var response = await backgroundJobHttpService.Client.PostAsJson(uri, model);
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+        }
 
     }
 }
