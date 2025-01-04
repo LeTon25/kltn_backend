@@ -38,6 +38,12 @@ namespace KLTN.Api.Controllers
         {
             return SetResponse(await _courseService.CreateCourseAsync(requestDto));
         }
+        [HttpPost("template")]
+        [ApiValidationFilter]
+        public async Task<IActionResult> PostCourseFromTemplateAsync(CreateCourseFromTemplateDto requestDto)
+        {
+            return SetResponse(await _courseService.CreateCourseFromTemplateAsync(requestDto));
+        }
         [HttpPatch("{courseId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutCourseId(string courseId, [FromBody] CreateCourseRequestDto requestDto)
