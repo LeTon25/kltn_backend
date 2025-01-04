@@ -4,6 +4,7 @@ using KLTN.Application.DTOs.Courses;
 using KLTN.Application.DTOs.Groups;
 using KLTN.Application.DTOs.ScoreStructures;
 using KLTN.Application.DTOs.Submissions;
+using KLTN.Application.DTOs.Uploads;
 using KLTN.Application.DTOs.Users;
 using KLTN.Application.Helpers.Response;
 using KLTN.Application.Services.HttpServices;
@@ -366,6 +367,32 @@ namespace KLTN.Application.Services
             var now= DateTime.Now;  
             data = data.Where(c=>c.DueDate == null || c.DueDate <= now).ToList();
             return new ApiResponse<List<AssignmentDto>>(200, "Thành công", data);
+
+        }
+        public async Task<ApiResponse<Dictionary<string,List<FileDto>>>> GetFileSubmissionAsync(string assignmentId,string userId)
+        {
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c => c.AssignmentId.Equals(assignmentId),false,c=>c.Course!,c => c.Submissions);
+            if(assignment == null)
+            {
+                return new ApiNotFoundResponse<Dictionary<string,List<FileDto>>>("Không tìm thấy bài tập");
+            }    
+            if(!assignment.Course!.LecturerId.Equals(userId))
+            {
+                return new ApiBadRequestResponse<Dictionary<string,List<FileDto>>>("Chỉ giáo viên mới có quyền tải tất cả bài nộp");    
+            }    
+
+            var dto = new Dictionary<string,List<FileDto>>();
+            if (assignment.Submissions != null && assignment.Submissions.Count > 0) 
+            {
+                foreach (var item in assignment.Submissions) 
+                {
+                    if(item.Attachments.Count>0)
+                    {
+                        dto.Add(item.SubmissionId,mapper.Map<List<FileDto>>(item.Attachments));
+                    }    
+                }  
+            }
+            return new ApiResponse<Dictionary<string,List<FileDto>>>(200,"Lấy dữ liệu thành công",dto);
 
         }
         #endregion

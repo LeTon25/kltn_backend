@@ -402,6 +402,17 @@ namespace KLTN.Application.Services
 
             return distribution;
         }
+        public ScoreStructure ChangeScoreStructureIdForAllChildren(ScoreStructure scoreStructure,string courseId)
+        {
+            var children = scoreStructure.Children;
+            foreach (var child in children)
+            {
+                child.Id = Guid.NewGuid().ToString(); 
+                child.CourseId = courseId;
+                ChangeScoreStructureIdForAllChildren(child, courseId);
+            }
+            return scoreStructure;
+        }
     }
 }
     

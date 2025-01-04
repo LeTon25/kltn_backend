@@ -28,7 +28,7 @@ namespace KLTN.Application
 
             CreateMap<User, UserDto>();
             CreateMap<UserDto, User>();
-
+            CreateMap<ScoreStructure, ScoreStructure>();
             CreateMap<Announcement, AnnouncementDto>();
             CreateMap<AnnouncementDto, Announcement>();
 
