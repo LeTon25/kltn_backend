@@ -155,6 +155,147 @@ namespace KLTN.Application.Services
             dto.Setting = mapper.Map<SettingDto>(newSetting);
             return new ApiResponse<object>(200, "Thành công", dto);
         }
+        public async Task<ApiResponse<object>> CreateCourseFromTemplateAsync(CreateCourseFromTemplateDto requestDto)
+        {
+            var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (await _unitOfWork.CourseRepository.AnyAsync(c => c.InviteCode == requestDto.InviteCode))
+            {
+                return new ApiBadRequestResponse<object>("Mã mời không được trùng");
+            }
+            var sourceCourse = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(requestDto.SourceCourseId), false, c => c.Annoucements, c => c.Setting!, c => c.Assignments);
+            if (sourceCourse == null)
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy lớp học gốc");
+            }
+            if (currentUserId != sourceCourse.LecturerId)
+            {
+                return new ApiBadRequestResponse<object>("Chỉ giáo viên của lớp học này mới có quyền tạo lớp học từ lớp học này");
+            }
+            if (await _unitOfWork.CourseRepository.AnyAsync(c => c.CourseGroup == requestDto.CourseGroup && c.LecturerId == currentUserId && c.SubjectId == sourceCourse.SubjectId))
+            {
+                return new ApiBadRequestResponse<object>("Nhóm môn học được mở không được trùng");
+            }
+            var newCourseId = Guid.NewGuid();
+            var newCourse = new Course()
+            {
+                CourseId = newCourseId.ToString(),
+                CourseGroup = requestDto.CourseGroup,
+                EnableInvite = true,
+                InviteCode = requestDto.InviteCode ?? GenerateRandomNumericString(6),
+                LecturerId = currentUserId!,
+                SubjectId = sourceCourse.SubjectId,
+                CreatedAt = DateTime.Now,
+                Semester = sourceCourse.Semester,
+                UpdatedAt = null,
+                DeletedAt = null,
+                Background = sourceCourse.Background,
+                Name = requestDto.Name,
+            };
+            await _unitOfWork.CourseRepository.AddAsync(newCourse);
+            // Copy setting khi tạo lớp học
+            var newSetting = new Setting()
+            {
+                SettingId = Guid.NewGuid().ToString(),
+                CourseId = newCourseId.ToString(),
+                AllowStudentCreateProject = sourceCourse.Setting!.AllowStudentCreateProject,
+                HasFinalScore = sourceCourse.Setting!.HasFinalScore,
+                MaxGroupSize = sourceCourse.Setting!.MaxGroupSize,
+                MinGroupSize = sourceCourse.Setting!.MinGroupSize,
+                DueDateToJoinGroup = sourceCourse.Setting!.DueDateToJoinGroup,
+            };
+            await _unitOfWork.SettingRepository.AddAsync(newSetting);
+            ////Copy announcement 
+            if (sourceCourse.Annoucements != null && sourceCourse.Annoucements.Count > 0)
+            {
+                var newAnnouncements = new List<Announcement>();
+                foreach (var item in sourceCourse.Annoucements)
+                {
+                    if (item.UserId.Equals(currentUserId))
+                    {
+                        newAnnouncements.Add(
+                                             new Announcement()
+                                             {
+                                                 AnnouncementId = Guid.NewGuid().ToString(),
+                                                 CourseId = newCourseId.ToString(),
+                                                 UserId = currentUserId,
+                                                 Content = item.Content,
+                                                 AttachedLinks = item.AttachedLinks,
+                                                 Attachments = item.Attachments,
+                                                 IsPinned = item.IsPinned,
+                                                 CreatedAt = item.CreatedAt,
+                                                 UpdatedAt = item.UpdatedAt,
+                                                 Mentions = new string[] { }
+                                             }
+                                         );
+                    }
+                }
+                await _unitOfWork.AnnnouncementRepository.AddRangeAsync(newAnnouncements);
+            }
+            //// Copy assignment
+            if (sourceCourse.Assignments != null && sourceCourse.Assignments.Count > 0)
+            {
+                var newAssignments = new List<Assignment>();
+                foreach (var item in sourceCourse.Assignments)
+                {
+                    if (!item.Type.Equals(Constants.AssignmentType.Final))
+                    {
+                        newAssignments.Add(new Assignment()
+                        {
+                            AssignmentId = Guid.NewGuid().ToString(),
+                            CourseId = newCourseId.ToString(),
+                            Title = item.Title,
+                            Content = item.Content,
+                            IsGroupAssigned = item.IsGroupAssigned,
+                            IsIndividualSubmissionRequired = item.IsIndividualSubmissionRequired,
+                            Type = item.Type,
+                            DueDate = item.DueDate,
+                            AttachedLinks = item.AttachedLinks,
+                            Attachments = item.Attachments,
+                            CreatedAt = item.CreatedAt,
+                            UpdatedAt = item.UpdatedAt,
+
+                        });
+                    }
+                }
+                await _unitOfWork.AssignmentRepository.AddRangeAsync(newAssignments);
+            }
+            // Copy Cấu trúc điểm
+            var score = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(sourceCourse.CourseId) && c.ParentId == null, false);
+            var cloneScoreStructure = new ScoreStructure();
+            if (score != null)
+            {
+                await scoreStructureService.LoadChildrenAsync(score);
+                cloneScoreStructure = mapper.Map<ScoreStructure>(score);  
+                cloneScoreStructure.Id = Guid.NewGuid().ToString();
+                cloneScoreStructure.CourseId= newCourseId.ToString();
+                scoreStructureService.ChangeScoreStructureIdForAllChildren(cloneScoreStructure,newCourseId.ToString());
+            }
+            await _unitOfWork.ScoreStructureRepository.AddAsync(cloneScoreStructure);
+
+            var endtermScore = cloneScoreStructure.Children!.FirstOrDefault(c => c.ColumnName.Equals(Constants.Score.EndtermColumnName));
+            var endtermAssignment = new Assignment()
+            {
+                AssignmentId = Guid.NewGuid().ToString(),
+                CourseId = newCourseId.ToString(),
+                ScoreStructureId = endtermScore!.Id,
+                Title = "Bài nộp cuối kỳ",
+                Type = Constants.AssignmentType.Final,
+                Content = "Nơi để học sinh nộp bài cuối kỳ",
+                Attachments = new List<Domain.Entities.File>(),
+                AttachedLinks = new List<MetaLinkData>(),
+                IsGroupAssigned = true,
+                CreatedAt = DateTime.Now,
+            };
+            await _unitOfWork.AssignmentRepository.AddAsync(endtermAssignment);
+            await _unitOfWork.SaveChangesAsync();
+
+
+            var dto = mapper.Map<CourseDto>(newCourse);
+            dto.ScoreStructure = mapper.Map<ScoreStructureDto>(cloneScoreStructure);
+            dto.Setting = mapper.Map<SettingDto>(newSetting);
+            return new ApiResponse<object>(200, "Thành công", dto);
+
+        }
         public async Task<ApiResponse<object>> UpdateCourseAsync(string courseId,CreateCourseRequestDto requestDto,string userId)
         {
             var course = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId == courseId);
