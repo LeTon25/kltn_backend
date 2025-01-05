@@ -4,6 +4,7 @@ using KLTN.Application.Helpers.Response;
 using KLTN.Application.DTOs.Uploads;
 using Amazon.S3.Transfer;
 using Amazon.S3.Model;
+using System.IO;
 
 namespace KLTN.Api.Controllers
 {
@@ -24,18 +25,34 @@ namespace KLTN.Api.Controllers
                 return Ok(new ApiResponse<string>(200,"Không có file để upload"));
             }
             var uploadResults = new List<FileDto>();
+            //foreach (var file in files)
+            //{
+            //    var filePath = Path.GetTempFileName();
+            //    using (var stream = System.IO.File.Create(filePath))
+            //    {
+            //        await file.CopyToAsync(stream);
+            //    }
+
+            //    var s3Url = await UploadFileAsync(filePath, file.FileName);
+            //    var fileType = file.ContentType;
+
+            //    uploadResults.Add(new FileDto(s3Url, file.FileName,fileType));
+            //}
             foreach (var file in files)
             {
-                var filePath = Path.GetTempFileName();
-                using (var stream = System.IO.File.Create(filePath))
+                try
                 {
-                    await file.CopyToAsync(stream);
+                    using (var stream = file.OpenReadStream())
+                    {
+                        var s3Url = await UploadFileAsync(stream, file.FileName, file.ContentType);
+                        uploadResults.Add(new FileDto(s3Url, file.FileName, file.ContentType));
+                    }
                 }
-
-                var s3Url = await UploadFileAsync(filePath, file.FileName);
-                var fileType = file.ContentType;
-
-                uploadResults.Add(new FileDto(s3Url, file.FileName,fileType));
+                catch (Exception ex)
+                {
+                    // Ghi log lỗi và tiếp tục với các file khác
+                    Console.WriteLine($"Lỗi khi upload file {file.FileName}: {ex.Message}");
+                }
             }
             return Ok(new ApiResponse<List<FileDto>>(200,"Thêm thành công",uploadResults));
         }
@@ -72,14 +89,28 @@ namespace KLTN.Api.Controllers
             return Ok(new ApiResponse<List<FileDto>>(200, "Thành công", files));
 
         }
-        private async Task<string> UploadFileAsync(string filePath, string keyName)
+        private async Task<string> UploadFileAsync(Stream stream, string keyName,string contentType)
         {
-            var fileTransferUtility = new TransferUtility(_s3Client);
+            try
+            {
+                var fileTransferUtility = new TransferUtility(_s3Client);
+                var uploadRequest = new TransferUtilityUploadRequest
+                {
+                    InputStream = stream,
+                    BucketName = _bucketName,
+                    Key = keyName,
+                    ContentType = contentType
+                };
+                await fileTransferUtility.UploadAsync(uploadRequest);
 
-            await fileTransferUtility.UploadAsync(filePath,_bucketName, keyName);
+                // Trả về URL của file
+                return $"https://{_bucketName}.s3.amazonaws.com/{keyName}";
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi upload file lên S3: {ex.Message}");
+            }
 
-            // Trả về URL của file
-            return $"https://{_bucketName}.s3.amazonaws.com/{keyName}";
         }
         private async Task<bool> DeleteFilesAsync(string keyName)
         {
