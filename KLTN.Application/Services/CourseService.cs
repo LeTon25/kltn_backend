@@ -158,10 +158,6 @@ namespace KLTN.Application.Services
         public async Task<ApiResponse<object>> CreateCourseFromTemplateAsync(CreateCourseFromTemplateDto requestDto)
         {
             var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (await _unitOfWork.CourseRepository.AnyAsync(c => c.InviteCode == requestDto.InviteCode))
-            {
-                return new ApiBadRequestResponse<object>("Mã mời không được trùng");
-            }
             var sourceCourse = await _unitOfWork.CourseRepository.GetFirstOrDefaultAsync(c => c.CourseId.Equals(requestDto.SourceCourseId), false, c => c.Annoucements, c => c.Setting!, c => c.Assignments);
             if (sourceCourse == null)
             {
@@ -181,11 +177,11 @@ namespace KLTN.Application.Services
                 CourseId = newCourseId.ToString(),
                 CourseGroup = requestDto.CourseGroup,
                 EnableInvite = true,
-                InviteCode = requestDto.InviteCode ?? GenerateRandomNumericString(6),
+                InviteCode = GenerateRandomNumericString(6),
                 LecturerId = currentUserId!,
                 SubjectId = sourceCourse.SubjectId,
                 CreatedAt = DateTime.Now,
-                Semester = sourceCourse.Semester,
+                Semester = requestDto.Semester,
                 UpdatedAt = null,
                 DeletedAt = null,
                 Background = sourceCourse.Background,
