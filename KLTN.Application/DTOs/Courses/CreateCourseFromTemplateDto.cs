@@ -10,7 +10,7 @@ namespace KLTN.Application.DTOs.Courses
     {
         public string CourseGroup { get; set; } = string.Empty;
         public string SourceCourseId { get; set; } = string.Empty;
-        public string? InviteCode { get; set; } = string.Empty;
+        public string Semester { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
     }
 }
