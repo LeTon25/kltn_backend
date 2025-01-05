@@ -100,7 +100,10 @@ builder.Services.AddSwaggerGen(
     }
 );
 
-
+builder.WebHost.ConfigureKestrel(options=>
+{
+    options.Limits.MaxRequestBodySize = 500* 1024*1024;
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
