@@ -200,7 +200,8 @@ namespace KLTN.Application.Services
                 AllowStudentCreateProject = sourceCourse.Setting!.AllowStudentCreateProject,
                 HasFinalScore = sourceCourse.Setting!.HasFinalScore,
                 MaxGroupSize = sourceCourse.Setting!.MaxGroupSize,
-                MinGroupSize = sourceCourse.Setting!.MinGroupSize
+                MinGroupSize = sourceCourse.Setting!.MinGroupSize,
+                DueDateToJoinGroup = sourceCourse.Setting!.DueDateToJoinGroup,
             };
             await _unitOfWork.SettingRepository.AddAsync(newSetting);
             ////Copy announcement 
