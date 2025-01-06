@@ -113,26 +113,30 @@ namespace KLTN.Application.Services
             {
                 return new ApiNotFoundResponse<TranscriptStatisticsDto>("Không tìm thấy lớp học");
             }
-            var scoreStructure = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId!.Equals(courseId) && c.ColumnName.Equals(Constants.Score.FinalColumnName), false, c => c.Scores);
-            await LoadChildrenWithScoreAsync(scoreStructure);
-
-            if (!course.Setting!.HasFinalScore)
+            if (course.EnrolledCourses != null && course.EnrolledCourses.Count() > 0) 
             {
-                var endtermScore = scoreStructure.Children!.FirstOrDefault(c => c.ColumnName.Equals(Constants.Score.EndtermColumnName));
-                scoreStructure.Children!.Remove(endtermScore!);
+                var scoreStructure = await _unitOfWork.ScoreStructureRepository.GetFirstOrDefaultAsync(c => c.CourseId!.Equals(courseId) && c.ColumnName.Equals(Constants.Score.FinalColumnName), false, c => c.Scores);
+                await LoadChildrenWithScoreAsync(scoreStructure);
+
+                if (!course.Setting!.HasFinalScore)
+                {
+                    var endtermScore = scoreStructure.Children!.FirstOrDefault(c => c.ColumnName.Equals(Constants.Score.EndtermColumnName));
+                    scoreStructure.Children!.Remove(endtermScore!);
+                }
+                scoreStructure.Children = scoreStructure.Children!.OrderByDescending(c => c.ColumnName).ToList();
+                var studentIds = course.EnrolledCourses.Select(c => c.StudentId).ToList();
+                var students = await _unitOfWork.UserRepository.FindByCondition(c => studentIds.Contains(c.Id), false, c => c.Scores).ToListAsync();
+
+                var studentScores = students.Select(student => new StudentScoreDTO
+                {
+                    Id = student.Id,
+                    FullName = student.UserName!,
+                    Scores = CalculateScore(scoreStructure, student.Id)
+                }).ToList();
+                var statisticsDto = CalculateStatistics(studentScores, course.Setting.HasFinalScore);
+                return new ApiResponse<TranscriptStatisticsDto>(200, "Thành công", statisticsDto);
             }
-            scoreStructure.Children = scoreStructure.Children!.OrderByDescending(c => c.ColumnName).ToList();
-            var studentIds = course.EnrolledCourses.Select(c => c.StudentId).ToList();
-            var students = await _unitOfWork.UserRepository.FindByCondition(c => studentIds.Contains(c.Id), false, c => c.Scores).ToListAsync();
-
-            var studentScores = students.Select(student => new StudentScoreDTO
-            {
-                Id = student.Id,
-                FullName = student.UserName!,
-                Scores = CalculateScore(scoreStructure, student.Id)
-            }).ToList();
-            var statisticsDto = CalculateStatistics(studentScores,course.Setting.HasFinalScore);
-            return new ApiResponse<TranscriptStatisticsDto>(200, "Thành công", statisticsDto);
+            return new ApiResponse<TranscriptStatisticsDto>(200, "Thành công", null);
         }
         #endregion
         private bool ValidateColumnNameDuplicate(UpSertScoreStructureDto dto)
