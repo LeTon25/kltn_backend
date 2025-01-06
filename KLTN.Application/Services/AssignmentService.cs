@@ -14,6 +14,7 @@ using KLTN.Domain.Enums;
 using KLTN.Domain.Extensions;
 using KLTN.Domain.Repositories;
 using KLTN.Domain.Shared.DTOs;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -348,24 +349,46 @@ namespace KLTN.Application.Services
         {
             var data = new List<AssignmentDto>();   
             //Khóa học do người dùng giảng dạy
-            var teachingCourses = await unitOfWork.CourseRepository.FindByCondition(c => c.LecturerId == userId && c.SaveAt == null, false, c => c.Lecturer!, c => c.Setting!).ToListAsync();
-            var teachingCoursesId = teachingCourses.Select(c => c.CourseId);
-
-            var assignmentsInTeachingCourses = await unitOfWork.AssignmentRepository.FindByCondition(c => teachingCoursesId.Contains(c.CourseId),false,c=>c.Course!,c => c.Course!.Lecturer!,c => c.ScoreStructure).ToListAsync();
-            data.AddRange(mapper.Map<List<AssignmentDto>>(assignmentsInTeachingCourses));
+            var teachingCourses = await unitOfWork.CourseRepository.FindByCondition(c => c.LecturerId == userId && c.SaveAt == null, false, c => c.Lecturer!, c => c.Setting!,c => c.Assignments).ToListAsync();
+            foreach(var item in teachingCourses)
+            {
+                if(item.Assignments != null)
+                {
+                    data.AddRange(mapper.Map<List<AssignmentDto>>(item.Assignments));
+                    if (!item.Setting!.HasFinalScore)
+                    {
+                        data.RemoveAll(c => c.CourseId.Equals(item.CourseId) && c.Type.Equals(Constants.AssignmentType.Final));
+                    }
+                }    
+            }
             //Khóa học do người dùng đăng kí làm học viên
             var enrollData = unitOfWork.EnrolledCourseRepository.GetAll(c => c.StudentId == userId);
             var enrollCourseIds = enrollData.Select(e => e.CourseId).ToList();
 
-            var assignmentsInEnrolledCourses = await unitOfWork.AssignmentRepository.FindByCondition(c => enrollCourseIds.Contains(c.CourseId), false, c => c.Course!, c => c.Course!.Lecturer!, c => c.ScoreStructure).ToListAsync();
-            data.AddRange(mapper.Map<List<AssignmentDto>>(assignmentsInEnrolledCourses));
-
+            var enrolledCourses = await unitOfWork.CourseRepository.FindByCondition(c => enrollCourseIds.Contains(c.CourseId) && c.SaveAt == null, false, 
+                c => c.Lecturer!, c => c.Setting!,c => c.Lecturer! ,c => c.Assignments).ToListAsync();
+            
+            foreach (var item in enrolledCourses)
+            {
+                if(item.Assignments != null)
+                {
+                    data.AddRange(mapper.Map<List<AssignmentDto>>(item.Assignments));
+                    if (!item.Setting!.HasFinalScore)
+                    {
+                        data.RemoveAll(c => c.CourseId.Equals(item.CourseId) && c.Type.Equals(Constants.AssignmentType.Final));
+                    }
+                }    
+            }
             foreach(var assignmentDto in data)
             {
                 assignmentDto.CreateUser = mapper.Map<UserDto>(assignmentDto.Course!.Lecturer);
             }
             var now= DateTime.Now;  
-            data = data.Where(c=>c.DueDate == null || c.DueDate <= now).ToList();
+            data = data.Where(c=>c.DueDate == null || c.DueDate >= now).ToList();
+            foreach(var item in data)
+            {
+                item.Course.Assignments = null;
+            }    
             return new ApiResponse<List<AssignmentDto>>(200, "Thành công", data);
 
         }
@@ -394,6 +417,37 @@ namespace KLTN.Application.Services
             }
             return new ApiResponse<Dictionary<string,List<FileDto>>>(200,"Lấy dữ liệu thành công",dto);
 
+        }
+        public async Task<ApiResponse<object>> GetStudentWithoutGroupAsync(string assignmentId)
+        {
+            var assignment = await unitOfWork.AssignmentRepository.GetFirstOrDefaultAsync(c=>c.AssignmentId.Equals(assignmentId));
+            if (assignment == null) 
+            {
+                return new ApiNotFoundResponse<object>("Không tìm thấy bài tập");
+            }
+            //Get students in course
+            var enrolledData = await unitOfWork.EnrolledCourseRepository.GetAllAsync();
+            var usersData = await userManager.Users.ToListAsync();
+            var users = from user in usersData
+                        join enroll in enrolledData on user.Id equals enroll.StudentId
+                        where enroll.CourseId == assignment.CourseId
+                        select user;
+            var enrolledStudents = mapper.Map<List<UserDto>>(users.ToList());
+            //Get group in course
+            var groups = await unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(assignment.CourseId) 
+             && c.AssignmentId!=null 
+             && c.AssignmentId.Equals(assignment.AssignmentId), false, c => c.GroupMembers).ToListAsync();
+
+            var studentWithoutGroups = new List<UserDto>();
+            foreach (var student in enrolledStudents)
+            {
+                if (!groups.Any(gr => gr.GroupMembers
+                        .Any(g => g.StudentId.Equals(student.Id))))
+                {
+                    studentWithoutGroups.Add(student);
+                }
+            }
+            return new ApiResponse<object>(200, "Thành công", studentWithoutGroups);
         }
         #endregion
         #region for_service
