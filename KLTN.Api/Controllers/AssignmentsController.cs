@@ -67,5 +67,12 @@ namespace KLTN.Api.Controllers
             var response = await assignmentService.GetFileSubmissionAsync(assignmentId,userId!);
             return StatusCode(response.StatusCode,response);
         }
+        [HttpGet("{assignmentId}/studentsWithoutGroup")]
+        public async Task<IActionResult> GetStudentWithoutGroupAsync(string assignmentId)
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var response = await assignmentService.GetStudentWithoutGroupAsync(assignmentId);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

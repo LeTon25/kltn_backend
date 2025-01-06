@@ -388,7 +388,7 @@ namespace KLTN.Application.Services
                         select user;
             var enrolledStudents = mapper.Map<List<UserDto>>(users.ToList());
             //Get group in course
-            var groups = await _unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(courseId),false,c => c.GroupMembers).ToListAsync();
+            var groups = await _unitOfWork.GroupRepository.FindByCondition(c => c.CourseId.Equals(courseId) && c.GroupType.Equals(Constants.GroupType.Final),false,c => c.GroupMembers).ToListAsync();
 
             var studentWithoutGroups = new List<UserDto>();
             foreach(var student in enrolledStudents)
