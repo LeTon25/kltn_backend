@@ -16,5 +16,6 @@ namespace KLTN.Domain.Repositories
         Task<bool> AnyAsync(Expression<Func<T, bool>> filter);
         IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression, bool trackChanges = false);
         IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression, bool trackChanges = false, params Expression<Func<T, object>>[] includeProperties);
+
     }
 }

@@ -6,8 +6,8 @@ using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class BriefsController : ControllerBase
     {
         private readonly BriefService briefService;

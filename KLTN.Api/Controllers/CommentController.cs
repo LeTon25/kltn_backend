@@ -8,8 +8,10 @@ using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class CommentController : BaseController
+    public class CommentController : ControllerBase
     {
         private readonly CommentService commentService;
         public CommentController(ApplicationDbContext db,CommentService commentService)
@@ -21,7 +23,9 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PostComment(string commentableId, [FromBody] CreateCommentRequestDto request)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await commentService.CreateCommentsAsync(commentableId, request,userId));
+            var response = await commentService.CreateCommentsAsync(commentableId, request, userId!);
+
+            return StatusCode(response.StatusCode, response);
         }
 
         [HttpPatch("{commentableId}/comments/{commentId}")]
@@ -29,13 +33,15 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PutComment(string commentId, [FromBody] CreateCommentRequestDto request)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await commentService.UpdateCommentAsync(commentId, request,userId));
+            var response = await commentService.UpdateCommentAsync(commentId, request, userId!);
+            return StatusCode(response.StatusCode, response);
         }
 
         [HttpDelete("{commentableId}/comments/{commentId}")]
         public async Task<IActionResult> DeleteComment(string commentableId, string commentId)
         {
-            return SetResponse(await commentService.DeleteCommentAsync(commentId));
+            var response = await commentService.DeleteCommentAsync(commentId);
+            return StatusCode(response.StatusCode, response);
         }
     }
 }

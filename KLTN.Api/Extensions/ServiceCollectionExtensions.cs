@@ -25,7 +25,7 @@ namespace KLTN.Api.Extensions
         public static IServiceCollection AddMyService(this IServiceCollection services)
         {
             services.AddAutoMapper(typeof(MappingProfile));
-            services.AddTransient<IStorageService, FileLocalStorageService>();
+            services.AddSingleton<IStorageService, FileLocalStorageService>();
             services.AddTransient<DbInitializer>();
             services.AddTransient<ITokenService, TokenService>();  
 

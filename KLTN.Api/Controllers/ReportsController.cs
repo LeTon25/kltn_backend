@@ -8,8 +8,10 @@ using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class ReportsController : BaseController
+    public class ReportsController : ControllerBase
     {
         private readonly ReportService reportService;
         public ReportsController(
@@ -21,7 +23,8 @@ namespace KLTN.Api.Controllers
         [ServiceFilter(typeof(GroupResourceAccessFilter))]
         public async Task<IActionResult> GetByIdAsync(string reportId)
         {
-            return SetResponse(await reportService.GetReportByIdAsync(reportId));  
+            var response = await reportService.GetReportByIdAsync(reportId);
+            return StatusCode(response.StatusCode,response);  
 
         }
         [HttpPost("{groupId}/report")]
@@ -31,21 +34,24 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PostReportAsync(CreateReportRequestDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await reportService.CreateReportAsync(userId!,requestDto));
+            var response = await reportService.CreateReportAsync(userId!, requestDto);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpPatch("{groupId}/report/{reportId}")]
         [ApiValidationFilter]
         [ServiceFilter(typeof(GroupResourceAccessFilter))]
         public async Task<IActionResult> PutReportId(string reportId, [FromBody] CreateReportRequestDto requestDto)
         {
-            return SetResponse(await reportService.UpdateReportAsync(reportId, requestDto));
+            var response = await reportService.UpdateReportAsync(reportId, requestDto);
+            return StatusCode(response.StatusCode, response);
         }
 
         [HttpDelete("{groupId}/report/{reportId}")]
         [ServiceFilter(typeof(GroupResourceAccessFilter))]
         public async Task<IActionResult> DeleteReportAsync(string reportId)
         {
-            return SetResponse(await reportService.DeleteReportAsync(reportId));
+            var response = await reportService.DeleteReportAsync(reportId);
+            return StatusCode(response.StatusCode, response);
         }
 
     }

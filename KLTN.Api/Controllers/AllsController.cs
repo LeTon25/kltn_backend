@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class AllsController : Controller
     {
         private readonly UserManager<User> _userManager;

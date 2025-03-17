@@ -10,8 +10,10 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class RolesController : BaseController
+    public class RolesController : ControllerBase
     {
         private readonly RoleManager<IdentityRole> _roleManager;
 

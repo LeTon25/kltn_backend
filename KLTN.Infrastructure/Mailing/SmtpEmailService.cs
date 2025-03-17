@@ -1,7 +1,6 @@
 ﻿using KLTN.Domain.Services;
 using KLTN.Domain.Settings;
 using MailKit.Net.Smtp;
-using Microsoft.Extensions.Logging;
 using MimeKit;
 
 namespace KLTN.Infrastructure.Mailing

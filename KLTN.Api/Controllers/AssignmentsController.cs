@@ -7,8 +7,10 @@ using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class AssignmentsController : BaseController
+    public class AssignmentsController : ControllerBase
     {
         private readonly AssignmentService assignmentService;
         public AssignmentsController(
@@ -30,21 +32,24 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PostAssignmentAsync(UpSertAssignmentRequestDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await assignmentService.CreateAssignmentAsync(userId!,requestDto));
+            var response = await assignmentService.CreateAssignmentAsync(userId!, requestDto);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpPatch("{assignmentId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutAssignmentId(string assignmentId, [FromBody] UpSertAssignmentRequestDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await assignmentService.UpdateAssignmentAsync(userId!,assignmentId, requestDto));
+            var response = await assignmentService.UpdateAssignmentAsync(userId!, assignmentId, requestDto);
+            return StatusCode(response.StatusCode, response);
         }
 
         [HttpDelete("{assignmentId}")]
         public async Task<IActionResult> DeleteAssignmentAsync(string assignmentId)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await assignmentService.DeleteAssignmentAsync(userId!,assignmentId));
+            var response = await assignmentService.DeleteAssignmentAsync(userId!, assignmentId);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpGet("{assignmentId}/submissions")]
         public async Task<IActionResult> GetSubmissionsInAssignment(string assignmentId)

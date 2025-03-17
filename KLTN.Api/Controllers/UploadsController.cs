@@ -8,7 +8,9 @@ using System.IO;
 
 namespace KLTN.Api.Controllers
 {
-    public class UploadsController : BaseController
+    [ApiController]
+    [Route("api/[controller]")]
+    public class UploadsController : ControllerBase
     {
         private readonly IAmazonS3 _s3Client;
         private readonly string? _bucketName;
