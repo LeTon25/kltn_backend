@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class AnnouncementsController : BaseController
+    public class AnnouncementsController : ControllerBase
     {
         private readonly AnnoucementService annoucementService;
         public AnnouncementsController(
@@ -18,32 +20,37 @@ namespace KLTN.Api.Controllers
         [HttpPatch("{announcementId}/pinned")]
         public async Task<IActionResult> PatchAnnouncementsAsync(string announcementId,bool isPinned)
         {
-            return SetResponse(await annoucementService.TogglePinAnnouncement(announcementId, isPinned));
+            var response = await annoucementService.TogglePinAnnouncement(announcementId, isPinned);
+            return StatusCode(response.StatusCode,response);
             
         }
         [HttpGet("{announcementId}")]
         public async Task<IActionResult> GetByIdAsync(string announcementId)
         {
-            return SetResponse(await annoucementService.GetAnnouncementByIdAsync(announcementId));  
+            var response = await annoucementService.GetAnnouncementByIdAsync(announcementId);
+            return StatusCode(response.StatusCode, response);
 
         }
         [HttpPost]
         [ApiValidationFilter]
         public async Task<IActionResult> PostAnnouncementAsync(CreateAnnouncementRequestDto requestDto)
         {
-            return SetResponse(await annoucementService.CreateAnnouncementAsync(requestDto));
+            var response = await annoucementService.CreateAnnouncementAsync(requestDto);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpPatch("{courseId}/{announcementId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutAnnouncementId(string announcementId, [FromBody] CreateAnnouncementRequestDto requestDto)
         {
-            return SetResponse(await annoucementService.UpdateAnnouncementAsync(announcementId, requestDto));
+            var response = await annoucementService.UpdateAnnouncementAsync(announcementId, requestDto);
+            return StatusCode(response.StatusCode, response);
         }
 
         [HttpDelete("{courseId}/{announcementId}")]
         public async Task<IActionResult> DeleteAnnouncementAsync(string announcementId)
         {
-            return SetResponse(await annoucementService.DeleteAnnouncementAsync(announcementId));
+            var response = await annoucementService.DeleteAnnouncementAsync(announcementId);
+            return StatusCode(response.StatusCode, response);
         }
 
     }

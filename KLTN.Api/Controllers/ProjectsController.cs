@@ -9,8 +9,10 @@ using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class ProjectsController : BaseController
+    public class ProjectsController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
         private readonly IMapper _mapper;

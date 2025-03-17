@@ -14,8 +14,10 @@ using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class UsersController : BaseController
+    public class UsersController : ControllerBase
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;

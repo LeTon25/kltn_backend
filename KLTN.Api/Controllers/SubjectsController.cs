@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class SubjectsController : BaseController
+    public class SubjectsController : ControllerBase
     {
         private readonly SubjectService _subjectService;    
         public SubjectsController(SubjectService subjectService) {
@@ -22,26 +24,28 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> GetByIdAsync(string subjectId)
         {
             var apiResposne = await _subjectService.GetByIdAsync(subjectId);
-            return SetResponse(apiResposne);
-
+            return StatusCode(apiResposne.StatusCode, apiResposne);
         }
         [HttpPost]
         [ApiValidationFilter]
         public async Task<IActionResult> PostSubjectAsync(CreateSubjectRequestDto requestDto)
         {
-            return SetResponse(await _subjectService.AddSubjectAsync(requestDto));
+            var apiResposne = await _subjectService.AddSubjectAsync(requestDto);
+            return StatusCode(apiResposne.StatusCode, apiResposne);
         }
         [HttpPut("{subjectId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutSubjectId(string subjectId, [FromBody] CreateSubjectRequestDto requestDto)
         {
-            return SetResponse(await _subjectService.UpdateSubjectAsync(subjectId, requestDto));
+            var apiResposne = await _subjectService.AddSubjectAsync(requestDto);
+            return StatusCode(apiResposne.StatusCode, apiResposne);
         }
 
         [HttpDelete("{subjectId}")]
         public async Task<IActionResult> DeleteSubjectAsync(string subjectId)
         {
-            return SetResponse(await _subjectService.DeleteSubjectAsync(subjectId));
+            var apiResposne = await _subjectService.DeleteSubjectAsync(subjectId);
+            return StatusCode(apiResposne.StatusCode, apiResposne);
         }
 
     }

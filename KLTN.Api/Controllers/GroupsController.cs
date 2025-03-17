@@ -11,8 +11,10 @@ using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class GroupsController : BaseController
+    public class GroupsController : ControllerBase
     {
         private readonly GroupService groupService;
         private readonly CourseService courseService;

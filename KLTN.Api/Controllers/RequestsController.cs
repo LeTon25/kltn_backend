@@ -5,8 +5,8 @@ using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
     public class RequestsController : ControllerBase
     {

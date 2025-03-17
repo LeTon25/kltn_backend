@@ -8,8 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class CoursesController : BaseController
+    public class CoursesController : ControllerBase
     {
         private readonly CourseService _courseService;
         public CoursesController(
@@ -30,26 +32,30 @@ namespace KLTN.Api.Controllers
         [ServiceFilter(typeof(CourseResourceAccessFilter))]
         public async Task<IActionResult> GetByIdAsync(string courseId)
         {
-            return SetResponse( await _courseService.GetCourseByIdAsync(courseId));
+            var response = await _courseService.GetCourseByIdAsync(courseId);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpPost]
         [ApiValidationFilter]
         public async Task<IActionResult> PostCourseAsync(CreateCourseRequestDto requestDto)
         {
-            return SetResponse(await _courseService.CreateCourseAsync(requestDto));
+            var response = await _courseService.CreateCourseAsync(requestDto);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpPost("template")]
         [ApiValidationFilter]
         public async Task<IActionResult> PostCourseFromTemplateAsync(CreateCourseFromTemplateDto requestDto)
         {
-            return SetResponse(await _courseService.CreateCourseFromTemplateAsync(requestDto));
+            var response = await _courseService.CreateCourseFromTemplateAsync(requestDto);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpPatch("{courseId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutCourseId(string courseId, [FromBody] CreateCourseRequestDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await _courseService.UpdateCourseAsync(courseId,requestDto,userId));
+            var response = await _courseService.UpdateCourseAsync(courseId, requestDto, userId!);
+            return StatusCode(response.StatusCode,response);
         }
 
         [HttpPatch("{courseId}/inviteCode")]
@@ -57,24 +63,28 @@ namespace KLTN.Api.Controllers
         [ApiValidationFilter]
         public async Task<IActionResult> PutCourseInviteCodeAsync(string courseId,[FromBody]string inviteCode)
         {
-            return SetResponse(await _courseService.UpdateInviteCodeAsync(courseId, inviteCode));
+            var response = await _courseService.UpdateInviteCodeAsync(courseId, inviteCode);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpGet("invite/{inviteCode:length(1,100)}")]
         public async Task<IActionResult> GetFindCourseByInviteCodeAsync(string inviteCode)
         {
-            return SetResponse(await _courseService.GetFindCourseByInviteCodeAsync(inviteCode));
+            var response = await _courseService.GetFindCourseByInviteCodeAsync(inviteCode);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpPost("invite/{inviteCode:length(1,100)}")]
         public async Task<IActionResult> GetApplyCodeAsync( string inviteCode)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await _courseService.ApplyInviteCodeAsync(inviteCode, userId));
+            var response = await _courseService.ApplyInviteCodeAsync(inviteCode, userId!);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpGet("{courseId}/regenerateCode")]
         [ServiceFilter(typeof(CourseResourceAccessFilter))]
         public async Task<IActionResult> GetRegenerateInviteCodeAsync(string courseId)
         {
-            return SetResponse(await _courseService.GetRegenerateInviteCodeAsync(courseId));
+            var response = await _courseService.GetRegenerateInviteCodeAsync(courseId);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpGet("{courseId}/studentsWithoutGroup")]
         [ServiceFilter(typeof(CourseResourceAccessFilter))]
@@ -86,22 +96,26 @@ namespace KLTN.Api.Controllers
         [HttpGet("suggest-inviteCode")]
         public async Task<IActionResult> GetRenerateInviteCodeAsync()
         {
-            return SetResponse(await _courseService.GetSuggestInviteCodeAsync());
+            var response = await _courseService.GetSuggestInviteCodeAsync();
+            return StatusCode(response.StatusCode, response);
         }
         [HttpGet("{courseId}/hide-code")]
         public async Task<IActionResult> GetHideSuggestCodeAsync(string courseId)
         {
-            return SetResponse(await _courseService.GetToggleInviteCodeAsync(courseId,true));
+            var response = await _courseService.GetToggleInviteCodeAsync(courseId, true);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpGet("{courseId}/show-code")]
         public async Task<IActionResult> GetShowSuggestCodeAsync(string courseId)
         {
-            return SetResponse(await _courseService.GetToggleInviteCodeAsync(courseId,false));
+            var response = await _courseService.GetToggleInviteCodeAsync(courseId, true);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpDelete("{courseId}")]
         public async Task<IActionResult> DeleteCourseAsync(string courseId)
         {
-            return SetResponse( await _courseService.DeleteCourseAsync(courseId));
+            var response = await _courseService.DeleteCourseAsync(courseId);
+            return StatusCode(response.StatusCode, response);
         }
 
         [HttpGet("{courseId}/groups")]
@@ -117,25 +131,29 @@ namespace KLTN.Api.Controllers
                     group.Course = course;
                 }
             }
-            return SetResponse(data);
+            return StatusCode(data.StatusCode, data);
+
         }
         [HttpGet("{courseId}/projects")]
         [ServiceFilter(typeof(CourseResourceAccessFilter))]
         public async Task<IActionResult> GetProjectsInCourseAsync(string courseId)
         {
-            return SetResponse(await _courseService.GetProjectsInCourseAsync(courseId));
+            var response = await _courseService.GetProjectsInCourseAsync(courseId);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpDelete("{courseId}/students")]
         public async Task<IActionResult> DeleteRemoveStudentFromCourseAsync(string courseId,RemoveStudentRequestDto dto)
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await _courseService.RemoveStudentFromCourseAsync(courseId,dto.StudentIds,currentUserId));
+            var response = await _courseService.RemoveStudentFromCourseAsync(courseId, dto.StudentIds, currentUserId!);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpPost("{courseId}/students")]
         public async Task<IActionResult> AddStudentsToCourseAsync(string courseId, AddStudentRequestDto dto)
         {
             var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await _courseService.AddStudentToCourseAsync(courseId, dto, currentUserId));
+            var response = await _courseService.AddStudentToCourseAsync(courseId, dto, currentUserId!);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpGet("{courseId}/statistic")]
         [ServiceFilter(typeof(CourseResourceAccessFilter))]

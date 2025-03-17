@@ -1,11 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace KLTN.Application.Helpers.Response
 {
     public class ApiBadRequestResponse<T> : ApiResponse<T> where T : class

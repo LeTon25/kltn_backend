@@ -8,8 +8,10 @@ using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class ScoreStructuresController : BaseController
+    public class ScoreStructuresController : ControllerBase
     {
         private readonly ScoreStructureService _scoreStructureService;
         public ScoreStructuresController(ScoreStructureService scoreStructureService)

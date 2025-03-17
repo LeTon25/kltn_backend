@@ -7,8 +7,10 @@ using System.Security.Claims;
 
 namespace KLTN.Api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     [Authorize]
-    public class SubmissionsController : BaseController
+    public class SubmissionsController : ControllerBase
     {
         private readonly SubmissionService submissionService;
         public SubmissionsController(
@@ -29,21 +31,24 @@ namespace KLTN.Api.Controllers
         public async Task<IActionResult> PostSubmissionAsync(CreateSubmissionDto requestDto,string assignmentId)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await submissionService.CreateSubmissionAsync(userId,requestDto,assignmentId));
+            var response = await submissionService.CreateSubmissionAsync(userId!, requestDto, assignmentId);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpPatch("{assignmentId}/submissions/{submissionId}")]
         [ApiValidationFilter]
         public async Task<IActionResult> PutSubmission(string submissionId, [FromBody] CreateSubmissionDto requestDto)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await submissionService.UpdateSubmissionAsync(userId,submissionId, requestDto));
+            var response = await submissionService.UpdateSubmissionAsync(userId!, submissionId, requestDto);
+            return StatusCode(response.StatusCode, response);
         }
 
         [HttpDelete("{assignmentId}/submissions/{submissionId}")]
         public async Task<IActionResult> DeleteSubmissionAsync(string submissionId)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return SetResponse(await submissionService.DeleteSubmissionAsync(userId,submissionId));
+            var response = await submissionService.DeleteSubmissionAsync(userId!, submissionId);
+            return StatusCode(response.StatusCode, response);
         }
     }
 }
